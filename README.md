@@ -7,7 +7,7 @@ Este proyecto implementa un **optimizador avanzado para Windows**, desarrollado 
 
 ## 📸 Vista previa de la interfaz
 
-![Interfaz del optimizador](./captura_ejecucion.png)
+![WindowsOptimizerGUI](./captura_ejecucion.png)
 
 > *Captura proporcionada por el autor mostrando la ejecución real del script.*
 
