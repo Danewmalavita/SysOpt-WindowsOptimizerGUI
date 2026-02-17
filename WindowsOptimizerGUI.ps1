@@ -408,22 +408,22 @@ $OptimizationScript = {
         Write-Console "═══════════════════════════════════════════════════════════"
         
         try {
-            $shell = New-Object -ComObject Shell.Application
-            $recycleBin = $shell.NameSpace(0x0a)
-            $items = $recycleBin.Items()
-            
-            if ($items.Count -gt 0) {
-                Write-Console "Elementos en papelera: $($items.Count)"
-                Update-SubProgress $basePercent 50 $taskWeight
-                
-                Clear-RecycleBin -Force -Confirm:$false -ErrorAction Stop
-                Write-Console "✓ Papelera vaciada correctamente"
-            } else {
-                Write-Console "La papelera ya está vacía"
+        # Recorre todas las unidades del sistema
+        Get-PSDrive -PSProvider FileSystem | ForEach-Object {
+            $recyclePath = Join-Path $_.Root '$Recycle.Bin'
+
+            if (Test-Path $recyclePath) {
+                # Elimina todo el contenido de la papelera de esa unidad
+                Get-ChildItem -Path $recyclePath -Force -ErrorAction SilentlyContinue |
+                Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
             }
-        } catch {
-            Write-Console "Error: $($_.Exception.Message)"
         }
+
+        Write-Host "Papelera de reciclaje vaciada para TODOS los usuarios." -ForegroundColor Green
+        }
+        catch {
+            Write-Host "Error al vaciar la papelera: $($_.Exception.Message)" -ForegroundColor Red
+           }
         
         $completedTasks++
         Update-Progress ([int](($completedTasks / $totalTasks) * 100)) ""
@@ -1236,4 +1236,5 @@ Write-ConsoleMain "  • Optimize-Volume funciona con método alternativo (defra
 Write-ConsoleMain "  • Barra de progreso se actualiza en tiempo real"
 Write-ConsoleMain "  • Muestra tarea actual y porcentaje exacto"
 Write-ConsoleMain ""
+
 $window.ShowDialog() | Out-Null
