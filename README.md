@@ -82,7 +82,9 @@ El script valida automáticamente los permisos:
 
 Muestra tarea actual y porcentaje exacto
 
-> “Es posible que haya que cambiar la politica de ejecución de powershell. Ejecutar desde powershell set-executionpolicy -executionpolicy bypass -scope localmachine”
+> “Es posible que haya que cambiar la politica de ejecución de powershell. Ejecutar desde powershell:
+>    ```powershell
+   .\OptimizadorSistema_GUI.ps1set-executionpolicy -executionpolicy bypass -scope localmachine
 
 
 ---
