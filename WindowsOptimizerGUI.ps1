@@ -4,9 +4,11 @@
     Optimizador de Sistema Windows con Interfaz Gráfica
 .DESCRIPTION
     Script completo de optimización con GUI, limpieza avanzada, verificación de sistema y registro
-.NOTES
-    Requiere permisos de administrador
-    Versión: 3.0 (CORREGIDO - Todos los procesos + Barra de progreso en tiempo real)
+.REQUIREMENTS
+    - Ejecutar el script set-executionpolicy -executionpolicy bypass -scope localmachine
+    - Requiere permisos de administrador 
+.NOTES    
+    Versión: 3.0.1 (Solventado bug de papelera de reciclaje)
 #>
 
 Add-Type -AssemblyName PresentationFramework
@@ -1238,3 +1240,4 @@ Write-ConsoleMain "  • Muestra tarea actual y porcentaje exacto"
 Write-ConsoleMain ""
 
 $window.ShowDialog() | Out-Null
+
