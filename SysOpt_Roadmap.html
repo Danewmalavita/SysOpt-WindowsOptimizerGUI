@@ -704,7 +704,7 @@
 
   <!-- ── Header ── -->
   <header>
-    <div class="version-badge">SysOpt v2.3 · Estable · v2.4.0 dev en progreso</div>
+    <div class="version-badge">SysOpt v2.3.0 · Estable · v2.4.0 completado — próximamente estable</div>
     <h1><span class="accent">SYS</span><span class="accent2">OPT</span><br>Plan de Estabilidad y Mejora</h1>
     <p class="subtitle">Análisis de bugs corregidos, mejoras implementadas y vías de evolución para una aplicación de optimización Windows robusta y escalable.</p>
   </header>
@@ -713,22 +713,24 @@
   <div class="dev-banner">
     <div class="dev-banner-icon">🧪</div>
     <div>
-      <div class="dev-banner-title">Estado actual — v2.3 pública / v2.4.0 rama developer interna</div>
+      <div class="dev-banner-title">Estado actual — v2.3.0 pública estable / v2.4.0 completada, pendiente release</div>
       <div class="dev-banner-desc">
-        <code>SysOpt v2.3</code> completamente operativo como versión pública estable. La rama developer
-        <code>v2.4.0</code> está en progreso activo: optimizaciones FIFO de RAM completadas y verificadas,
-        bugs de estabilidad corregidos. Aún no publicada como release estable.
+        <code>SysOpt v2.3.0</code> completamente operativo como versión pública estable. La rama developer
+        <code>v2.4.0</code> está completa: optimizaciones FIFO de RAM implementadas y verificadas,
+        pre-cálculo de top-files activo durante el escaneo, y todos los bugs críticos corregidos.
+        Pendiente de publicar como release estable oficial.
       </div>
       <div class="dev-banner-chips">
-        <span class="dchip done">✓ v2.3 estable publicada</span>
+        <span class="dchip done">✓ v2.3.0 estable publicada</span>
         <span class="dchip done">✓ RAM-01…06 implementados</span>
         <span class="dchip done">✓ FIFO-01 save streaming</span>
         <span class="dchip done">✓ FIFO-02 load streaming</span>
+        <span class="dchip done">✓ FIFO-03 terminación limpia</span>
         <span class="dchip done">✓ Fix toggle colapsar/expandir</span>
         <span class="dchip done">✓ Fix Set-Content → WriteAllText</span>
-        <span class="dchip wip">⚡ v2.4.0 en desarrollo</span>
-        <span class="dchip">A2 Top-files pre-cálculo pendiente</span>
-        <span class="dchip">B5 Deduplicación SHA256 pendiente</span>
+        <span class="dchip done">✓ A2 Top-files pre-cálculo implementado</span>
+        <span class="dchip">B5 Deduplicación SHA256 → v2.5.0</span>
+        <span class="dchip">Error boundary global → v2.5.0</span>
       </div>
     </div>
   </div>
@@ -1011,12 +1013,12 @@
         </div>
       </div>
       <div class="items-grid">
-        <div class="item-card">
+        <div class="item-card done">
           <div class="item-id-box">A2</div>
           <div class="item-content">
             <div class="item-name">Top 10 archivos — pre-cálculo en escaneo</div>
-            <div class="item-desc">Calcular los archivos más grandes durante el escaneo principal, eliminando el delay al hacer clic en una carpeta. Trasladado a v2.4.x.</div>
-            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">UX</span><span class="tag">Pre-cálculo</span></div>
+            <div class="item-desc">Calcular los archivos más grandes durante el escaneo principal mediante acumulador en background, eliminando el delay al hacer clic en una carpeta. Implementado en v2.4.0 como [NEW-02].</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Implementado en v2.4.0</span><span class="tag">UX</span><span class="tag">Pre-cálculo</span></div>
           </div>
         </div>
         <div class="item-card">
@@ -1308,28 +1310,27 @@ LOH compaction + EmptyWorkingSet post-op</div>
         </ul>
       </div>
 
-      <div class="tl-item current">
-        <div class="tl-ver">v2.4.0 · EN PROGRESO ⚡ — RAMA DEVELOPER</div>
-        <div class="tl-title">FIFO Streaming + Estabilidad de runspaces</div>
+      <div class="tl-item done">
+        <div class="tl-ver">v2.4.0 · COMPLETADO ✓ — RAMA DEVELOPER</div>
+        <div class="tl-title">FIFO Streaming + Pre-cálculo + Estabilidad</div>
         <ul class="tl-list">
           <li class="done-li">✓ FIFO-01: Save streaming sin RAM pico (ConcurrentQueue + StreamWriter)</li>
           <li class="done-li">✓ FIFO-02: Load entries con ConvertFrom-Json nativo (sin Newtonsoft)</li>
           <li class="done-li">✓ FIFO-03: Terminación limpia garantizada en finally</li>
           <li class="done-li">✓ Fix: Set-Content → File::WriteAllText en Save-Settings</li>
           <li class="done-li">✓ Fix: Toggle colapsar/expandir + Items.Refresh()</li>
-          <li>A2: Pre-cálculo de top 10 archivos durante escaneo</li>
-          <li>Error boundary global con UnhandledException</li>
+          <li class="done-li">✓ A2: Pre-cálculo de top 10 archivos durante escaneo (acumulador en background)</li>
         </ul>
       </div>
 
       <div class="tl-item next">
         <div class="tl-ver">v2.5.0 · PLANIFICADO</div>
-        <div class="tl-title">Deduplicación y funcionalidades avanzadas</div>
+        <div class="tl-title">Deduplicación, estabilidad avanzada y funcionalidades extra</div>
         <ul class="tl-list">
           <li>B5: Deduplicación por SHA256 en archivos grandes (&gt;10 MB)</li>
-          <li>A2: Pre-cálculo de top 10 archivos (si no entra en v2.4.0)</li>
-          <li>Error boundary global con UnhandledException</li>
-          <li>Logging estructurado a archivo rotante</li>
+          <li>Error boundary global con UnhandledException en AppDomain</li>
+          <li>Logging estructurado a archivo rotante en %TEMP%\SysOpt.log</li>
+          <li>WMI con timeout configurable via CimSession (5 s)</li>
         </ul>
       </div>
 
@@ -1350,10 +1351,10 @@ LOH compaction + EmptyWorkingSet post-op</div>
 
   <!-- ── Footer ── -->
   <footer>
-    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v2.3 estable · v2.4.0 developer en progreso</p>
+    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v2.3.0 estable · v2.4.0 completada, pendiente release estable</p>
     <div>
-      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>v2.3 estable</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>v2.4.0 dev en progreso</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>v2.3.0 estable</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>v2.4.0 completada</span>
       <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>FIFO streaming activo</span>
       <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>C# inline types</span>
       <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>Multi-runspace</span>
