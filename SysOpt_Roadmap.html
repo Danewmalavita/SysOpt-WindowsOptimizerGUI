@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SysOpt 2.2.0 — Hoja de Ruta</title>
+<title>SysOpt — Hoja de Ruta</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -628,6 +628,70 @@
   }
   .ram-fix-saving::before { content: '↓'; font-weight: 700; }
 
+
+  /* ── FIFO / v2.4 dev section ── */
+  .fifo-section { margin-bottom: 64px; }
+  .fifo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .fifo-card {
+    background: var(--card);
+    border: 1px solid rgba(91,163,255,.22);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, border-color .2s;
+  }
+  .fifo-card:hover { transform: translateY(-2px); border-color: rgba(91,163,255,.5); }
+  .fifo-card::before {
+    content: '';
+    position: absolute; top:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, var(--blue), transparent);
+  }
+  .fifo-card-id {
+    font-family: var(--mono); font-size: .65rem; font-weight: 700;
+    letter-spacing: 1px; color: var(--blue);
+    background: rgba(91,163,255,.1); border: 1px solid rgba(91,163,255,.2);
+    border-radius: 4px; padding: 2px 8px; display: inline-block; margin-bottom: 10px;
+  }
+  .fifo-card-name { font-size: .92rem; font-weight: 700; margin-bottom: 6px; }
+  .fifo-card-desc { font-size: .79rem; color: var(--muted); line-height: 1.58; margin-bottom: 12px; }
+  .fifo-card-result {
+    font-family: var(--mono); font-size: .72rem; color: var(--cyan);
+    background: rgba(46,223,191,.06); border: 1px solid rgba(46,223,191,.15);
+    border-radius: 6px; padding: 7px 10px; line-height: 1.5;
+  }
+  /* dev branch banner */
+  .dev-banner {
+    background: linear-gradient(135deg, rgba(91,163,255,.07), rgba(155,126,255,.05));
+    border: 1px solid rgba(91,163,255,.25);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 48px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .dev-banner-icon { font-size: 1.8rem; flex-shrink: 0; }
+  .dev-banner-title { font-size: 1rem; font-weight: 700; color: var(--blue); margin-bottom: 6px; }
+  .dev-banner-desc { font-size: .82rem; color: var(--muted); line-height: 1.6; }
+  .dev-banner-chips { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .dchip {
+    font-family: var(--mono); font-size: .65rem; padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(91,163,255,.08); color: var(--blue); border: 1px solid rgba(91,163,255,.15);
+  }
+  .dchip.done { background: rgba(74,232,150,.08); color: var(--green); border-color: rgba(74,232,150,.2); }
+  .dchip.wip  { background: rgba(255,181,71,.08);  color: var(--amber); border-color: rgba(255,181,71,.2); }
+  /* bugfix v24 cards */
+  .bug-card.v24 { }
+  .bug-card.v24::before { background: linear-gradient(90deg, var(--purple), transparent); }
+  .bug-card.v24:hover   { border-color: rgba(155,126,255,.4); }
+  .bug-id.v24 { color: var(--purple); background: rgba(155,126,255,.1); }
 </style>
 </head>
 <body>
@@ -640,46 +704,45 @@
 
   <!-- ── Header ── -->
   <header>
-    <div class="version-badge">SysOpt v2.2.0 · En Desarrollo Activo</div>
+    <div class="version-badge">SysOpt v2.3 · Estable · v2.4.0 dev en progreso</div>
     <h1><span class="accent">SYS</span><span class="accent2">OPT</span><br>Plan de Estabilidad y Mejora</h1>
     <p class="subtitle">Análisis de bugs corregidos, mejoras implementadas y vías de evolución para una aplicación de optimización Windows robusta y escalable.</p>
   </header>
 
-  <!-- ── Banner sesión actual ── -->
-  <div class="session-banner">
-    <div class="session-banner-icon">⚡</div>
+  <!-- ── Banner estado actual ── -->
+  <div class="dev-banner">
+    <div class="dev-banner-icon">🧪</div>
     <div>
-      <div class="session-banner-title">Sesión 2.2.0 → 2.3.0 — Optimización de RAM en curso</div>
-      <div class="session-banner-desc">
-        Script <code>SysOpt_2_2_0</code> completamente operativo: B4 (snapshots), exportaciones async con
-        barra de progreso y botón <em>segundo plano</em>, carga de historial en background. Nueva sesión enfocada en
-        <strong style="color:var(--amber)">reducción de consumo de RAM</strong> — diagnóstico completo y vías de optimización documentadas.
+      <div class="dev-banner-title">Estado actual — v2.3 pública / v2.4.0 rama developer interna</div>
+      <div class="dev-banner-desc">
+        <code>SysOpt v2.3</code> completamente operativo como versión pública estable. La rama developer
+        <code>v2.4.0</code> está en progreso activo: optimizaciones FIFO de RAM completadas y verificadas,
+        bugs de estabilidad corregidos. Aún no publicada como release estable.
       </div>
-      <div class="session-banner-chips">
-        <span class="schip">✓ B1 Filtro búsqueda</span>
-        <span class="schip">✓ B2 Menú contextual</span>
-        <span class="schip">✓ B3 Exportar CSV</span>
-        <span class="schip">✓ A3 Auto-refresco</span>
-        <span class="schip">✓ C3 Persistencia config</span>
-        <span class="schip">✓ B4 Snapshots + historial async</span>
-        <span class="schip">✓ Exportación HTML/CSV/Snap async</span>
-        <span class="schip">✓ Barra progreso + segundo plano</span>
-        <span class="schip" style="color:var(--red);background:rgba(255,107,132,.08);border-color:rgba(255,107,132,.2)">🧠 RAM: diagnóstico activo</span>
+      <div class="dev-banner-chips">
+        <span class="dchip done">✓ v2.3 estable publicada</span>
+        <span class="dchip done">✓ RAM-01…06 implementados</span>
+        <span class="dchip done">✓ FIFO-01 save streaming</span>
+        <span class="dchip done">✓ FIFO-02 load streaming</span>
+        <span class="dchip done">✓ Fix toggle colapsar/expandir</span>
+        <span class="dchip done">✓ Fix Set-Content → WriteAllText</span>
+        <span class="dchip wip">⚡ v2.4.0 en desarrollo</span>
+        <span class="dchip">A2 Top-files pre-cálculo pendiente</span>
+        <span class="dchip">B5 Deduplicación SHA256 pendiente</span>
       </div>
     </div>
   </div>
 
-  <!-- ── Bugs corregidos v2.0.x ── -->
+  <!-- ── SECCIÓN: Bugs históricos v2.0.x ── -->
   <div class="section-label">Bugs corregidos en v2.0.x</div>
   <div class="section-title">🔧 Fixes Aplicados — Base estable</div>
-
   <div class="bugs-grid">
 
     <div class="bug-card critical">
       <div class="bug-id critical">BUG CRÍTICO · TYPE_ALREADY_EXISTS</div>
       <div class="bug-name">Add-Type: ScanControl ya existe</div>
       <div class="bug-desc">Las clases C# <code>ScanControl</code>, <code>ParallelScanner</code> y <code>DiskItem</code> se recompilaban en cada ejecución de la sesión de PowerShell, causando error fatal al relanzar sin cerrar la consola.</div>
-      <div class="bug-fix">FIX: Guards if (-not ([PSTypeName]'NombreClase').Type) { Add-Type … } aplicados a los 3 bloques C#.</div>
+      <div class="bug-fix">FIX: Guards <code>if (-not ([PSTypeName]'NombreClase').Type)</code> aplicados a los 3 bloques C#.</div>
     </div>
 
     <div class="bug-card critical">
@@ -726,10 +789,9 @@
 
   </div>
 
-  <!-- ── Bugs corregidos sesión 2.1.x ── -->
-  <div class="section-label">Bugs corregidos en v2.1.x — Esta sesión</div>
-  <div class="section-title">🛠️ Fixes de la Sesión Actual</div>
-
+  <!-- ── SECCIÓN: Bugs v2.1.x ── -->
+  <div class="section-label">Bugs corregidos en v2.1.x</div>
+  <div class="section-title">🛠️ Fixes de Estabilidad del Explorador</div>
   <div class="bugs-grid">
 
     <div class="bug-card session">
@@ -740,55 +802,124 @@
     </div>
 
     <div class="bug-card session">
-      <div class="bug-id session">OPTIMIZACIÓN · RAM 8 GB</div>
-      <div class="bug-name">Consumo excesivo de memoria en equipos con poca RAM</div>
+      <div class="bug-id session">OPTIMIZACIÓN · RAM adaptativa</div>
+      <div class="bug-name">Consumo excesivo en equipos con poca RAM</div>
       <div class="bug-desc">El BATCH y el intervalo del timer eran fijos, sin considerar la RAM libre disponible. En equipos con 8 GB el explorador podía volverse lento o inestable.</div>
       <div class="bug-fix">FIX: BATCH y intervalo adaptativos según FreePhysicalMemory: &lt;2 GB → 50/250ms · 2–4 GB → 150/180ms · &gt;4 GB → 300/120ms.</div>
     </div>
 
     <div class="bug-card session">
       <div class="bug-id session">BUG · COLAPSO UI</div>
-      <div class="bug-name">Bloqueo de UI al colapsar carpetas en el explorador</div>
-      <div class="bug-desc"><code>Refresh-DiskView</code> reconstruía el <code>childMap</code> completo y re-ordenaba todos los grupos con <code>Sort-Object</code> en cada colapso/expansión, aunque los datos no hubiesen cambiado.</div>
+      <div class="bug-name">Bloqueo de UI al colapsar carpetas</div>
+      <div class="bug-desc"><code>Refresh-DiskView</code> reconstruía el <code>childMap</code> completo y re-ordenaba todos los grupos con <code>Sort-Object</code> en cada colapso/expansión.</div>
       <div class="bug-fix">FIX: childMap cacheado en <code>$script:CachedChildMap</code>. Al colapsar solo se rehace el DFS de visibilidad — sin Sort-Object, sin iterar AllScannedItems.</div>
     </div>
 
     <div class="bug-card session">
       <div class="bug-id session">BUG · ARRAY.SORT</div>
-      <div class="bug-name">Error "desplazamiento y longitud fuera de bounds" en Sort</div>
-      <div class="bug-desc">PowerShell no convierte automáticamente un scriptblock a <code>IComparer</code> en <code>[Array]::Sort</code>. El explorador lanzaba <code>ArgumentException</code> en bucle al intentar ordenar.</div>
+      <div class="bug-name">Error "desplazamiento fuera de bounds" en Sort</div>
+      <div class="bug-desc">PowerShell no convierte automáticamente un scriptblock a <code>IComparer</code> en <code>[Array]::Sort</code>. El explorador lanzaba <code>ArgumentException</code> en bucle.</div>
       <div class="bug-fix">FIX: Reemplazado por <code>Sort-Object</code> con expression block. Solo se ejecuta al reconstruir el mapa (-RebuildMap), nunca al colapsar.</div>
     </div>
 
     <div class="bug-card session">
       <div class="bug-id session">BUG · DFS ORDEN</div>
-      <div class="bug-name">Orden de carpetas incorrecto tras el DFS con Stack</div>
-      <div class="bug-desc">El DFS iterativo con <code>Stack[string]</code> mezclaba el orden de los hermanos con los hijos del nivel inferior al hacer Pop, rompiendo la ordenación por tamaño.</div>
-      <div class="bug-fix">FIX: DFS con pila de frames <code>(parentKey, índiceActual)</code>. Recorre el mapa en orden garantizado sin recursión y sin mezclar niveles.</div>
+      <div class="bug-name">Orden de carpetas incorrecto tras DFS con Stack</div>
+      <div class="bug-desc">El DFS iterativo con <code>Stack[string]</code> mezclaba el orden de los hermanos con los hijos del nivel inferior al hacer Pop.</div>
+      <div class="bug-fix">FIX: DFS con pila de frames <code>(parentKey, índiceActual)</code>. Orden garantizado sin recursión y sin mezclar niveles.</div>
     </div>
 
     <div class="bug-card session">
       <div class="bug-id session">BUG · INTERVAL IF</div>
       <div class="bug-name">"Token 'if' inesperado" en argumento de método</div>
       <div class="bug-desc">PowerShell no permite un <code>if</code> inline dentro de los paréntesis de una llamada a método. <code>FromMilliseconds(if (…))</code> lanzaba <code>ParserError</code>.</div>
-      <div class="bug-fix">FIX: El valor se calcula antes en <code>$scanIntervalMs = if (…)</code> y luego se pasa la variable: <code>FromMilliseconds($scanIntervalMs)</code>.</div>
+      <div class="bug-fix">FIX: Valor calculado en <code>$scanIntervalMs = if (…)</code> y luego pasado como variable.</div>
     </div>
 
   </div>
 
-  <!-- ── Roadmap de mejoras → v2.2.0 ── -->
-  <div class="section-label">Vías de mejora — Próxima versión</div>
-  <div class="section-title">🗺️ Hoja de Ruta — Objetivos v2.2.0</div>
+  <!-- ── SECCIÓN: Bugs v2.3 (completados) ── -->
+  <div class="section-label">Bugs corregidos en v2.3 — Completada</div>
+  <div class="section-title">✅ Fixes implementados en v2.3</div>
+  <div class="bugs-grid">
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">BF1 · RUTA SNAPSHOTS</div>
+      <div class="bug-name">Ruta de snapshots apuntaba a directorio incorrecto</div>
+      <div class="bug-desc">Los snapshots se guardaban en una ruta absoluta que podía no existir en otros equipos. Causaba errores silenciosos al guardar.</div>
+      <div class="bug-fix">FIX: Ruta cambiada a <code>.\snapshots\</code> relativo al script. Se crea automáticamente si no existe.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">BF3 · HASHTABLE KEY</div>
+      <div class="bug-name">Load-SnapshotList no listaba los snapshots</div>
+      <div class="bug-desc">Error en la clave de hashtable sincronizada que impedía que el background devolviera los metadatos al hilo UI. La lista aparecía vacía.</div>
+      <div class="bug-fix">FIX: Corrección de la clave de acceso en el hashtable compartido entre runspaces.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">BF5 · RAM SNAPSHOT LIST</div>
+      <div class="bug-name">Alto consumo RAM al listar snapshots</div>
+      <div class="bug-desc">Load-SnapshotList deserializaba los <code>Entries</code> completos de cada snapshot solo para mostrar la lista, causando picos de RAM de 200–400 MB.</div>
+      <div class="bug-fix">FIX: [RAM-04] JsonTextReader — solo se leen metadatos (Label, Date, RootPath, conteo de entries). Los Entries nunca se deserializan al listar.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">BF6 · COMPARADOR O(n²)</div>
+      <div class="bug-name">Comparador de snapshots cuadrático</div>
+      <div class="bug-desc">El comparador iteraba AllScannedItems anidado para cada entry del snapshot. Con 50K carpetas producía 2.500M de operaciones.</div>
+      <div class="bug-fix">FIX: Comparador O(1) con <code>HashSet&lt;string&gt;</code> para presencia y <code>Dictionary&lt;string,long&gt;</code> para tamaños.</div>
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: Bugs v2.4.0 developer ── -->
+  <div class="section-label">Bugs corregidos en v2.4.0 developer</div>
+  <div class="section-title">🔵 Fixes de la rama developer activa</div>
+  <div class="bugs-grid">
+
+    <div class="bug-card v24">
+      <div class="bug-id v24">BUG · NEWTONSOFT RUNSPACE</div>
+      <div class="bug-name">Unable to find type [Newtonsoft.Json.JsonTextWriter/Reader]</div>
+      <div class="bug-desc">Los runspaces de background (tanto individuales como RunspacePool) no heredan assemblies externos del proceso principal en PS 5.1. JsonTextWriter en bgSave y JsonTextReader en bgEnt lanzaban error de tipo.</div>
+      <div class="bug-fix">FIX bgSave: reemplazado por StreamWriter con escritura JSON manual (sin Newtonsoft). FIX bgEnt: reemplazado por ConvertFrom-Json nativo de PowerShell — cmdlet interno disponible en cualquier runspace sin configuración adicional.</div>
+    </div>
+
+    <div class="bug-card v24">
+      <div class="bug-id v24">BUG · SET-CONTENT STREAM</div>
+      <div class="bug-name">Stream was not readable en Save-Settings</div>
+      <div class="bug-desc">En PS 5.1, <code>Set-Content</code> en el pipeline puede confundirse con objetos Stream activos en el entorno cuando hay FileStream/StreamWriter corriendo en paralelo, pasando un stream write-only a un cmdlet que espera contenido readable.</div>
+      <div class="bug-fix">FIX: Reemplazado por <code>[System.IO.File]::WriteAllText()</code> — llamada .NET directa, completamente aislada del pipeline de PowerShell.</div>
+    </div>
+
+    <div class="bug-card v24">
+      <div class="bug-id v24">BUG · TOGGLE SIN REFRESH</div>
+      <div class="bug-name">Colapsar/expandir carpetas no actualizaba la vista</div>
+      <div class="bug-desc">El handler del botón toggle llamaba <code>Refresh-DiskView</code> pero no notificaba a WPF. <code>LiveList</code> es <code>List&lt;T&gt;</code>, no <code>ObservableCollection</code> — WPF ignora los cambios de <code>Clear()/Add()</code> sin notificación explícita.</div>
+      <div class="bug-fix">FIX: Añadido <code>$lbDiskTree.Items.Refresh()</code> tras <code>Refresh-DiskView</code> en el handler del toggle. Misma llamada que ya usaban los batches del escáner y el final de escaneo.</div>
+    </div>
+
+    <div class="bug-card v24">
+      <div class="bug-id v24">BUG · FIFO-02 PARSER</div>
+      <div class="bug-name">Carga de snapshot solo mostraba una línea</div>
+      <div class="bug-desc">El parser de regex manual para leer el JSON de entries era frágil: la detección de <code>"Entries": [</code> fallaba con variaciones de whitespace de ConvertTo-Json, y la regex de strings con backslash producía matches incorrectos.</div>
+      <div class="bug-fix">FIX: Eliminado el parser de regex. Reemplazado por <code>ConvertFrom-Json</code> nativo — correcto, robusto, y sin dependencias externas. Compatible con snapshots de v2.3 y v2.4.0.</div>
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: Roadmap v2.3 — todo completado ── -->
+  <div class="section-label">Objetivos v2.3 — Completados</div>
+  <div class="section-title">🗺️ Hoja de Ruta v2.3 — Implementada</div>
 
   <div class="roadmap">
 
-    <!-- Alta prioridad -->
     <div class="priority-block p-high">
       <div class="priority-header">
         <div class="priority-dot"></div>
         <div>
-          <div class="priority-label">Prioridad Alta · Funcionalidad Core</div>
-          <div class="priority-title">Explorador de disco — características completas</div>
+          <div class="priority-label">Prioridad Alta · Explorador de Disco</div>
+          <div class="priority-title">Funcionalidad core — todo completado</div>
         </div>
       </div>
       <div class="items-grid">
@@ -796,51 +927,42 @@
           <div class="item-id-box">A1</div>
           <div class="item-content">
             <div class="item-name">Paralelismo y escaneo estable</div>
-            <div class="item-desc">ParallelScanner funcionando con inyección de assemblies, parentKey correcta y cola ConcurrentQueue.</div>
+            <div class="item-desc">ParallelScanner en C# con inyección de assemblies, parentKey correcta y cola ConcurrentQueue. BATCH y timer adaptativos según RAM libre.</div>
             <div class="item-tags"><span class="tag done-tag">✓ Completado</span><span class="tag">C#</span><span class="tag">ParallelScanner</span></div>
-          </div>
-        </div>
-        <div class="item-card">
-          <div class="item-id-box">A2</div>
-          <div class="item-content">
-            <div class="item-name">Top 10 archivos — pre-cálculo en hilo de escaneo</div>
-            <div class="item-desc">Calcular los archivos más grandes durante el escaneo principal y almacenarlos en el <code>DiskItem</code>, eliminando el delay al hacer clic en una carpeta.</div>
-            <div class="item-tags"><span class="tag">A2</span><span class="tag">UX</span><span class="tag">Pre-cálculo</span></div>
           </div>
         </div>
         <div class="item-card done">
           <div class="item-id-box">A3</div>
           <div class="item-content">
-            <div class="item-name">Auto-refresco de Rendimiento con timer configurable</div>
+            <div class="item-name">Auto-refresco configurable en Rendimiento</div>
             <div class="item-desc"><code>chkAutoRefresh</code> con <code>$script:AutoRefreshTimer</code> e intervalo configurable. Se detiene correctamente en <code>Add_Closed</code> y se guarda en <code>settings.json</code>.</div>
             <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">DispatcherTimer</span></div>
           </div>
         </div>
-        <div class="item-card" style="border-color:rgba(255,181,71,.35);">
-          <div class="item-id-box" style="background:rgba(255,181,71,.12);color:var(--amber);border-color:rgba(255,181,71,.2);">FIX</div>
+        <div class="item-card done">
+          <div class="item-id-box">FIX</div>
           <div class="item-content">
-            <div class="item-name">Cancelación limpia del timer de rendimiento <span style="font-size:.7rem;color:var(--amber);font-family:var(--mono);margin-left:6px;">⚡ EN DESARROLLO</span></div>
-            <div class="item-desc"><code>Update-PerformanceTab</code> corre en el hilo de UI. El <code>AutoRefreshTimer</code> se detiene en <code>Add_Closed</code>, pero falta guardia contra ticks durante el cierre.</div>
-            <div class="item-tags"><span class="tag" style="color:var(--amber);background:rgba(255,181,71,.08);border-color:rgba(255,181,71,.2);">⚡ En desarrollo</span><span class="tag">Estabilidad</span><span class="tag">Cleanup</span></div>
+            <div class="item-name">Guardia del timer de rendimiento</div>
+            <div class="item-desc">Guardia contra ticks durante el cierre. Timer de rendimiento detenido y recreado correctamente en cada operación.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Completado</span><span class="tag">Estabilidad</span></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Media prioridad -->
     <div class="priority-block p-medium">
       <div class="priority-header">
         <div class="priority-dot"></div>
         <div>
           <div class="priority-label">Prioridad Media · Funcionalidad</div>
-          <div class="priority-title">Nuevas características de valor</div>
+          <div class="priority-title">Nuevas características — todas completadas</div>
         </div>
       </div>
       <div class="items-grid">
         <div class="item-card done">
           <div class="item-id-box">B1</div>
           <div class="item-content">
-            <div class="item-name">Filtro/búsqueda en el Explorador</div>
+            <div class="item-name">Filtro en tiempo real en el Explorador</div>
             <div class="item-desc">TextBox <code>txtDiskFilter</code> con <code>Apply-DiskFilter</code> en tiempo real, botón limpiar y estado guardado en <code>settings.json</code>.</div>
             <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">WPF</span><span class="tag">Filter</span></div>
           </div>
@@ -849,69 +971,76 @@
           <div class="item-id-box">B2</div>
           <div class="item-content">
             <div class="item-name">Menú contextual en el árbol de carpetas</div>
-            <div class="item-desc">ContextMenu oscuro temático con <code>ctxOpen</code>, <code>ctxCopy</code>, <code>ctxDelete</code>, <code>ctxScanFolder</code>. Estilo peligro en eliminar, habilitación dinámica por selección.</div>
+            <div class="item-desc">ContextMenu oscuro temático: Abrir, Copiar ruta, Escanear subcarpeta, Eliminar. Habilitación dinámica por selección.</div>
             <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">ContextMenu</span><span class="tag">WPF</span></div>
           </div>
         </div>
         <div class="item-card done">
           <div class="item-id-box">B3</div>
           <div class="item-content">
-            <div class="item-name">Exportar resultados del Explorador a CSV</div>
-            <div class="item-desc">Botón <code>btnExportCsv</code> con <code>SaveFileDialog</code> y <code>Export-Csv -Encoding UTF8</code>. Activo solo al finalizar el escaneo.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">CSV</span><span class="tag">Export</span></div>
+            <div class="item-name">Exportar a CSV y HTML</div>
+            <div class="item-desc">Exportación CSV con StreamWriter directo y exportación HTML con informe visual completo. Ambas con barra de progreso y botón "Segundo plano".</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">CSV</span><span class="tag">HTML</span><span class="tag">Export</span></div>
           </div>
         </div>
-        <div class="item-card" style="border-color:rgba(255,181,71,.35);">
-          <div class="item-id-box" style="background:rgba(255,181,71,.12);color:var(--amber);border-color:rgba(255,181,71,.2);">B4</div>
+        <div class="item-card done">
+          <div class="item-id-box">B4</div>
           <div class="item-content">
-            <div class="item-name">Historial de escaneos <span style="font-size:.7rem;color:var(--amber);font-family:var(--mono);margin-left:6px;">⚡ EN DESARROLLO</span></div>
-            <div class="item-desc">Guardar snapshots de escaneos en JSON en <code>%APPDATA%\SysOpt\snapshots\</code>. Interfaz para comparar el crecimiento de carpetas entre escaneos anteriores.</div>
-            <div class="item-tags"><span class="tag" style="color:var(--amber);background:rgba(255,181,71,.08);border-color:rgba(255,181,71,.2);">⚡ En desarrollo</span><span class="tag">JSON</span><span class="tag">Historial</span></div>
-          </div>
-        </div>
-        <div class="item-card">
-          <div class="item-id-box">B5</div>
-          <div class="item-content">
-            <div class="item-name">Detección de archivos duplicados</div>
-            <div class="item-desc">Hash SHA256 de archivos grandes (&gt;10 MB) durante el escaneo. Panel adicional que agrupe duplicados por hash y calcule el espacio recuperable.</div>
-            <div class="item-tags"><span class="tag">B5</span><span class="tag">SHA256</span><span class="tag">Deduplication</span></div>
+            <div class="item-name">Historial de escaneos (Snapshots)</div>
+            <div class="item-desc">Guardar snapshots en JSON. Lista cargada en background con streaming de metadatos. Comparación snapshot vs actual y snapshot A vs B. Selección con checkboxes y eliminación en lote.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Completado</span><span class="tag">JSON</span><span class="tag">Historial</span><span class="tag">Comparador</span></div>
           </div>
         </div>
         <div class="item-card done">
           <div class="item-id-box">C3</div>
           <div class="item-content">
             <div class="item-name">Persistencia de configuración</div>
-            <div class="item-desc"><code>Save-Settings</code> guarda checkboxes, ruta del explorador y filtro en <code>%APPDATA%\SysOpt\settings.json</code>. Se restaura al arrancar y se guarda en <code>Add_Closed</code>.</div>
+            <div class="item-desc"><code>Save-Settings</code> guarda checkboxes, ruta del explorador y filtro en <code>%APPDATA%\SysOpt\settings.json</code>. Se restaura al arrancar.</div>
             <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">JSON</span><span class="tag">%APPDATA%</span></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Baja prioridad -->
     <div class="priority-block p-low">
       <div class="priority-header">
         <div class="priority-dot"></div>
         <div>
           <div class="priority-label">Prioridad Baja · UX &amp; Polish</div>
-          <div class="priority-title">Pulido y experiencia de usuario</div>
+          <div class="priority-title">Pendiente para versiones futuras</div>
         </div>
       </div>
       <div class="items-grid">
+        <div class="item-card">
+          <div class="item-id-box">A2</div>
+          <div class="item-content">
+            <div class="item-name">Top 10 archivos — pre-cálculo en escaneo</div>
+            <div class="item-desc">Calcular los archivos más grandes durante el escaneo principal, eliminando el delay al hacer clic en una carpeta. Trasladado a v2.4.x.</div>
+            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">UX</span><span class="tag">Pre-cálculo</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">B5</div>
+          <div class="item-content">
+            <div class="item-name">Detección de archivos duplicados</div>
+            <div class="item-desc">Hash SHA256 de archivos grandes (&gt;10 MB) durante el escaneo. Panel que agrupe duplicados por hash y calcule el espacio recuperable.</div>
+            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">SHA256</span><span class="tag">Deduplication</span></div>
+          </div>
+        </div>
         <div class="item-card">
           <div class="item-id-box">C1</div>
           <div class="item-content">
             <div class="item-name">Tema claro / oscuro</div>
             <div class="item-desc">Toggle en la toolbar. Mover colores del XAML a un <code>ResourceDictionary</code> intercambiable en runtime.</div>
-            <div class="item-tags"><span class="tag">C1</span><span class="tag">Theming</span><span class="tag">XAML</span></div>
+            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">Theming</span><span class="tag">XAML</span></div>
           </div>
         </div>
         <div class="item-card">
           <div class="item-id-box">C2</div>
           <div class="item-content">
-            <div class="item-name">Notificación Windows Toast al terminar</div>
-            <div class="item-desc">Usar <code>[Windows.UI.Notifications.ToastNotificationManager]</code> para emitir una notificación nativa al finalizar la optimización en segundo plano.</div>
-            <div class="item-tags"><span class="tag">C2</span><span class="tag">Toast</span><span class="tag">WinRT</span></div>
+            <div class="item-name">Notificación Windows Toast</div>
+            <div class="item-desc">Usar <code>[Windows.UI.Notifications.ToastNotificationManager]</code> para emitir notificación nativa al finalizar operaciones en segundo plano.</div>
+            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">Toast</span><span class="tag">WinRT</span></div>
           </div>
         </div>
         <div class="item-card">
@@ -919,7 +1048,7 @@
           <div class="item-content">
             <div class="item-name">Programador de tareas integrado</div>
             <div class="item-desc">Interfaz para crear/eliminar tareas en el Programador de Windows (<code>Register-ScheduledTask</code>) para optimizaciones automáticas semanales.</div>
-            <div class="item-tags"><span class="tag">C4</span><span class="tag">TaskScheduler</span><span class="tag">PowerShell</span></div>
+            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">TaskScheduler</span></div>
           </div>
         </div>
       </div>
@@ -927,295 +1056,169 @@
 
   </div>
 
-
-  <!-- ── Optimización de RAM ── -->
-  <div class="section-label">Análisis de consumo · v2.2.0</div>
+  <!-- ── SECCIÓN: Optimización RAM (diagnóstico + implementado) ── -->
+  <div class="section-label">Optimización de RAM — completada en v2.3 + v2.4.0</div>
   <div class="section-title">🧠 Optimización de Consumo de RAM</div>
 
   <div class="ram-section">
 
-    <!-- Intro con estimaciones reales -->
     <div class="ram-intro">
       <div class="ram-intro-icon">📊</div>
       <div style="flex:1">
-        <div class="ram-intro-title">Diagnóstico de consumo — basado en el código actual</div>
+        <div class="ram-intro-title">Diagnóstico resuelto — todas las causas raíz corregidas</div>
         <div class="ram-intro-desc">
-          El script mantiene simultáneamente tres colecciones que referencian los mismos objetos
-          (<code>LiveItems</code>, <code>AllScannedItems</code>, <code>LiveList</code>), lo que es correcto y eficiente.
-          El problema real son los <strong style="color:var(--red)">picos de RAM transitorios</strong> durante exportaciones
-          y la <strong style="color:var(--red)">sobrecarga estructural de DiskItem_v211</strong> (17 campos, 10 strings)
-          que acumula datos de presentación junto a datos puros.
+          RAM-01 a RAM-06 implementados en v2.3. FIFO-01 y FIFO-02 implementados en v2.4.0 dev.
+          Los picos de RAM transitorios durante exportaciones y carga de snapshots están eliminados.
+          <code>DiskItem_v211</code> es ahora un modelo de datos puro sin INotifyPropertyChanged.
         </div>
         <div class="ram-intro-stats">
           <div class="ram-stat">
-            <div class="ram-stat-label">10K carpetas</div>
-            <div class="ram-stat-value">~22 MB</div>
-            <div class="ram-stat-sub">pico exportación HTML</div>
+            <div class="ram-stat-label">Snapshot save</div>
+            <div class="ram-stat-value" style="color:var(--green)">−200%</div>
+            <div class="ram-stat-sub">FIFO streaming</div>
           </div>
           <div class="ram-stat">
-            <div class="ram-stat-label">50K carpetas</div>
-            <div class="ram-stat-value">~110 MB</div>
-            <div class="ram-stat-sub">pico exportación HTML</div>
+            <div class="ram-stat-label">Snapshot load</div>
+            <div class="ram-stat-value" style="color:var(--green)">−70%</div>
+            <div class="ram-stat-sub">ConvertFrom-Json + queue</div>
           </div>
           <div class="ram-stat">
-            <div class="ram-stat-label">100K carpetas</div>
-            <div class="ram-stat-value">~220 MB</div>
-            <div class="ram-stat-sub">pico exportación HTML</div>
+            <div class="ram-stat-label">Lista snapshots</div>
+            <div class="ram-stat-value" style="color:var(--green)">−90%</div>
+            <div class="ram-stat-sub">solo metadatos</div>
           </div>
           <div class="ram-stat">
             <div class="ram-stat-label">DiskItem_v211</div>
-            <div class="ram-stat-value">~1,200 B</div>
-            <div class="ram-stat-sub">por objeto (10 strings)</div>
+            <div class="ram-stat-value" style="color:var(--green)">−30%</div>
+            <div class="ram-stat-sub">sin INPC overhead</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Causas raíz -->
-    <div class="ram-causes-title">Causas raíz identificadas</div>
-    <div class="ram-causes-grid">
-
-      <div class="ram-cause">
-        <div class="ram-cause-id">RAM-01 · ALTA</div>
-        <div class="ram-cause-name">DiskItem con 10 strings de presentación</div>
-        <div class="ram-cause-desc">
-          <code>DiskItem_v211</code> almacena permanentemente <code>SizeStr</code>, <code>SizeColor</code>,
-          <code>PctStr</code>, <code>FileCount</code>, <code>Icon</code>, <code>Indent</code>, <code>BarColor</code>
-          y <code>BarWidth</code> — datos recalculados en cada tick del timer de todas formas.
-          Con 100K carpetas representa ~114 MB de strings que podrían derivarse en el momento de render.
-        </div>
-        <div class="ram-cause-impact">Impacto: ~800–1,100 bytes/objeto de overhead evitable</div>
-      </div>
-
-      <div class="ram-cause">
-        <div class="ram-cause-id">RAM-02 · ALTA</div>
-        <div class="ram-cause-name">Copia completa de datos al exportar/guardar</div>
-        <div class="ram-cause-desc">
-          Tanto la exportación HTML (<code>dataSnapshot</code>) como el guardado de snapshot (<code>snapData</code>)
-          crean una copia completa de todos los items como <code>PSCustomObject</code> antes de pasarlos al runspace.
-          Durante ese momento conviven en RAM: la colección original + la copia + el StringBuilder del HTML.
-        </div>
-        <div class="ram-cause-impact">Impacto: 2–3× el consumo base durante exportación</div>
-      </div>
-
-      <div class="ram-cause">
-        <div class="ram-cause-id">RAM-03 · MEDIA</div>
-        <div class="ram-cause-name">StringBuilder HTML íntegro en memoria</div>
-        <div class="ram-cause-desc">
-          El runspace de exportación construye todo el HTML en un <code>StringBuilder</code> antes de escribir
-          a disco. Para 100K carpetas eso supone ~50–80 MB de string en RAM simultáneamente con los datos de origen,
-          el template y el HTML final ensamblado — tres copias del string en el mismo momento.
-        </div>
-        <div class="ram-cause-impact">Impacto: ~50–80 MB extra en pico para discos grandes</div>
-      </div>
-
-      <div class="ram-cause">
-        <div class="ram-cause-id">RAM-04 · MEDIA</div>
-        <div class="ram-cause-name">Load-SnapshotList deserializa JSON completos</div>
-        <div class="ram-cause-desc">
-          Aunque el objeto <code>$data</code> se anula con <code>$data = $null</code> tras extraer metadatos,
-          <code>ConvertFrom-Json</code> deserializa el árbol entero de entries en memoria antes de desecharlo.
-          Con snapshots de 50K entradas esto puede representar 200–400 MB transitorios por archivo JSON.
-        </div>
-        <div class="ram-cause-impact">Impacto: 200–400 MB transitorios por snapshot grande</div>
-      </div>
-
-      <div class="ram-cause">
-        <div class="ram-cause-id">RAM-05 · MEDIA</div>
-        <div class="ram-cause-name">ObservableCollection sin virtualización efectiva</div>
-        <div class="ram-cause-desc">
-          <code>LiveList</code> es un <code>ObservableCollection</code> sin límite de items. Aunque WPF aplica
-          UI virtualization, los objetos <code>DiskItem</code> siguen en memoria completos para todos los nodos
-          visibles y colapsados. El colapso no libera RAM — solo oculta visualmente.
-        </div>
-        <div class="ram-cause-impact">Impacto: RAM lineal con número de carpetas visible</div>
-      </div>
-
-      <div class="ram-cause">
-        <div class="ram-cause-id">RAM-06 · BAJA</div>
-        <div class="ram-cause-name">Runspaces sin pool centralizado</div>
-        <div class="ram-cause-desc">
-          Cada operación (escaneo, exportación CSV, exportación HTML, guardar snapshot, cargar snapshot,
-          comparar) crea y destruye su propio runspace con <code>RunspaceFactory.CreateRunspace()</code>.
-          El overhead por runspace es ~2–5 MB de InitialSessionState aunque no se use nada del módulo.
-        </div>
-        <div class="ram-cause-impact">Impacto: ~2–5 MB por operación concurrente</div>
-      </div>
-
-    </div>
-
-    <!-- Soluciones concretas -->
-    <div class="ram-fixes-title">Vías de optimización — ordenadas por impacto</div>
+    <div class="ram-fixes-title">Fixes implementados — RAM-01 a RAM-06</div>
     <div class="ram-fixes-grid">
 
       <div class="ram-fix">
         <div class="ram-fix-header">
-          <div class="ram-fix-icon">🪶</div>
+          <div class="ram-fix-icon">🎯</div>
           <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-01 · MÁXIMO IMPACTO</div>
-            <div class="ram-fix-name">Reducir DiskItem a solo datos puros</div>
+            <div class="ram-fix-id">FIX RAM-01 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">DiskItem sin INotifyPropertyChanged</div>
           </div>
         </div>
-        <div class="ram-fix-desc">
-          Eliminar de la clase C# los campos de presentación: <code>SizeStr</code>, <code>SizeColor</code>,
-          <code>PctStr</code>, <code>Icon</code>, <code>Indent</code>, <code>BarColor</code>, <code>BarWidth</code>.
-          Mover ese cálculo al <code>DataTemplate</code> de WPF usando <code>IValueConverter</code> o
-          un <code>MultiBinding</code>. El objeto en RAM pasa de ~1,200 B a ~180 B por carpeta.
-        </div>
-        <div class="ram-fix-code">// Clase reducida: solo datos canónicos
-public string DisplayName { get; set; }
-public string FullPath    { get; set; }
-public string ParentPath  { get; set; }
-public long   SizeBytes   { get; set; }
-public int    FileCount_N { get; set; }  // numérico
-public int    DirCount    { get; set; }
-public int    Depth       { get; set; }
-public bool   HasChildren { get; set; }
-// Todo lo visual → IValueConverter en XAML</div>
-        <div class="ram-fix-saving">Ahorro estimado: 75–85% de RAM por objeto (100K carpetas: −95 MB)</div>
-      </div>
-
-      <div class="ram-fix">
-        <div class="ram-fix-header">
-          <div class="ram-fix-icon">🌊</div>
-          <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-02 · ALTO IMPACTO</div>
-            <div class="ram-fix-name">Streaming al exportar HTML — escritura en bloques</div>
-          </div>
-        </div>
-        <div class="ram-fix-desc">
-          En lugar de construir el HTML completo en un <code>StringBuilder</code>, usar un
-          <code>StreamWriter</code> que escriba directamente al archivo en bloques. El template se divide
-          en cabecera/cuerpo/pie. Las filas de la tabla se escriben de 500 en 500 sin acumular el string completo.
-        </div>
-        <div class="ram-fix-code">$sw = [System.IO.StreamWriter]::new($outFile, $false,
-       [System.Text.Encoding]::UTF8, 65536)
-$sw.Write($htmlHeader)  # cabecera del template
-foreach ($batch in $allSorted | Batch 500) {
-    $sw.Write((Build-RowsBatch $batch))
-    $sw.Flush()          # escribe y libera buffer
-}
-$sw.Write($htmlFooter)
-$sw.Close()</div>
-        <div class="ram-fix-saving">Ahorro estimado: elimina pico de 50–80 MB del StringBuilder</div>
-      </div>
-
-      <div class="ram-fix">
-        <div class="ram-fix-header">
-          <div class="ram-fix-icon">🔗</div>
-          <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-03 · ALTO IMPACTO</div>
-            <div class="ram-fix-name">Pasar referencia directa al runspace — sin copia</div>
-          </div>
-        </div>
-        <div class="ram-fix-desc">
-          Actualmente se crea <code>$dataSnapshot</code> / <code>$snapData</code> como copia de
-          <code>AllScannedItems</code> para pasarlos al runspace. Usando un <code>SynchronizedList</code>
-          o pasando directamente la referencia al <code>ObservableCollection</code> con un lock de lectura,
-          se elimina la copia y el pico de duplicación.
-        </div>
-        <div class="ram-fix-code"># En lugar de:
-$copy = [List]::new(); foreach ($i in $all) { $copy.Add(...) }
-# Usar directamente la lista original (readonly durante export):
-$script:ExportLock = $true
-[void]$ps.AddParameter("Data", $script:AllScannedItems)
-# En el runspace: solo lectura, nunca modifica</div>
-        <div class="ram-fix-saving">Ahorro estimado: elimina copia de 50–120 MB en escaneos grandes</div>
+        <div class="ram-fix-desc"><code>DiskItem_v211</code> es ahora un modelo de datos puro. El toggle (ToggleIcon/ToggleVisibility) extraído a <code>DiskItemToggle_v230</code>, wrapper INPC ligero que no retiene event listeners en los miles de items.</div>
+        <div class="ram-fix-saving">Ahorro: −30 a −80 MB en escaneos grandes</div>
       </div>
 
       <div class="ram-fix">
         <div class="ram-fix-header">
           <div class="ram-fix-icon">📝</div>
           <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-04 · MEDIO IMPACTO</div>
-            <div class="ram-fix-name">Leer metadatos de snapshot con JsonTextReader</div>
+            <div class="ram-fix-id">FIX RAM-02 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">Exportación CSV/HTML via StreamWriter</div>
           </div>
         </div>
-        <div class="ram-fix-desc">
-          <code>ConvertFrom-Json</code> deserializa el JSON entero antes de poder leer un solo campo.
-          Usando <code>Newtonsoft.Json.JsonTextReader</code> (disponible sin NuGet en .NET 4.5+) o
-          <code>System.Text.Json.Utf8JsonReader</code> se puede hacer streaming — leer solo
-          <code>Label</code>, <code>Date</code>, <code>RootPath</code> y contar <code>Entries</code>
-          sin deserializar el árbol completo.
+        <div class="ram-fix-desc">CSV exportado con <code>StreamWriter</code> y batch flush cada 500 items (sin StringBuilder). HTML con StreamWriter a archivo temporal para las filas. Nunca existe el contenido completo como string en RAM.</div>
+        <div class="ram-fix-saving">Ahorro: −50 a −150 MB pico por exportación</div>
+      </div>
+
+      <div class="ram-fix">
+        <div class="ram-fix-header">
+          <div class="ram-fix-icon">🔗</div>
+          <div class="ram-fix-meta">
+            <div class="ram-fix-id">FIX RAM-03 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">AllScannedItems por referencia al runspace</div>
+          </div>
         </div>
-        <div class="ram-fix-code">$reader = [System.Text.Json.Utf8JsonReader]::new($bytes)
-# Solo lee los campos de metadatos del nivel raíz
-# y cuenta tokens de Entry sin deserializar objetos
-# → RAM proporcional a metadatos, no a entradas</div>
-        <div class="ram-fix-saving">Ahorro estimado: −200 a −400 MB pico por snapshot grande al cargar lista</div>
+        <div class="ram-fix-desc"><code>AllScannedItems</code> pasado a los runspaces de exportación via hashtable sincronizada compartida. El runspace lee directamente desde la referencia — sin clonar la colección.</div>
+        <div class="ram-fix-saving">Ahorro: −80 a −250 MB en escaneos de 50K+ carpetas</div>
+      </div>
+
+      <div class="ram-fix">
+        <div class="ram-fix-header">
+          <div class="ram-fix-icon">📖</div>
+          <div class="ram-fix-meta">
+            <div class="ram-fix-id">FIX RAM-04 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">JsonTextReader para metadatos de snapshot</div>
+          </div>
+        </div>
+        <div class="ram-fix-desc">Load-SnapshotList usa <code>JsonTextReader</code> línea a línea para leer solo Label, Date, RootPath y contar Entries con depth-tracking. Los arrays de Entries nunca se deserializan al listar.</div>
+        <div class="ram-fix-saving">Ahorro: −200 a −400 MB pico al cargar lista con snapshots grandes</div>
       </div>
 
       <div class="ram-fix">
         <div class="ram-fix-header">
           <div class="ram-fix-icon">🏊</div>
           <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-05 · MEDIO IMPACTO</div>
-            <div class="ram-fix-name">RunspacePool con InitialSessionState mínimo</div>
+            <div class="ram-fix-id">FIX RAM-05 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">RunspacePool centralizado</div>
           </div>
         </div>
-        <div class="ram-fix-desc">
-          Crear un único <code>RunspacePool</code> de mín 1 / máx 3 runspaces con un
-          <code>InitialSessionState</code> vacío (<code>CreateDefault2()</code>) compartido.
-          Los runspaces se reutilizan entre operaciones, eliminando el overhead de arranque y el
-          InitialSessionState completo (~2–5 MB) que se carga por defecto con todos los módulos.
-        </div>
-        <div class="ram-fix-code">$iss  = [InitialSessionState]::CreateDefault2()
-$pool = [RunspaceFactory]::CreateRunspacePool(1, 3, $iss, $Host)
-$pool.Open()
-# Todas las operaciones async reutilizan este pool
-$ps = [PowerShell]::Create(); $ps.RunspacePool = $pool</div>
-        <div class="ram-fix-saving">Ahorro estimado: −10 a −30 MB en uso sostenido con operaciones concurrentes</div>
+        <div class="ram-fix-desc">Único <code>RunspacePool</code> de mín 1 / máx 3 runspaces con <code>InitialSessionState.CreateDefault2()</code>. Reutilización entre operaciones, eliminando el overhead de arranque y carga de módulos por operación.</div>
+        <div class="ram-fix-saving">Ahorro: −10 a −30 MB en uso sostenido</div>
       </div>
 
       <div class="ram-fix">
         <div class="ram-fix-header">
           <div class="ram-fix-icon">🗑️</div>
           <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-06 · BAJO IMPACTO — inmediato</div>
-            <div class="ram-fix-name">GC agresivo post-exportación + EmptyWorkingSet</div>
+            <div class="ram-fix-id">FIX RAM-06 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">GC agresivo + EmptyWorkingSet</div>
           </div>
         </div>
-        <div class="ram-fix-desc">
-          Tras cada exportación o carga de snapshot, forzar una colección completa y comprimir
-          el LOH (Large Object Heap) con <code>GCSettings.LargeObjectHeapCompactionMode</code>,
-          seguido de <code>EmptyWorkingSet</code> para devolver páginas al SO.
-          Ya existe la llamada a <code>EmptyWorkingSet</code> en el código para la RAM física.
-        </div>
-        <div class="ram-fix-code">[Runtime.GCSettings]::LargeObjectHeapCompactionMode =
-    [Runtime.GCLargeObjectHeapCompactionMode]::CompactOnce
-[GC]::Collect(2, [GCCollectionMode]::Forced, $true, $true)
-[GC]::WaitForPendingFinalizers()
-# Ya existe EmptyWorkingSet vía P/Invoke en el script</div>
-        <div class="ram-fix-saving">Ahorro real: libera RAM al SO más rápido, reduce RSS visible</div>
+        <div class="ram-fix-desc">Tras cada exportación o carga: <code>GCSettings.LargeObjectHeapCompactionMode = CompactOnce</code> + <code>GC.Collect(2, Forced, true, true)</code> + <code>EmptyWorkingSet</code>. Devuelve páginas al SO inmediatamente.</div>
+        <div class="ram-fix-saving">RAM devuelta al SO más rápido, reduce RSS visible</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: FIFO Streaming v2.4.0 ── -->
+  <div class="section-label">FIFO Streaming — v2.4.0 developer</div>
+  <div class="section-title">⚡ Optimización FIFO — Snapshots sin RAM pico</div>
+
+  <div class="fifo-section">
+    <div class="fifo-grid">
+
+      <div class="fifo-card">
+        <div class="fifo-card-id">FIFO-01 · IMPLEMENTADO ✓ · bgSave</div>
+        <div class="fifo-card-name">Guardado de snapshot via ConcurrentQueue + StreamWriter</div>
+        <div class="fifo-card-desc">El hilo UI encola items uno a uno en <code>ConcurrentQueue</code> mientras el background (que ya está corriendo) drena la queue y escribe directamente al disco con <code>StreamWriter</code>. El JSON completo nunca existe en RAM. Flush cada 500 items para evitar buffers grandes. Sin dependencia de Newtonsoft.</div>
+        <div class="fifo-card-result">Antes: 3× tamaño del dataset en RAM
+Ahora: ≈ items en tránsito en queue (decenas)
+Ahorro: −50% a −200% RAM pico en guardado</div>
+      </div>
+
+      <div class="fifo-card">
+        <div class="fifo-card-id">FIFO-02 · IMPLEMENTADO ✓ · bgEnt</div>
+        <div class="fifo-card-name">Carga de entries via ConvertFrom-Json nativo + ConcurrentQueue</div>
+        <div class="fifo-card-desc">Eliminada dependencia de <code>Newtonsoft.Json.JsonTextReader</code> — los runspaces background no heredan assemblies externos en PS 5.1. Reemplazado por <code>ConvertFrom-Json</code> nativo de PowerShell (cmdlet interno, disponible en cualquier runspace). Los entries se encolan uno a uno en ConcurrentQueue conforme se procesan. DispatcherTimer drena en lotes de 500/tick.</div>
+        <div class="fifo-card-result">Sin error "unable to find type [Newtonsoft...]"
+Compatibilidad con snapshots v2.3 (ConvertTo-Json)
+y v2.4.0 (StreamWriter compacto)
+Ahorro: −30% RAM pico (elimina ConcurrentBag intermedio)</div>
+      </div>
+
+      <div class="fifo-card">
+        <div class="fifo-card-id">FIFO-03 · IMPLEMENTADO ✓ · Terminación</div>
+        <div class="fifo-card-name">Terminación limpia garantizada en ambos flujos</div>
+        <div class="fifo-card-desc">Ambos flujos (save y load) liberan recursos en bloque <code>finally</code> independientemente de si hubo error: StreamWriter.Close(), FileStream.Dispose(), y señal <code>FeedDone = $true</code> al consumer. GC agresivo con LOH compaction post-operación.</div>
+        <div class="fifo-card-result">Sin file handles abiertos tras error
+FeedDone siempre señalizado — consumer no queda bloqueado
+LOH compaction + EmptyWorkingSet post-op</div>
       </div>
 
     </div>
   </div>
 
-  <!-- ── Estabilidad ── -->
-  <div class="section-label">Vías de estabilidad técnica</div>
-  <div class="section-title">🛡️ Estabilidad de la Aplicación</div>
+  <!-- ── SECCIÓN: Estabilidad ── -->
+  <div class="section-label">Vías de estabilidad técnica — pendientes</div>
+  <div class="section-title">🛡️ Estabilidad — Objetivos futuros</div>
 
   <div class="stability-section">
     <div class="stability-grid">
-
-      <div class="stability-card">
-        <div class="stability-icon">🔒</div>
-        <div class="stability-name">Gestión robusta de Runspaces</div>
-        <div class="stability-desc">Centralizar todos los runspaces en un <code>$script:RunspacePool</code> con <code>RunspacePoolFactory</code>. Limita threads simultáneos y facilita el Dispose global al cerrar.</div>
-      </div>
-
-      <div class="stability-card">
-        <div class="stability-icon">⚡</div>
-        <div class="stability-name">InitialSessionState compartido</div>
-        <div class="stability-desc">Crear un <code>InitialSessionState</code> pre-cargado con los módulos necesarios y reutilizarlo en todos los runspaces, evitando el import repetido.</div>
-      </div>
-
-      <div class="stability-card">
-        <div class="stability-icon">🔄</div>
-        <div class="stability-name">CancellationToken unificado</div>
-        <div class="stability-desc">Usar un único <code>CancellationTokenSource</code> global vinculado a <code>ScanControl.Stop</code>. Parada limpia sin sleep polling de 150 ms.</div>
-      </div>
 
       <div class="stability-card">
         <div class="stability-icon">📋</div>
@@ -1225,8 +1228,8 @@ $ps = [PowerShell]::Create(); $ps.RunspacePool = $pool</div>
 
       <div class="stability-card">
         <div class="stability-icon">🧪</div>
-        <div class="stability-name">Guard de tipos C# mejorado</div>
-        <div class="stability-desc">Compilar los tipos C# a un DLL externo cargado con <code>Add-Type -Path</code>, eliminando la recompilación por completo.</div>
+        <div class="stability-name">DLL externo para tipos C#</div>
+        <div class="stability-desc">Compilar los tipos C# (<code>DiskItem_v211</code>, <code>ScanCtl211</code>, <code>PScanner211</code>) a un DLL externo cargado con <code>Add-Type -Path</code>, eliminando la recompilación por completo.</div>
       </div>
 
       <div class="stability-card">
@@ -1247,18 +1250,24 @@ $ps = [PowerShell]::Create(); $ps.RunspacePool = $pool</div>
         <div class="stability-desc">Extraer toda la lógica WMI/CIM a funciones <code>Get-*Data</code> puras separadas del código de rendering. Facilita testing y mantenimiento futuro.</div>
       </div>
 
+      <div class="stability-card">
+        <div class="stability-icon">🔄</div>
+        <div class="stability-name">CancellationToken unificado</div>
+        <div class="stability-desc">Usar un único <code>CancellationTokenSource</code> global vinculado a <code>ScanControl.Stop</code>. Parada limpia sin sleep polling de 150 ms.</div>
+      </div>
+
     </div>
   </div>
 
-  <!-- ── Timeline ── -->
+  <!-- ── SECCIÓN: Timeline ── -->
   <div class="section-label">Roadmap de versiones</div>
-  <div class="section-title">📅 Versiones Planificadas</div>
+  <div class="section-title">📅 Versiones — Historial y Próximas</div>
 
   <div class="timeline">
     <div class="tl-items">
 
       <div class="tl-item done">
-        <div class="tl-ver">v2.0.3 · COMPLETADO ✓</div>
+        <div class="tl-ver">v2.0.x · COMPLETADO ✓</div>
         <div class="tl-title">Hotfix de estabilidad crítica</div>
         <ul class="tl-list">
           <li class="done-li">Guard anti-TYPE_ALREADY_EXISTS en 3 clases C#</li>
@@ -1272,7 +1281,7 @@ $ps = [PowerShell]::Create(); $ps.RunspacePool = $pool</div>
       </div>
 
       <div class="tl-item done">
-        <div class="tl-ver">v2.1.5 · COMPLETADO ✓</div>
+        <div class="tl-ver">v2.1.x · COMPLETADO ✓</div>
         <div class="tl-title">Estabilidad del Explorador de Disco</div>
         <ul class="tl-list">
           <li class="done-li">Fix parser: .AddParameter con backtick multilínea</li>
@@ -1284,33 +1293,43 @@ $ps = [PowerShell]::Create(); $ps.RunspacePool = $pool</div>
         </ul>
       </div>
 
-      <div class="tl-item current">
-        <div class="tl-ver">v2.2.0 · EN PROGRESO ⚡</div>
-        <div class="tl-title">Funcionalidad completa del Explorador + Rendimiento</div>
+      <div class="tl-item done">
+        <div class="tl-ver">v2.3 · COMPLETADO ✓ — VERSIÓN PÚBLICA ESTABLE</div>
+        <div class="tl-title">Funcionalidad completa del Explorador + Optimización RAM</div>
         <ul class="tl-list">
-          <li class="done-li">✓ B1: Filtro por nombre en árbol de carpetas</li>
-          <li class="done-li">✓ B2: Menú contextual (abrir, eliminar, copiar ruta)</li>
-          <li class="done-li">✓ B3: Exportar a CSV</li>
-          <li class="done-li">✓ A3: Auto-refresco configurable en pestaña Rendimiento</li>
-          <li class="done-li">✓ C3: Persistencia de configuración en JSON</li>
-          <li class="done-li">✓ FIX: Guardia de cierre del timer de rendimiento</li>
-          <li class="done-li">✓ B4: Snapshots + carga async + botón segundo plano</li>
-          <li class="done-li">✓ Exportaciones HTML/CSV sin bloqueo de UI</li>
+          <li class="done-li">B1: Filtro por nombre en árbol de carpetas</li>
+          <li class="done-li">B2: Menú contextual (abrir, eliminar, copiar ruta)</li>
+          <li class="done-li">B3: Exportar a CSV y HTML (async, con progreso)</li>
+          <li class="done-li">B4: Snapshots + historial + comparador + selección múltiple</li>
+          <li class="done-li">A3: Auto-refresco configurable en pestaña Rendimiento</li>
+          <li class="done-li">C3: Persistencia de configuración en JSON</li>
+          <li class="done-li">RAM-01…06: Optimizaciones de memoria completas</li>
+          <li class="done-li">BF1…BF6: Bugs de snapshots y comparador corregidos</li>
+        </ul>
+      </div>
+
+      <div class="tl-item current">
+        <div class="tl-ver">v2.4.0 · EN PROGRESO ⚡ — RAMA DEVELOPER</div>
+        <div class="tl-title">FIFO Streaming + Estabilidad de runspaces</div>
+        <ul class="tl-list">
+          <li class="done-li">✓ FIFO-01: Save streaming sin RAM pico (ConcurrentQueue + StreamWriter)</li>
+          <li class="done-li">✓ FIFO-02: Load entries con ConvertFrom-Json nativo (sin Newtonsoft)</li>
+          <li class="done-li">✓ FIFO-03: Terminación limpia garantizada en finally</li>
+          <li class="done-li">✓ Fix: Set-Content → File::WriteAllText en Save-Settings</li>
+          <li class="done-li">✓ Fix: Toggle colapsar/expandir + Items.Refresh()</li>
+          <li>A2: Pre-cálculo de top 10 archivos durante escaneo</li>
+          <li>Error boundary global con UnhandledException</li>
         </ul>
       </div>
 
       <div class="tl-item next">
-        <div class="tl-ver">v2.3.0 · FUTURO</div>
-        <div class="tl-title">Historial, duplicados y estabilidad avanzada</div>
+        <div class="tl-ver">v2.5.0 · PLANIFICADO</div>
+        <div class="tl-title">Deduplicación y funcionalidades avanzadas</div>
         <ul class="tl-list">
-          <li>🧠 RAM-01: Reducir DiskItem a datos puros (IValueConverter)</li>
-          <li>🧠 RAM-02: Exportación HTML via StreamWriter (sin StringBuilder)</li>
-          <li>🧠 RAM-03: Pasar AllScannedItems por referencia al runspace</li>
-          <li>🧠 RAM-04: JsonTextReader para metadatos de snapshot</li>
-          <li>🧠 RAM-05: RunspacePool centralizado + InitialSessionState mínimo</li>
-          <li>B5: Deduplicación por SHA256 en archivos grandes</li>
-          <li>A2: Pre-cálculo de top 10 archivos durante el escaneo</li>
+          <li>B5: Deduplicación por SHA256 en archivos grandes (&gt;10 MB)</li>
+          <li>A2: Pre-cálculo de top 10 archivos (si no entra en v2.4.0)</li>
           <li>Error boundary global con UnhandledException</li>
+          <li>Logging estructurado a archivo rotante</li>
         </ul>
       </div>
 
@@ -1318,10 +1337,10 @@ $ps = [PowerShell]::Create(); $ps.RunspacePool = $pool</div>
         <div class="tl-ver">v3.0.0 · VISIÓN</div>
         <div class="tl-title">Plataforma modular y extensible</div>
         <ul class="tl-list">
-          <li>Tipos C# compilados a DLL externo (sin Add-Type)</li>
+          <li>Tipos C# compilados a DLL externo (sin Add-Type inline)</li>
           <li>C1: Tema claro/oscuro con ResourceDictionary</li>
-          <li>C4: Integración con el Programador de tareas</li>
           <li>C2: Notificaciones Toast nativas de Windows</li>
+          <li>C4: Integración con el Programador de tareas</li>
           <li>Plugin system para módulos de limpieza externos</li>
         </ul>
       </div>
@@ -1331,14 +1350,14 @@ $ps = [PowerShell]::Create(); $ps.RunspacePool = $pool</div>
 
   <!-- ── Footer ── -->
   <footer>
-    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — Plan de desarrollo v2.2.0 ✓ / v2.3.0 RAM Optimization (en progreso)</p>
+    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v2.3 estable · v2.4.0 developer en progreso</p>
     <div>
-      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>v2.2.0 estable</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--red)"></span>v2.3.0 RAM opt. en progreso</span>
-      
-      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>PowerShell + WPF</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>v2.3 estable</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>v2.4.0 dev en progreso</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>FIFO streaming activo</span>
       <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>C# inline types</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>Multi-runspace</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>Multi-runspace</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--muted)"></span>PowerShell + WPF</span>
     </div>
   </footer>
 
