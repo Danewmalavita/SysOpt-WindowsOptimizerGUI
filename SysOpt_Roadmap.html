@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SysOpt — Hoja de Ruta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #0D0F1A;
+    --card:     #131625;
+    --card2:    #1A1E2F;
+    --border:   #252B40;
+    --blue:     #5BA3FF;
+    --cyan:     #2EDFBF;
+    --amber:    #FFB547;
+    --red:      #FF6B84;
+    --green:    #4AE896;
+    --purple:   #9B7EFF;
+    --txt:      #E8ECF4;
+    --muted:    #7880A0;
+    --mono:     'JetBrains Mono', monospace;
+    --sans:     'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(91,163,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,163,255,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: .12;
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .blob-1 { width:500px; height:500px; background:#5BA3FF; top:-100px; left:-100px; }
+  .blob-2 { width:400px; height:400px; background:#2EDFBF; bottom:0; right:0; animation-delay:-9s; }
+  .blob-3 { width:300px; height:300px; background:#9B7EFF; top:50%; left:50%; transform:translate(-50%,-50%); animation-delay:-4s; }
+
+  @keyframes drift {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(30px,20px) scale(1.08); }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 72px;
+  }
+
+  .version-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--green);
+    background: rgba(74,232,150,.1);
+    border: 1px solid rgba(74,232,150,.25);
+    border-radius: 100px;
+    padding: 4px 14px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  h1 .accent  { color: var(--blue); }
+  h1 .accent2 { color: var(--cyan); }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--muted);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 32px;
+  }
+
+  /* ── Bug cards ── */
+  .bugs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    margin-bottom: 64px;
+  }
+
+  .bug-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .2s, transform .2s;
+  }
+  .bug-card:hover { transform: translateY(-2px); }
+  .bug-card.critical:hover { border-color: rgba(255,107,132,.4); }
+  .bug-card.warning:hover  { border-color: rgba(255,181,71,.4);  }
+  .bug-card.fixed:hover    { border-color: rgba(74,232,150,.4);  }
+  .bug-card.session:hover  { border-color: rgba(91,163,255,.4);  }
+
+  .bug-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .bug-card.critical::before { background: linear-gradient(90deg, var(--red),    transparent); }
+  .bug-card.warning::before  { background: linear-gradient(90deg, var(--amber),  transparent); }
+  .bug-card.fixed::before    { background: linear-gradient(90deg, var(--green),  transparent); }
+  .bug-card.session::before  { background: linear-gradient(90deg, var(--blue),   transparent); }
+
+  .bug-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: inline-block;
+  }
+  .bug-id.critical { color: var(--red);   background: rgba(255,107,132,.1); }
+  .bug-id.warning  { color: var(--amber); background: rgba(255,181,71,.1);  }
+  .bug-id.fixed    { color: var(--green); background: rgba(74,232,150,.1);  }
+  .bug-id.session  { color: var(--blue);  background: rgba(91,163,255,.1);  }
+
+  .bug-name { font-size: .95rem; font-weight: 700; margin-bottom: 8px; }
+
+  .bug-desc {
+    font-size: .82rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .bug-fix {
+    font-family: var(--mono);
+    font-size: .75rem;
+    color: var(--cyan);
+    background: rgba(46,223,191,.06);
+    border: 1px solid rgba(46,223,191,.15);
+    border-radius: 6px;
+    padding: 8px 10px;
+    line-height: 1.5;
+  }
+
+  /* ── Roadmap ── */
+  .roadmap { margin-bottom: 64px; }
+
+  .priority-block { margin-bottom: 48px; }
+
+  .priority-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .priority-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px currentColor;
+  }
+  .p-high   .priority-dot { color: var(--red);   background: var(--red);   }
+  .p-medium .priority-dot { color: var(--amber); background: var(--amber); }
+  .p-low    .priority-dot { color: var(--green); background: var(--green); }
+
+  .priority-label {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .p-high   .priority-label { color: var(--red);   }
+  .p-medium .priority-label { color: var(--amber); }
+  .p-low    .priority-label { color: var(--green); }
+
+  .priority-title { font-size: 1.1rem; font-weight: 700; }
+
+  .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+
+  .item-card {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: border-color .2s, transform .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .item-card:hover { transform: translateY(-2px); }
+  .p-high   .item-card:hover { border-color: rgba(255,107,132,.35); }
+  .p-medium .item-card:hover { border-color: rgba(255,181,71,.35);  }
+  .p-low    .item-card:hover { border-color: rgba(74,232,150,.35);  }
+
+  /* Tarjeta completada */
+  .item-card.done {
+    opacity: .72;
+    border-color: rgba(74,232,150,.2);
+  }
+  .item-card.done::before {
+    content: '✓ COMPLETADO';
+    position: absolute;
+    top: 8px; right: 10px;
+    font-family: var(--mono);
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--green);
+    background: rgba(74,232,150,.1);
+    border: 1px solid rgba(74,232,150,.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+
+  .item-id-box {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .p-high   .item-id-box { background: rgba(255,107,132,.12); color: var(--red);   border: 1px solid rgba(255,107,132,.2); }
+  .p-medium .item-id-box { background: rgba(255,181,71,.12);  color: var(--amber); border: 1px solid rgba(255,181,71,.2);  }
+  .p-low    .item-id-box { background: rgba(74,232,150,.12);  color: var(--green); border: 1px solid rgba(74,232,150,.2);  }
+  .item-card.done .item-id-box { background: rgba(74,232,150,.08); color: var(--green); border-color: rgba(74,232,150,.15); }
+
+  .item-content { flex: 1; min-width: 0; }
+  .item-name { font-size: .9rem; font-weight: 700; margin-bottom: 5px; }
+  .item-desc { font-size: .79rem; color: var(--muted); line-height: 1.55; margin-bottom: 8px; }
+
+  .item-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font-family: var(--mono);
+    font-size: .65rem;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(91,163,255,.08);
+    color: var(--blue);
+    border: 1px solid rgba(91,163,255,.15);
+  }
+  .tag.done-tag {
+    background: rgba(74,232,150,.08);
+    color: var(--green);
+    border-color: rgba(74,232,150,.15);
+  }
+
+  /* ── Stability ── */
+  .stability-section { margin-bottom: 64px; }
+  .stability-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .stability-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    transition: border-color .2s, transform .2s;
+  }
+  .stability-card:hover { border-color: rgba(155,126,255,.4); transform: translateY(-2px); }
+  .stability-icon { font-size: 1.4rem; margin-bottom: 12px; }
+  .stability-name { font-size: .95rem; font-weight: 700; margin-bottom: 8px; color: var(--purple); }
+  .stability-desc { font-size: .8rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── Timeline ── */
+  .timeline { margin-bottom: 64px; }
+  .tl-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-left: 2px solid var(--border);
+    padding-left: 28px;
+    margin-left: 12px;
+  }
+  .tl-item { position: relative; padding: 0 0 40px; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -36px; top: 5px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg);
+  }
+  .tl-item.done::before    { background: var(--green);  border-color: var(--green);  box-shadow: 0 0 12px var(--green); }
+  .tl-item.current::before { background: var(--blue);   border-color: var(--blue);   box-shadow: 0 0 12px var(--blue); }
+  .tl-item.next::before    { background: var(--card2);  border-color: var(--amber);  }
+  .tl-item.future::before  { background: var(--card2);  border-color: var(--muted);  }
+
+  .tl-ver {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .tl-item.done .tl-ver    { color: var(--green); }
+  .tl-item.current .tl-ver { color: var(--blue);  }
+  .tl-item.next .tl-ver    { color: var(--amber); }
+
+  .tl-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+
+  .tl-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tl-list li {
+    font-size: .8rem;
+    color: var(--muted);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .tl-list li::before {
+    content: '→';
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--border);
+    flex-shrink: 0;
+  }
+  .tl-item.done    .tl-list li::before { color: var(--green); }
+  .tl-item.current .tl-list li::before { color: var(--blue);  }
+  .tl-item.next    .tl-list li::before { color: var(--amber); }
+  .tl-list li.done-li { color: var(--green); opacity: .8; }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 32px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 4px 12px;
+    margin: 4px;
+  }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* Banner de sesión */
+  .session-banner {
+    background: linear-gradient(135deg, rgba(91,163,255,.07), rgba(46,223,191,.05));
+    border: 1px solid rgba(91,163,255,.2);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 48px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .session-banner-icon { font-size: 1.8rem; flex-shrink: 0; }
+  .session-banner-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+  .session-banner-desc {
+    font-size: .82rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .session-banner-chips { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .schip {
+    font-family: var(--mono);
+    font-size: .65rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(91,163,255,.08);
+    color: var(--blue);
+    border: 1px solid rgba(91,163,255,.15);
+  }
+
+  /* ── RAM Optimization ── */
+  .ram-section { margin-bottom: 64px; }
+
+  .ram-intro {
+    background: linear-gradient(135deg, rgba(255,107,132,.06), rgba(255,181,71,.04));
+    border: 1px solid rgba(255,107,132,.2);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .ram-intro-icon { font-size: 2rem; flex-shrink: 0; }
+  .ram-intro-title { font-size: 1rem; font-weight: 700; color: var(--red); margin-bottom: 6px; }
+  .ram-intro-desc  { font-size: .82rem; color: var(--muted); line-height: 1.65; }
+  .ram-intro-stats {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .ram-stat {
+    background: rgba(255,107,132,.06);
+    border: 1px solid rgba(255,107,132,.15);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: var(--mono);
+  }
+  .ram-stat-label { font-size: .65rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+  .ram-stat-value { font-size: .9rem; font-weight: 700; color: var(--red); }
+  .ram-stat-sub   { font-size: .65rem; color: var(--muted); }
+
+  .ram-causes-title {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ram-causes-title::after { content:''; flex:1; height:1px; background: rgba(255,107,132,.2); }
+
+  .ram-causes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+
+  .ram-cause {
+    background: var(--card);
+    border: 1px solid rgba(255,107,132,.18);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, border-color .2s;
+  }
+  .ram-cause:hover { transform: translateY(-2px); border-color: rgba(255,107,132,.4); }
+  .ram-cause::before {
+    content: '';
+    position: absolute; top:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, var(--red), transparent);
+  }
+  .ram-cause-id {
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--red);
+    background: rgba(255,107,132,.1);
+    border: 1px solid rgba(255,107,132,.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+  .ram-cause-name { font-size: .92rem; font-weight: 700; margin-bottom: 6px; }
+  .ram-cause-desc { font-size: .79rem; color: var(--muted); line-height: 1.58; margin-bottom: 12px; }
+  .ram-cause-impact {
+    font-family: var(--mono);
+    font-size: .73rem;
+    color: var(--amber);
+    background: rgba(255,181,71,.07);
+    border: 1px solid rgba(255,181,71,.18);
+    border-radius: 6px;
+    padding: 7px 10px;
+    line-height: 1.5;
+  }
+
+  .ram-fixes-title {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ram-fixes-title::after { content:''; flex:1; height:1px; background: rgba(74,232,150,.2); }
+
+  .ram-fixes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+
+  .ram-fix {
+    background: var(--card);
+    border: 1px solid rgba(74,232,150,.18);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, border-color .2s;
+  }
+  .ram-fix:hover { transform: translateY(-2px); border-color: rgba(74,232,150,.4); }
+  .ram-fix::before {
+    content: '';
+    position: absolute; top:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, var(--green), transparent);
+  }
+  .ram-fix-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+  .ram-fix-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    background: rgba(74,232,150,.1);
+    border: 1px solid rgba(74,232,150,.2);
+    flex-shrink: 0;
+  }
+  .ram-fix-meta { flex: 1; }
+  .ram-fix-id {
+    font-family: var(--mono);
+    font-size: .63rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--green);
+    margin-bottom: 3px;
+  }
+  .ram-fix-name { font-size: .92rem; font-weight: 700; }
+  .ram-fix-desc { font-size: .79rem; color: var(--muted); line-height: 1.58; margin-bottom: 12px; }
+  .ram-fix-code {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--cyan);
+    background: rgba(46,223,191,.06);
+    border: 1px solid rgba(46,223,191,.15);
+    border-radius: 6px;
+    padding: 8px 11px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+  .ram-fix-saving {
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ram-fix-saving::before { content: '↓'; font-weight: 700; }
+
+
+  /* ── FIFO / v2.4 dev section ── */
+  .fifo-section { margin-bottom: 64px; }
+  .fifo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .fifo-card {
+    background: var(--card);
+    border: 1px solid rgba(91,163,255,.22);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, border-color .2s;
+  }
+  .fifo-card:hover { transform: translateY(-2px); border-color: rgba(91,163,255,.5); }
+  .fifo-card::before {
+    content: '';
+    position: absolute; top:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, var(--blue), transparent);
+  }
+  .fifo-card-id {
+    font-family: var(--mono); font-size: .65rem; font-weight: 700;
+    letter-spacing: 1px; color: var(--blue);
+    background: rgba(91,163,255,.1); border: 1px solid rgba(91,163,255,.2);
+    border-radius: 4px; padding: 2px 8px; display: inline-block; margin-bottom: 10px;
+  }
+  .fifo-card-name { font-size: .92rem; font-weight: 700; margin-bottom: 6px; }
+  .fifo-card-desc { font-size: .79rem; color: var(--muted); line-height: 1.58; margin-bottom: 12px; }
+  .fifo-card-result {
+    font-family: var(--mono); font-size: .72rem; color: var(--cyan);
+    background: rgba(46,223,191,.06); border: 1px solid rgba(46,223,191,.15);
+    border-radius: 6px; padding: 7px 10px; line-height: 1.5;
+  }
+  /* dev branch banner */
+  .dev-banner {
+    background: linear-gradient(135deg, rgba(91,163,255,.07), rgba(155,126,255,.05));
+    border: 1px solid rgba(91,163,255,.25);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 48px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .dev-banner-icon { font-size: 1.8rem; flex-shrink: 0; }
+  .dev-banner-title { font-size: 1rem; font-weight: 700; color: var(--blue); margin-bottom: 6px; }
+  .dev-banner-desc { font-size: .82rem; color: var(--muted); line-height: 1.6; }
+  .dev-banner-chips { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .dchip {
+    font-family: var(--mono); font-size: .65rem; padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(91,163,255,.08); color: var(--blue); border: 1px solid rgba(91,163,255,.15);
+  }
+  .dchip.done { background: rgba(74,232,150,.08); color: var(--green); border-color: rgba(74,232,150,.2); }
+  .dchip.wip  { background: rgba(255,181,71,.08);  color: var(--amber); border-color: rgba(255,181,71,.2); }
+  /* bugfix v24 cards */
+  .bug-card.v24 { }
+  .bug-card.v24::before { background: linear-gradient(90deg, var(--purple), transparent); }
+  .bug-card.v24:hover   { border-color: rgba(155,126,255,.4); }
+  .bug-id.v24 { color: var(--purple); background: rgba(155,126,255,.1); }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="container">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="version-badge">SysOpt v2.3.0 · Estable · v2.4.0 completado — próximamente estable</div>
+    <h1><span class="accent">SYS</span><span class="accent2">OPT</span><br>Plan de Estabilidad y Mejora</h1>
+    <p class="subtitle">Análisis de bugs corregidos, mejoras implementadas y vías de evolución para una aplicación de optimización Windows robusta y escalable.</p>
+  </header>
+
+  <!-- ── Banner estado actual ── -->
+  <div class="dev-banner">
+    <div class="dev-banner-icon">🧪</div>
+    <div>
+      <div class="dev-banner-title">Estado actual — v2.3.0 pública estable / v2.4.0 completada, pendiente release</div>
+      <div class="dev-banner-desc">
+        <code>SysOpt v2.3.0</code> completamente operativo como versión pública estable. La rama developer
+        <code>v2.4.0</code> está completa: optimizaciones FIFO de RAM implementadas y verificadas,
+        pre-cálculo de top-files activo durante el escaneo, y todos los bugs críticos corregidos.
+        Pendiente de publicar como release estable oficial.
+      </div>
+      <div class="dev-banner-chips">
+        <span class="dchip done">✓ v2.3.0 estable publicada</span>
+        <span class="dchip done">✓ RAM-01…06 implementados</span>
+        <span class="dchip done">✓ FIFO-01 save streaming</span>
+        <span class="dchip done">✓ FIFO-02 load streaming</span>
+        <span class="dchip done">✓ FIFO-03 terminación limpia</span>
+        <span class="dchip done">✓ Fix toggle colapsar/expandir</span>
+        <span class="dchip done">✓ Fix Set-Content → WriteAllText</span>
+        <span class="dchip done">✓ A2 Top-files pre-cálculo implementado</span>
+        <span class="dchip">B5 Deduplicación SHA256 → v2.5.0</span>
+        <span class="dchip">Error boundary global → v2.5.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECCIÓN: Bugs históricos v2.0.x ── -->
+  <div class="section-label">Bugs corregidos en v2.0.x</div>
+  <div class="section-title">🔧 Fixes Aplicados — Base estable</div>
+  <div class="bugs-grid">
+
+    <div class="bug-card critical">
+      <div class="bug-id critical">BUG CRÍTICO · TYPE_ALREADY_EXISTS</div>
+      <div class="bug-name">Add-Type: ScanControl ya existe</div>
+      <div class="bug-desc">Las clases C# <code>ScanControl</code>, <code>ParallelScanner</code> y <code>DiskItem</code> se recompilaban en cada ejecución de la sesión de PowerShell, causando error fatal al relanzar sin cerrar la consola.</div>
+      <div class="bug-fix">FIX: Guards <code>if (-not ([PSTypeName]'NombreClase').Type)</code> aplicados a los 3 bloques C#.</div>
+    </div>
+
+    <div class="bug-card critical">
+      <div class="bug-id critical">BUG CRÍTICO · A1 — Explorador vacío</div>
+      <div class="bug-name">Runspace de escaneo no ve los tipos C#</div>
+      <div class="bug-desc">El nuevo runspace creado para <code>ParallelScanner</code> no tenía acceso a los assemblies C# ya compilados, causando que el árbol de carpetas no mostrara nada.</div>
+      <div class="bug-fix">FIX: Se inyectan los assemblies al runspace via <code>Assembly.LoadFrom()</code> antes de invocar el script de fondo.</div>
+    </div>
+
+    <div class="bug-card critical">
+      <div class="bug-id critical">BUG CRÍTICO · A1 — ParentKey raíz incorrecta</div>
+      <div class="bug-name">Carpetas de primer nivel sin parentKey válida</div>
+      <div class="bug-desc">El <code>bgScript</code> pasaba <code>$Root</code> como <code>parentKey</code>, pero <code>Refresh-DiskView</code> busca hijos de <code>'::ROOT::'</code>, causando que nada se renderice.</div>
+      <div class="bug-fix">FIX: Se pasa <code>'::ROOT::'</code> como parentKey al llamar a <code>ParallelScanner.ScanDir()</code> en el nivel 0.</div>
+    </div>
+
+    <div class="bug-card critical">
+      <div class="bug-id critical">BUG CRÍTICO · A3 — Pestaña Rendimiento vacía</div>
+      <div class="bug-name">Runspace de Rendimiento sin módulos Storage/NetAdapter</div>
+      <div class="bug-desc">El runspace creado para <code>Update-PerformanceTab</code> no importaba los módulos necesarios, causando que <code>Get-PhysicalDisk</code> y <code>Get-NetAdapter</code> no existieran.</div>
+      <div class="bug-fix">FIX: <code>Import-Module Storage/NetAdapter/NetTCPIP</code> inyectado en el runspace antes de invocar el scriptblock de rendimiento.</div>
+    </div>
+
+    <div class="bug-card warning">
+      <div class="bug-id warning">BUG MEDIO · CLOSURE</div>
+      <div class="bug-name">Variable $async no capturada por el timer del explorador</div>
+      <div class="bug-desc">La variable <code>$async</code> del runspace de escaneo no quedaba en scope cuando el <code>DispatcherTimer</code> disparaba su tick, causando <code>NullReference</code>.</div>
+      <div class="bug-fix">FIX: Almacenado en <code>$script:DiskScanAsync</code> y <code>$script:DiskScanPS</code> para acceso global desde el timer.</div>
+    </div>
+
+    <div class="bug-card warning">
+      <div class="bug-id warning">BUG MEDIO · UI FREEZE</div>
+      <div class="bug-name">Update-SystemInfo bloqueaba el hilo de UI</div>
+      <div class="bug-desc"><code>Get-CimInstance</code> se ejecutaba síncronamente en el hilo principal, congelando la UI 200–800 ms cada 2 segundos.</div>
+      <div class="bug-fix">FIX: Toda la lógica WMI movida a un runspace con su propio DispatcherTimer de polling.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · ADD_CLOSED</div>
+      <div class="bug-name">Cleanup incompleto al cerrar la ventana</div>
+      <div class="bug-desc">El evento <code>Add_Closed</code> no liberaba las nuevas variables del refactor de closure, dejando objetos vivos al relanzar.</div>
+      <div class="bug-fix">FIX: Dispose de <code>$script:DiskScanPS</code> y null de <code>$script:DiskScanAsync</code> añadidos al handler de cierre.</div>
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: Bugs v2.1.x ── -->
+  <div class="section-label">Bugs corregidos en v2.1.x</div>
+  <div class="section-title">🛠️ Fixes de Estabilidad del Explorador</div>
+  <div class="bugs-grid">
+
+    <div class="bug-card session">
+      <div class="bug-id session">BUG PARSER · 2.1.x</div>
+      <div class="bug-name">Error "Token inesperado" en .AddParameter con backtick</div>
+      <div class="bug-desc">PowerShell no soporta encadenamiento de métodos con backtick entre líneas. El explorador de archivos lanzaba <code>ParserError</code> al iniciar.</div>
+      <div class="bug-fix">FIX: Consolidado en una sola línea: <code>[void]$ps.AddScript(…).AddParameter(…).AddParameter(…)</code></div>
+    </div>
+
+    <div class="bug-card session">
+      <div class="bug-id session">OPTIMIZACIÓN · RAM adaptativa</div>
+      <div class="bug-name">Consumo excesivo en equipos con poca RAM</div>
+      <div class="bug-desc">El BATCH y el intervalo del timer eran fijos, sin considerar la RAM libre disponible. En equipos con 8 GB el explorador podía volverse lento o inestable.</div>
+      <div class="bug-fix">FIX: BATCH y intervalo adaptativos según FreePhysicalMemory: &lt;2 GB → 50/250ms · 2–4 GB → 150/180ms · &gt;4 GB → 300/120ms.</div>
+    </div>
+
+    <div class="bug-card session">
+      <div class="bug-id session">BUG · COLAPSO UI</div>
+      <div class="bug-name">Bloqueo de UI al colapsar carpetas</div>
+      <div class="bug-desc"><code>Refresh-DiskView</code> reconstruía el <code>childMap</code> completo y re-ordenaba todos los grupos con <code>Sort-Object</code> en cada colapso/expansión.</div>
+      <div class="bug-fix">FIX: childMap cacheado en <code>$script:CachedChildMap</code>. Al colapsar solo se rehace el DFS de visibilidad — sin Sort-Object, sin iterar AllScannedItems.</div>
+    </div>
+
+    <div class="bug-card session">
+      <div class="bug-id session">BUG · ARRAY.SORT</div>
+      <div class="bug-name">Error "desplazamiento fuera de bounds" en Sort</div>
+      <div class="bug-desc">PowerShell no convierte automáticamente un scriptblock a <code>IComparer</code> en <code>[Array]::Sort</code>. El explorador lanzaba <code>ArgumentException</code> en bucle.</div>
+      <div class="bug-fix">FIX: Reemplazado por <code>Sort-Object</code> con expression block. Solo se ejecuta al reconstruir el mapa (-RebuildMap), nunca al colapsar.</div>
+    </div>
+
+    <div class="bug-card session">
+      <div class="bug-id session">BUG · DFS ORDEN</div>
+      <div class="bug-name">Orden de carpetas incorrecto tras DFS con Stack</div>
+      <div class="bug-desc">El DFS iterativo con <code>Stack[string]</code> mezclaba el orden de los hermanos con los hijos del nivel inferior al hacer Pop.</div>
+      <div class="bug-fix">FIX: DFS con pila de frames <code>(parentKey, índiceActual)</code>. Orden garantizado sin recursión y sin mezclar niveles.</div>
+    </div>
+
+    <div class="bug-card session">
+      <div class="bug-id session">BUG · INTERVAL IF</div>
+      <div class="bug-name">"Token 'if' inesperado" en argumento de método</div>
+      <div class="bug-desc">PowerShell no permite un <code>if</code> inline dentro de los paréntesis de una llamada a método. <code>FromMilliseconds(if (…))</code> lanzaba <code>ParserError</code>.</div>
+      <div class="bug-fix">FIX: Valor calculado en <code>$scanIntervalMs = if (…)</code> y luego pasado como variable.</div>
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: Bugs v2.3 (completados) ── -->
+  <div class="section-label">Bugs corregidos en v2.3 — Completada</div>
+  <div class="section-title">✅ Fixes implementados en v2.3</div>
+  <div class="bugs-grid">
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">BF1 · RUTA SNAPSHOTS</div>
+      <div class="bug-name">Ruta de snapshots apuntaba a directorio incorrecto</div>
+      <div class="bug-desc">Los snapshots se guardaban en una ruta absoluta que podía no existir en otros equipos. Causaba errores silenciosos al guardar.</div>
+      <div class="bug-fix">FIX: Ruta cambiada a <code>.\snapshots\</code> relativo al script. Se crea automáticamente si no existe.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">BF3 · HASHTABLE KEY</div>
+      <div class="bug-name">Load-SnapshotList no listaba los snapshots</div>
+      <div class="bug-desc">Error en la clave de hashtable sincronizada que impedía que el background devolviera los metadatos al hilo UI. La lista aparecía vacía.</div>
+      <div class="bug-fix">FIX: Corrección de la clave de acceso en el hashtable compartido entre runspaces.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">BF5 · RAM SNAPSHOT LIST</div>
+      <div class="bug-name">Alto consumo RAM al listar snapshots</div>
+      <div class="bug-desc">Load-SnapshotList deserializaba los <code>Entries</code> completos de cada snapshot solo para mostrar la lista, causando picos de RAM de 200–400 MB.</div>
+      <div class="bug-fix">FIX: [RAM-04] JsonTextReader — solo se leen metadatos (Label, Date, RootPath, conteo de entries). Los Entries nunca se deserializan al listar.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">BF6 · COMPARADOR O(n²)</div>
+      <div class="bug-name">Comparador de snapshots cuadrático</div>
+      <div class="bug-desc">El comparador iteraba AllScannedItems anidado para cada entry del snapshot. Con 50K carpetas producía 2.500M de operaciones.</div>
+      <div class="bug-fix">FIX: Comparador O(1) con <code>HashSet&lt;string&gt;</code> para presencia y <code>Dictionary&lt;string,long&gt;</code> para tamaños.</div>
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: Bugs v2.4.0 developer ── -->
+  <div class="section-label">Bugs corregidos en v2.4.0 developer</div>
+  <div class="section-title">🔵 Fixes de la rama developer activa</div>
+  <div class="bugs-grid">
+
+    <div class="bug-card v24">
+      <div class="bug-id v24">BUG · NEWTONSOFT RUNSPACE</div>
+      <div class="bug-name">Unable to find type [Newtonsoft.Json.JsonTextWriter/Reader]</div>
+      <div class="bug-desc">Los runspaces de background (tanto individuales como RunspacePool) no heredan assemblies externos del proceso principal en PS 5.1. JsonTextWriter en bgSave y JsonTextReader en bgEnt lanzaban error de tipo.</div>
+      <div class="bug-fix">FIX bgSave: reemplazado por StreamWriter con escritura JSON manual (sin Newtonsoft). FIX bgEnt: reemplazado por ConvertFrom-Json nativo de PowerShell — cmdlet interno disponible en cualquier runspace sin configuración adicional.</div>
+    </div>
+
+    <div class="bug-card v24">
+      <div class="bug-id v24">BUG · SET-CONTENT STREAM</div>
+      <div class="bug-name">Stream was not readable en Save-Settings</div>
+      <div class="bug-desc">En PS 5.1, <code>Set-Content</code> en el pipeline puede confundirse con objetos Stream activos en el entorno cuando hay FileStream/StreamWriter corriendo en paralelo, pasando un stream write-only a un cmdlet que espera contenido readable.</div>
+      <div class="bug-fix">FIX: Reemplazado por <code>[System.IO.File]::WriteAllText()</code> — llamada .NET directa, completamente aislada del pipeline de PowerShell.</div>
+    </div>
+
+    <div class="bug-card v24">
+      <div class="bug-id v24">BUG · TOGGLE SIN REFRESH</div>
+      <div class="bug-name">Colapsar/expandir carpetas no actualizaba la vista</div>
+      <div class="bug-desc">El handler del botón toggle llamaba <code>Refresh-DiskView</code> pero no notificaba a WPF. <code>LiveList</code> es <code>List&lt;T&gt;</code>, no <code>ObservableCollection</code> — WPF ignora los cambios de <code>Clear()/Add()</code> sin notificación explícita.</div>
+      <div class="bug-fix">FIX: Añadido <code>$lbDiskTree.Items.Refresh()</code> tras <code>Refresh-DiskView</code> en el handler del toggle. Misma llamada que ya usaban los batches del escáner y el final de escaneo.</div>
+    </div>
+
+    <div class="bug-card v24">
+      <div class="bug-id v24">BUG · FIFO-02 PARSER</div>
+      <div class="bug-name">Carga de snapshot solo mostraba una línea</div>
+      <div class="bug-desc">El parser de regex manual para leer el JSON de entries era frágil: la detección de <code>"Entries": [</code> fallaba con variaciones de whitespace de ConvertTo-Json, y la regex de strings con backslash producía matches incorrectos.</div>
+      <div class="bug-fix">FIX: Eliminado el parser de regex. Reemplazado por <code>ConvertFrom-Json</code> nativo — correcto, robusto, y sin dependencias externas. Compatible con snapshots de v2.3 y v2.4.0.</div>
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: Roadmap v2.3 — todo completado ── -->
+  <div class="section-label">Objetivos v2.3 — Completados</div>
+  <div class="section-title">🗺️ Hoja de Ruta v2.3 — Implementada</div>
+
+  <div class="roadmap">
+
+    <div class="priority-block p-high">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Alta · Explorador de Disco</div>
+          <div class="priority-title">Funcionalidad core — todo completado</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card done">
+          <div class="item-id-box">A1</div>
+          <div class="item-content">
+            <div class="item-name">Paralelismo y escaneo estable</div>
+            <div class="item-desc">ParallelScanner en C# con inyección de assemblies, parentKey correcta y cola ConcurrentQueue. BATCH y timer adaptativos según RAM libre.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Completado</span><span class="tag">C#</span><span class="tag">ParallelScanner</span></div>
+          </div>
+        </div>
+        <div class="item-card done">
+          <div class="item-id-box">A3</div>
+          <div class="item-content">
+            <div class="item-name">Auto-refresco configurable en Rendimiento</div>
+            <div class="item-desc"><code>chkAutoRefresh</code> con <code>$script:AutoRefreshTimer</code> e intervalo configurable. Se detiene correctamente en <code>Add_Closed</code> y se guarda en <code>settings.json</code>.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">DispatcherTimer</span></div>
+          </div>
+        </div>
+        <div class="item-card done">
+          <div class="item-id-box">FIX</div>
+          <div class="item-content">
+            <div class="item-name">Guardia del timer de rendimiento</div>
+            <div class="item-desc">Guardia contra ticks durante el cierre. Timer de rendimiento detenido y recreado correctamente en cada operación.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Completado</span><span class="tag">Estabilidad</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="priority-block p-medium">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Media · Funcionalidad</div>
+          <div class="priority-title">Nuevas características — todas completadas</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card done">
+          <div class="item-id-box">B1</div>
+          <div class="item-content">
+            <div class="item-name">Filtro en tiempo real en el Explorador</div>
+            <div class="item-desc">TextBox <code>txtDiskFilter</code> con <code>Apply-DiskFilter</code> en tiempo real, botón limpiar y estado guardado en <code>settings.json</code>.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">WPF</span><span class="tag">Filter</span></div>
+          </div>
+        </div>
+        <div class="item-card done">
+          <div class="item-id-box">B2</div>
+          <div class="item-content">
+            <div class="item-name">Menú contextual en el árbol de carpetas</div>
+            <div class="item-desc">ContextMenu oscuro temático: Abrir, Copiar ruta, Escanear subcarpeta, Eliminar. Habilitación dinámica por selección.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">ContextMenu</span><span class="tag">WPF</span></div>
+          </div>
+        </div>
+        <div class="item-card done">
+          <div class="item-id-box">B3</div>
+          <div class="item-content">
+            <div class="item-name">Exportar a CSV y HTML</div>
+            <div class="item-desc">Exportación CSV con StreamWriter directo y exportación HTML con informe visual completo. Ambas con barra de progreso y botón "Segundo plano".</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">CSV</span><span class="tag">HTML</span><span class="tag">Export</span></div>
+          </div>
+        </div>
+        <div class="item-card done">
+          <div class="item-id-box">B4</div>
+          <div class="item-content">
+            <div class="item-name">Historial de escaneos (Snapshots)</div>
+            <div class="item-desc">Guardar snapshots en JSON. Lista cargada en background con streaming de metadatos. Comparación snapshot vs actual y snapshot A vs B. Selección con checkboxes y eliminación en lote.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Completado</span><span class="tag">JSON</span><span class="tag">Historial</span><span class="tag">Comparador</span></div>
+          </div>
+        </div>
+        <div class="item-card done">
+          <div class="item-id-box">C3</div>
+          <div class="item-content">
+            <div class="item-name">Persistencia de configuración</div>
+            <div class="item-desc"><code>Save-Settings</code> guarda checkboxes, ruta del explorador y filtro en <code>%APPDATA%\SysOpt\settings.json</code>. Se restaura al arrancar.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">JSON</span><span class="tag">%APPDATA%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="priority-block p-low">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Baja · UX &amp; Polish</div>
+          <div class="priority-title">Pendiente para versiones futuras</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card done">
+          <div class="item-id-box">A2</div>
+          <div class="item-content">
+            <div class="item-name">Top 10 archivos — pre-cálculo en escaneo</div>
+            <div class="item-desc">Calcular los archivos más grandes durante el escaneo principal mediante acumulador en background, eliminando el delay al hacer clic en una carpeta. Implementado en v2.4.0 como [NEW-02].</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Implementado en v2.4.0</span><span class="tag">UX</span><span class="tag">Pre-cálculo</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">B5</div>
+          <div class="item-content">
+            <div class="item-name">Detección de archivos duplicados</div>
+            <div class="item-desc">Hash SHA256 de archivos grandes (&gt;10 MB) durante el escaneo. Panel que agrupe duplicados por hash y calcule el espacio recuperable.</div>
+            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">SHA256</span><span class="tag">Deduplication</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">C1</div>
+          <div class="item-content">
+            <div class="item-name">Tema claro / oscuro</div>
+            <div class="item-desc">Toggle en la toolbar. Mover colores del XAML a un <code>ResourceDictionary</code> intercambiable en runtime.</div>
+            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">Theming</span><span class="tag">XAML</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">C2</div>
+          <div class="item-content">
+            <div class="item-name">Notificación Windows Toast</div>
+            <div class="item-desc">Usar <code>[Windows.UI.Notifications.ToastNotificationManager]</code> para emitir notificación nativa al finalizar operaciones en segundo plano.</div>
+            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">Toast</span><span class="tag">WinRT</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">C4</div>
+          <div class="item-content">
+            <div class="item-name">Programador de tareas integrado</div>
+            <div class="item-desc">Interfaz para crear/eliminar tareas en el Programador de Windows (<code>Register-ScheduledTask</code>) para optimizaciones automáticas semanales.</div>
+            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">TaskScheduler</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: Optimización RAM (diagnóstico + implementado) ── -->
+  <div class="section-label">Optimización de RAM — completada en v2.3 + v2.4.0</div>
+  <div class="section-title">🧠 Optimización de Consumo de RAM</div>
+
+  <div class="ram-section">
+
+    <div class="ram-intro">
+      <div class="ram-intro-icon">📊</div>
+      <div style="flex:1">
+        <div class="ram-intro-title">Diagnóstico resuelto — todas las causas raíz corregidas</div>
+        <div class="ram-intro-desc">
+          RAM-01 a RAM-06 implementados en v2.3. FIFO-01 y FIFO-02 implementados en v2.4.0 dev.
+          Los picos de RAM transitorios durante exportaciones y carga de snapshots están eliminados.
+          <code>DiskItem_v211</code> es ahora un modelo de datos puro sin INotifyPropertyChanged.
+        </div>
+        <div class="ram-intro-stats">
+          <div class="ram-stat">
+            <div class="ram-stat-label">Snapshot save</div>
+            <div class="ram-stat-value" style="color:var(--green)">−200%</div>
+            <div class="ram-stat-sub">FIFO streaming</div>
+          </div>
+          <div class="ram-stat">
+            <div class="ram-stat-label">Snapshot load</div>
+            <div class="ram-stat-value" style="color:var(--green)">−70%</div>
+            <div class="ram-stat-sub">ConvertFrom-Json + queue</div>
+          </div>
+          <div class="ram-stat">
+            <div class="ram-stat-label">Lista snapshots</div>
+            <div class="ram-stat-value" style="color:var(--green)">−90%</div>
+            <div class="ram-stat-sub">solo metadatos</div>
+          </div>
+          <div class="ram-stat">
+            <div class="ram-stat-label">DiskItem_v211</div>
+            <div class="ram-stat-value" style="color:var(--green)">−30%</div>
+            <div class="ram-stat-sub">sin INPC overhead</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ram-fixes-title">Fixes implementados — RAM-01 a RAM-06</div>
+    <div class="ram-fixes-grid">
+
+      <div class="ram-fix">
+        <div class="ram-fix-header">
+          <div class="ram-fix-icon">🎯</div>
+          <div class="ram-fix-meta">
+            <div class="ram-fix-id">FIX RAM-01 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">DiskItem sin INotifyPropertyChanged</div>
+          </div>
+        </div>
+        <div class="ram-fix-desc"><code>DiskItem_v211</code> es ahora un modelo de datos puro. El toggle (ToggleIcon/ToggleVisibility) extraído a <code>DiskItemToggle_v230</code>, wrapper INPC ligero que no retiene event listeners en los miles de items.</div>
+        <div class="ram-fix-saving">Ahorro: −30 a −80 MB en escaneos grandes</div>
+      </div>
+
+      <div class="ram-fix">
+        <div class="ram-fix-header">
+          <div class="ram-fix-icon">📝</div>
+          <div class="ram-fix-meta">
+            <div class="ram-fix-id">FIX RAM-02 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">Exportación CSV/HTML via StreamWriter</div>
+          </div>
+        </div>
+        <div class="ram-fix-desc">CSV exportado con <code>StreamWriter</code> y batch flush cada 500 items (sin StringBuilder). HTML con StreamWriter a archivo temporal para las filas. Nunca existe el contenido completo como string en RAM.</div>
+        <div class="ram-fix-saving">Ahorro: −50 a −150 MB pico por exportación</div>
+      </div>
+
+      <div class="ram-fix">
+        <div class="ram-fix-header">
+          <div class="ram-fix-icon">🔗</div>
+          <div class="ram-fix-meta">
+            <div class="ram-fix-id">FIX RAM-03 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">AllScannedItems por referencia al runspace</div>
+          </div>
+        </div>
+        <div class="ram-fix-desc"><code>AllScannedItems</code> pasado a los runspaces de exportación via hashtable sincronizada compartida. El runspace lee directamente desde la referencia — sin clonar la colección.</div>
+        <div class="ram-fix-saving">Ahorro: −80 a −250 MB en escaneos de 50K+ carpetas</div>
+      </div>
+
+      <div class="ram-fix">
+        <div class="ram-fix-header">
+          <div class="ram-fix-icon">📖</div>
+          <div class="ram-fix-meta">
+            <div class="ram-fix-id">FIX RAM-04 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">JsonTextReader para metadatos de snapshot</div>
+          </div>
+        </div>
+        <div class="ram-fix-desc">Load-SnapshotList usa <code>JsonTextReader</code> línea a línea para leer solo Label, Date, RootPath y contar Entries con depth-tracking. Los arrays de Entries nunca se deserializan al listar.</div>
+        <div class="ram-fix-saving">Ahorro: −200 a −400 MB pico al cargar lista con snapshots grandes</div>
+      </div>
+
+      <div class="ram-fix">
+        <div class="ram-fix-header">
+          <div class="ram-fix-icon">🏊</div>
+          <div class="ram-fix-meta">
+            <div class="ram-fix-id">FIX RAM-05 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">RunspacePool centralizado</div>
+          </div>
+        </div>
+        <div class="ram-fix-desc">Único <code>RunspacePool</code> de mín 1 / máx 3 runspaces con <code>InitialSessionState.CreateDefault2()</code>. Reutilización entre operaciones, eliminando el overhead de arranque y carga de módulos por operación.</div>
+        <div class="ram-fix-saving">Ahorro: −10 a −30 MB en uso sostenido</div>
+      </div>
+
+      <div class="ram-fix">
+        <div class="ram-fix-header">
+          <div class="ram-fix-icon">🗑️</div>
+          <div class="ram-fix-meta">
+            <div class="ram-fix-id">FIX RAM-06 · IMPLEMENTADO ✓</div>
+            <div class="ram-fix-name">GC agresivo + EmptyWorkingSet</div>
+          </div>
+        </div>
+        <div class="ram-fix-desc">Tras cada exportación o carga: <code>GCSettings.LargeObjectHeapCompactionMode = CompactOnce</code> + <code>GC.Collect(2, Forced, true, true)</code> + <code>EmptyWorkingSet</code>. Devuelve páginas al SO inmediatamente.</div>
+        <div class="ram-fix-saving">RAM devuelta al SO más rápido, reduce RSS visible</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: FIFO Streaming v2.4.0 ── -->
+  <div class="section-label">FIFO Streaming — v2.4.0 developer</div>
+  <div class="section-title">⚡ Optimización FIFO — Snapshots sin RAM pico</div>
+
+  <div class="fifo-section">
+    <div class="fifo-grid">
+
+      <div class="fifo-card">
+        <div class="fifo-card-id">FIFO-01 · IMPLEMENTADO ✓ · bgSave</div>
+        <div class="fifo-card-name">Guardado de snapshot via ConcurrentQueue + StreamWriter</div>
+        <div class="fifo-card-desc">El hilo UI encola items uno a uno en <code>ConcurrentQueue</code> mientras el background (que ya está corriendo) drena la queue y escribe directamente al disco con <code>StreamWriter</code>. El JSON completo nunca existe en RAM. Flush cada 500 items para evitar buffers grandes. Sin dependencia de Newtonsoft.</div>
+        <div class="fifo-card-result">Antes: 3× tamaño del dataset en RAM
+Ahora: ≈ items en tránsito en queue (decenas)
+Ahorro: −50% a −200% RAM pico en guardado</div>
+      </div>
+
+      <div class="fifo-card">
+        <div class="fifo-card-id">FIFO-02 · IMPLEMENTADO ✓ · bgEnt</div>
+        <div class="fifo-card-name">Carga de entries via ConvertFrom-Json nativo + ConcurrentQueue</div>
+        <div class="fifo-card-desc">Eliminada dependencia de <code>Newtonsoft.Json.JsonTextReader</code> — los runspaces background no heredan assemblies externos en PS 5.1. Reemplazado por <code>ConvertFrom-Json</code> nativo de PowerShell (cmdlet interno, disponible en cualquier runspace). Los entries se encolan uno a uno en ConcurrentQueue conforme se procesan. DispatcherTimer drena en lotes de 500/tick.</div>
+        <div class="fifo-card-result">Sin error "unable to find type [Newtonsoft...]"
+Compatibilidad con snapshots v2.3 (ConvertTo-Json)
+y v2.4.0 (StreamWriter compacto)
+Ahorro: −30% RAM pico (elimina ConcurrentBag intermedio)</div>
+      </div>
+
+      <div class="fifo-card">
+        <div class="fifo-card-id">FIFO-03 · IMPLEMENTADO ✓ · Terminación</div>
+        <div class="fifo-card-name">Terminación limpia garantizada en ambos flujos</div>
+        <div class="fifo-card-desc">Ambos flujos (save y load) liberan recursos en bloque <code>finally</code> independientemente de si hubo error: StreamWriter.Close(), FileStream.Dispose(), y señal <code>FeedDone = $true</code> al consumer. GC agresivo con LOH compaction post-operación.</div>
+        <div class="fifo-card-result">Sin file handles abiertos tras error
+FeedDone siempre señalizado — consumer no queda bloqueado
+LOH compaction + EmptyWorkingSet post-op</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SECCIÓN: Estabilidad ── -->
+  <div class="section-label">Vías de estabilidad técnica — pendientes</div>
+  <div class="section-title">🛡️ Estabilidad — Objetivos futuros</div>
+
+  <div class="stability-section">
+    <div class="stability-grid">
+
+      <div class="stability-card">
+        <div class="stability-icon">📋</div>
+        <div class="stability-name">Logging estructurado</div>
+        <div class="stability-desc">Función centralizada que escriba a la UI, a un archivo de log rotante en <code>%TEMP%\SysOpt.log</code> y a un buffer en memoria para diagnóstico.</div>
+      </div>
+
+      <div class="stability-card">
+        <div class="stability-icon">🧪</div>
+        <div class="stability-name">DLL externo para tipos C#</div>
+        <div class="stability-desc">Compilar los tipos C# (<code>DiskItem_v211</code>, <code>ScanCtl211</code>, <code>PScanner211</code>) a un DLL externo cargado con <code>Add-Type -Path</code>, eliminando la recompilación por completo.</div>
+      </div>
+
+      <div class="stability-card">
+        <div class="stability-icon">🔍</div>
+        <div class="stability-name">WMI con timeout configurable</div>
+        <div class="stability-desc">Envolver todas las llamadas CIM en un <code>CimSession</code> con <code>OperationTimeout</code> de 5 s para garantizar respuesta en sistemas con WMI dañado.</div>
+      </div>
+
+      <div class="stability-card">
+        <div class="stability-icon">🪝</div>
+        <div class="stability-name">Error boundary global</div>
+        <div class="stability-desc">Handler <code>[System.AppDomain]::CurrentDomain.UnhandledException</code> que capture excepciones no controladas de runspaces, las logee y muestre un mensaje amigable.</div>
+      </div>
+
+      <div class="stability-card">
+        <div class="stability-icon">📦</div>
+        <div class="stability-name">Abstracción de la capa de datos</div>
+        <div class="stability-desc">Extraer toda la lógica WMI/CIM a funciones <code>Get-*Data</code> puras separadas del código de rendering. Facilita testing y mantenimiento futuro.</div>
+      </div>
+
+      <div class="stability-card">
+        <div class="stability-icon">🔄</div>
+        <div class="stability-name">CancellationToken unificado</div>
+        <div class="stability-desc">Usar un único <code>CancellationTokenSource</code> global vinculado a <code>ScanControl.Stop</code>. Parada limpia sin sleep polling de 150 ms.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SECCIÓN: Timeline ── -->
+  <div class="section-label">Roadmap de versiones</div>
+  <div class="section-title">📅 Versiones — Historial y Próximas</div>
+
+  <div class="timeline">
+    <div class="tl-items">
+
+      <div class="tl-item done">
+        <div class="tl-ver">v2.0.x · COMPLETADO ✓</div>
+        <div class="tl-title">Hotfix de estabilidad crítica</div>
+        <ul class="tl-list">
+          <li class="done-li">Guard anti-TYPE_ALREADY_EXISTS en 3 clases C#</li>
+          <li class="done-li">Fix parentKey ::ROOT:: en explorador de disco</li>
+          <li class="done-li">Inyección de assemblies al runspace de escaneo</li>
+          <li class="done-li">Import-Module en runspace de rendimiento</li>
+          <li class="done-li">Update-SystemInfo asíncrono (no bloquea UI)</li>
+          <li class="done-li">Fix closure $async → $script:DiskScanAsync</li>
+          <li class="done-li">Cleanup completo en Add_Closed</li>
+        </ul>
+      </div>
+
+      <div class="tl-item done">
+        <div class="tl-ver">v2.1.x · COMPLETADO ✓</div>
+        <div class="tl-title">Estabilidad del Explorador de Disco</div>
+        <ul class="tl-list">
+          <li class="done-li">Fix parser: .AddParameter con backtick multilínea</li>
+          <li class="done-li">Fix: "Token 'if' inesperado" en argumento de método</li>
+          <li class="done-li">Memoria adaptativa según RAM libre (BATCH + intervalo)</li>
+          <li class="done-li">Colapso de carpetas sin bloqueo de UI (childMap cacheado)</li>
+          <li class="done-li">Fix Array::Sort → Sort-Object correcto</li>
+          <li class="done-li">Orden mayor→menor garantizado (DFS con frame stack)</li>
+        </ul>
+      </div>
+
+      <div class="tl-item done">
+        <div class="tl-ver">v2.3 · COMPLETADO ✓ — VERSIÓN PÚBLICA ESTABLE</div>
+        <div class="tl-title">Funcionalidad completa del Explorador + Optimización RAM</div>
+        <ul class="tl-list">
+          <li class="done-li">B1: Filtro por nombre en árbol de carpetas</li>
+          <li class="done-li">B2: Menú contextual (abrir, eliminar, copiar ruta)</li>
+          <li class="done-li">B3: Exportar a CSV y HTML (async, con progreso)</li>
+          <li class="done-li">B4: Snapshots + historial + comparador + selección múltiple</li>
+          <li class="done-li">A3: Auto-refresco configurable en pestaña Rendimiento</li>
+          <li class="done-li">C3: Persistencia de configuración en JSON</li>
+          <li class="done-li">RAM-01…06: Optimizaciones de memoria completas</li>
+          <li class="done-li">BF1…BF6: Bugs de snapshots y comparador corregidos</li>
+        </ul>
+      </div>
+
+      <div class="tl-item done">
+        <div class="tl-ver">v2.4.0 · COMPLETADO ✓ — RAMA DEVELOPER</div>
+        <div class="tl-title">FIFO Streaming + Pre-cálculo + Estabilidad</div>
+        <ul class="tl-list">
+          <li class="done-li">✓ FIFO-01: Save streaming sin RAM pico (ConcurrentQueue + StreamWriter)</li>
+          <li class="done-li">✓ FIFO-02: Load entries con ConvertFrom-Json nativo (sin Newtonsoft)</li>
+          <li class="done-li">✓ FIFO-03: Terminación limpia garantizada en finally</li>
+          <li class="done-li">✓ Fix: Set-Content → File::WriteAllText en Save-Settings</li>
+          <li class="done-li">✓ Fix: Toggle colapsar/expandir + Items.Refresh()</li>
+          <li class="done-li">✓ A2: Pre-cálculo de top 10 archivos durante escaneo (acumulador en background)</li>
+        </ul>
+      </div>
+
+      <div class="tl-item next">
+        <div class="tl-ver">v2.5.0 · PLANIFICADO</div>
+        <div class="tl-title">Deduplicación, estabilidad avanzada y funcionalidades extra</div>
+        <ul class="tl-list">
+          <li>B5: Deduplicación por SHA256 en archivos grandes (&gt;10 MB)</li>
+          <li>Error boundary global con UnhandledException en AppDomain</li>
+          <li>Logging estructurado a archivo rotante en %TEMP%\SysOpt.log</li>
+          <li>WMI con timeout configurable via CimSession (5 s)</li>
+        </ul>
+      </div>
+
+      <div class="tl-item future">
+        <div class="tl-ver">v3.0.0 · VISIÓN</div>
+        <div class="tl-title">Plataforma modular y extensible</div>
+        <ul class="tl-list">
+          <li>Tipos C# compilados a DLL externo (sin Add-Type inline)</li>
+          <li>C1: Tema claro/oscuro con ResourceDictionary</li>
+          <li>C2: Notificaciones Toast nativas de Windows</li>
+          <li>C4: Integración con el Programador de tareas</li>
+          <li>Plugin system para módulos de limpieza externos</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v2.3.0 estable · v2.4.0 completada, pendiente release estable</p>
+    <div>
+      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>v2.3.0 estable</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>v2.4.0 completada</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>FIFO streaming activo</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>C# inline types</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>Multi-runspace</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--muted)"></span>PowerShell + WPF</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

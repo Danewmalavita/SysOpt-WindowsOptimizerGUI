@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SysOpt — Informe de Disco {{REPORT_DATE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:      #0D0F1A;
+    --card:    #131625;
+    --card2:   #1A1E2F;
+    --border:  #252B40;
+    --blue:    #5BA3FF;
+    --cyan:    #2EDFBF;
+    --amber:   #FFB547;
+    --red:     #FF6B84;
+    --green:   #4AE896;
+    --purple:  #9B7EFF;
+    --txt:     #E8ECF4;
+    --muted:   #7880A0;
+    --mono:    'JetBrains Mono', monospace;
+    --sans:    'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(91,163,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,163,255,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Blobs */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: .10;
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .blob-1 { width:520px; height:520px; background:#5BA3FF; top:-120px; left:-120px; }
+  .blob-2 { width:420px; height:420px; background:#2EDFBF; bottom:-60px; right:-80px; animation-delay:-9s; }
+  .blob-3 { width:320px; height:320px; background:#9B7EFF; top:45%; left:50%; transform:translate(-50%,-50%); animation-delay:-4s; }
+
+  @keyframes drift {
+    from { transform: translate(0,0)   scale(1);    }
+    to   { transform: translate(28px,18px) scale(1.07); }
+  }
+  .blob-3 { animation-name: drift3; }
+  @keyframes drift3 {
+    from { transform: translate(-50%,-50%) scale(1);    }
+    to   { transform: translate(calc(-50% + 28px), calc(-50% + 18px)) scale(1.07); }
+  }
+
+  /* ── Layout ── */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 52px 28px 96px;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding-bottom: 36px;
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+  .logo-fallback {
+    width: 60px; height: 60px;
+    border-radius: 14px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; flex-shrink: 0;
+  }
+  .header-brand h1 {
+    font-size: clamp(1.6rem, 3vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+  .header-brand h1 .a1 { color: var(--blue); }
+  .header-brand h1 .a2 { color: var(--cyan); }
+  .header-meta {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .header-meta .sep { color: var(--border); }
+  .badge-ver {
+    margin-left: auto;
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--purple);
+    background: rgba(155,126,255,.1);
+    border: 1px solid rgba(155,126,255,.25);
+    border-radius: 100px;
+    padding: 4px 14px;
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+
+  /* ── Section chrome ── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 22px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+  }
+
+  /* ── Summary stats row ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .stat-box {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 14px;
+    text-align: center;
+  }
+  .stat-lbl {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 1.55rem;
+    font-weight: 700;
+  }
+  .c-blue   { color: var(--blue);   }
+  .c-green  { color: var(--green);  }
+  .c-amber  { color: var(--amber);  }
+  .c-red    { color: var(--red);    }
+  .c-purple { color: var(--purple); }
+  .c-cyan   { color: var(--cyan);   }
+  .c-muted  { color: var(--muted);  }
+
+  /* ── Disk usage bar ── */
+  .disk-bar-wrap {
+    height: 10px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 14px 0 6px;
+  }
+  .disk-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+  }
+  .disk-bar-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* ── Pie + legend ── */
+  .chart-wrap {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 36px;
+    align-items: start;
+  }
+  .pie-svg-container { position: relative; }
+  .pie-svg-container svg { display: block; width: 100%; max-width: 320px; }
+
+  .slice {
+    cursor: pointer;
+    transform-origin: 160px 160px;
+    transition: opacity .15s, transform .15s;
+  }
+  .slice:hover { opacity: 1 !important; transform: scale(1.04); }
+
+  .legend { display: flex; flex-direction: column; gap: 5px; max-height: 360px; overflow-y: auto; }
+  .legend::-webkit-scrollbar { width: 4px; }
+  .legend::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .legend-item {
+    display: grid;
+    grid-template-columns: 12px 1fr 88px 54px;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 7px;
+    cursor: default;
+    transition: background .15s;
+    font-size: 12px;
+  }
+  .legend-item:hover { background: var(--card2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--txt); }
+  .legend-size { font-family: var(--mono); font-size: 11px; color: var(--amber); text-align: right; }
+  .legend-pct  { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: right; }
+
+  /* ── Tooltip ── */
+  .tooltip-box {
+    position: fixed;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--txt);
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    max-width: 320px;
+    word-break: break-all;
+  }
+  .tooltip-box .tt-name { color: var(--blue); font-weight: 700; margin-bottom: 3px; }
+  .tooltip-box .tt-size { color: var(--amber); }
+  .tooltip-box .tt-pct  { color: var(--muted); margin-left: 10px; }
+
+  /* ── Data table ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .data-table th {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 9px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table th.r { text-align: right; }
+  .data-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(37,43,64,.5);
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(26,30,47,.7); }
+  .td-dot  { width: 18px; }
+  .dot     { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+  .td-path { color: var(--muted); font-family: var(--mono); font-size: 10px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .td-size { font-family: var(--mono); font-weight: 600; text-align: right; }
+  .td-pct  { font-family: var(--mono); color: var(--muted); text-align: right; }
+  .td-bar  { min-width: 80px; }
+  .bar-wrap { height: 5px; background: var(--card2); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; }
+  .td-files { font-family: var(--mono); color: var(--muted); font-size: 10px; text-align: right; }
+  .depth-0  { color: var(--txt); font-weight: 600; }
+  .depth-1  { color: var(--txt); padding-left: 18px !important; }
+  .depth-2  { color: var(--muted); padding-left: 34px !important; }
+  .depth-3  { color: var(--muted); padding-left: 50px !important; font-size: 11px; }
+  .depth-4p { color: var(--muted); padding-left: 66px !important; font-size: 10px; }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding-top: 36px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+  .chips {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 3px 12px;
+    font-size: 10px;
+  }
+  .chip-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  @media (max-width: 780px) {
+    .chart-wrap { grid-template-columns: 1fr; }
+    .stats-row  { grid-template-columns: repeat(2, 1fr); }
+    header { flex-wrap: wrap; }
+    .badge-ver { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="tooltip-box" id="tt">
+  <div class="tt-name" id="tt-name"></div>
+  <span class="tt-size" id="tt-size"></span>
+  <span class="tt-pct"  id="tt-pct"></span>
+</div>
+
+<div class="container">
+
+  <!-- ═══ HEADER ═══════════════════════════════════════════════════════════ -->
+  <header>
+    {{LOGO_TAG}}
+    <div class="header-brand">
+      <h1><span class="a1">SYS</span>OPT <span class="a2">·</span> Informe de Disco</h1>
+      <div class="header-meta">
+        <span>📁 {{SCAN_PATH}}</span>
+        <span class="sep">|</span>
+        <span>📅 {{REPORT_DATE_LONG}}</span>
+        <span class="sep">|</span>
+        <span>⏱ {{SCAN_TIME}}</span>
+      </div>
+    </div>
+    <div class="badge-ver">{{APP_VERSION}}</div>
+  </header>
+
+  <!-- ═══ RESUMEN GENERAL ═══════════════════════════════════════════════════ -->
+  <section class="card">
+    <div class="section-label">Resumen del análisis</div>
+    <div class="section-title">Vista general del espacio</div>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-lbl">Tamaño analizado</div>
+        <div class="stat-val c-blue">{{TOTAL_SIZE}}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Carpetas</div>
+        <div class="stat-val c-green">{{TOTAL_FOLDERS}}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Archivos</div>
+        <div class="stat-val c-amber">{{TOTAL_FILES}}</div>
+      </div>
+      {{DISK_STATS_EXTRA}}
+    </div>
+    {{DISK_USAGE_BAR}}
+  </section>
+
+  <!-- ═══ GRÁFICO DE TARTA ═══════════════════════════════════════════════════ -->
+  <section class="card">
+    <div class="section-label">Distribución del espacio</div>
+    <div class="section-title">Carpetas raíz — Gráfico de uso</div>
+    <div class="chart-wrap">
+      <div class="pie-svg-container">
+        <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg">
+          {{PIE_SLICES}}
+          <!-- Donut hole -->
+          <circle cx="160" cy="160" r="62" fill="#0D0F1A"/>
+          <!-- Center label -->
+          <text x="160" y="153" text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="13" font-weight="700" fill="#E8ECF4">{{TOTAL_SIZE}}</text>
+          <text x="160" y="170" text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9" fill="#7880A0" letter-spacing="1.5">TOTAL</text>
+        </svg>
+      </div>
+      <div class="legend" id="legend">
+        {{PIE_LEGEND}}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TABLA DETALLADA ════════════════════════════════════════════════════ -->
+  <section class="card">
+    <div class="section-label">Desglose por carpetas</div>
+    <div class="section-title">Todas las carpetas — ordenadas por tamaño</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="td-dot"></th>
+          <th>Carpeta</th>
+          <th>Ruta</th>
+          <th class="r">Tamaño</th>
+          <th class="r">%</th>
+          <th class="r">Archivos</th>
+          <th>Proporción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{TABLE_ROWS}}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══ FOOTER ════════════════════════════════════════════════════════════ -->
+  <footer>
+    <p>SysOpt Windows Optimizer GUI {{APP_VERSION}} — Informe generado el {{REPORT_DATE_LONG}}</p>
+    <div class="chips">
+      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>{{SCAN_PATH}}</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>{{TOTAL_FOLDERS}} carpetas</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>{{TOTAL_SIZE}} analizados</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>PowerShell + WPF</span>
+    </div>
+  </footer>
+
+</div><!-- /container -->
+
+<script>
+// ── Tooltip en slices del pie ─────────────────────────────────────────────
+const tt      = document.getElementById('tt');
+const ttName  = document.getElementById('tt-name');
+const ttSize  = document.getElementById('tt-size');
+const ttPct   = document.getElementById('tt-pct');
+
+document.querySelectorAll('.slice').forEach(s => {
+  s.addEventListener('mousemove', e => {
+    tt.style.display = 'block';
+    tt.style.left    = (e.clientX + 16) + 'px';
+    tt.style.top     = (e.clientY - 14) + 'px';
+    ttName.textContent = s.dataset.name;
+    ttSize.textContent = s.dataset.size;
+    ttPct.textContent  = ' (' + s.dataset.pct + ')';
+  });
+  s.addEventListener('mouseleave', () => { tt.style.display = 'none'; });
+});
+
+// ── Highlight de leyenda al hacer hover en slice ─────────────────────────
+document.querySelectorAll('.slice').forEach((s, i) => {
+  s.addEventListener('mouseenter', () => {
+    document.querySelectorAll('.slice').forEach((ss, ii) => {
+      ss.style.opacity = ii === i ? '1' : '0.35';
+    });
+    const li = document.querySelectorAll('.legend-item')[i];
+    if (li) li.style.background = 'var(--card2)';
+  });
+  s.addEventListener('mouseleave', () => {
+    document.querySelectorAll('.slice').forEach(ss => ss.style.opacity = '');
+    document.querySelectorAll('.legend-item').forEach(li => li.style.background = '');
+  });
+});
+</script>
+</body>
+</html>
