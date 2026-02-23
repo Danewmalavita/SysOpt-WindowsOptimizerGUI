@@ -1,4 +1,4 @@
-﻿#﻿Requires -RunAsAdministrator
+#﻿Requires -RunAsAdministrator
 <#
 .SYNOPSIS
     Optimizador de Sistema Windows con Interfaz Gráfica
@@ -489,7 +489,7 @@ Set-SplashProgress 40 "Analizando permisos..."
 $xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SysOpt - Windows Optimizer GUI v2.3.0" Height="980" Width="1220"
+        Title="SysOpt - Windows Optimizer GUI v2.4.0" Height="980" Width="1220"
         WindowStartupLocation="CenterScreen" ResizeMode="CanResize"
         Background="#0D0F1A">
     <Window.Resources>
@@ -847,7 +847,7 @@ $xaml = @"
                                    Foreground="#E8ECF4">
                             <Run Text="SYS"/>
                             <Run Foreground="#5BA3FF" Text="OPT"/>
-                            <Run Foreground="#B0BACC" FontSize="13" FontWeight="Normal" Text="  v2.3.0  ·  Windows Optimizer GUI"/>
+                            <Run Foreground="#B0BACC" FontSize="13" FontWeight="Normal" Text="  v2.4.0  ·  Windows Optimizer GUI"/>
                         </TextBlock>
                         <TextBlock Name="StatusText" FontFamily="Segoe UI" FontSize="11"
                                    Foreground="#9BA4C0" Margin="2,3,0,0"
@@ -5063,7 +5063,7 @@ $btnDiskReport.Add_Click({
                 -replace '{{REPORT_DATE}}',       $reportDate `
                 -replace '{{REPORT_DATE_LONG}}',  $dateLong `
                 -replace '{{SCAN_TIME}}',         $dateLong `
-                -replace '{{APP_VERSION}}',       "v2.3.0" `
+                -replace '{{APP_VERSION}}',       "v2.4.0" `
                 -replace '{{TOTAL_SIZE}}',        $totalStr `
                 -replace '{{TOTAL_FOLDERS}}',     $totalFolders `
                 -replace '{{TOTAL_FILES}}',       $totalFiles `
@@ -7913,15 +7913,77 @@ function Show-AboutWindow {
                     </StackPanel>
                     <Border CornerRadius="6" Background="#1A5BA3FF" BorderBrush="#405BA3FF" BorderThickness="1"
                             Padding="10,4" Margin="14,0,0,0" VerticalAlignment="Center">
-                        <TextBlock FontFamily="Consolas" FontSize="11" FontWeight="Bold" Foreground="#5BA3FF" Text="v2.1.3"/>
+                        <TextBlock FontFamily="Consolas" FontSize="11" FontWeight="Bold" Foreground="#5BA3FF" Text="v2.4.0"/>
                     </Border>
                 </StackPanel>
 
                 <!-- Separador -->
                 <Rectangle Height="1" Fill="#252B40" Margin="0,0,0,16"/>
 
-                <!-- v2.1.3 UX -->
+                <!-- v2.4.0 FIFO Streaming -->
                 <Border CornerRadius="8" Background="#131625" BorderBrush="#3D8EFF" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Border CornerRadius="4" Background="#1F5BA3FF" Padding="6,2" Margin="0,0,8,0">
+                                <TextBlock FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="#5BA3FF" Text="v2.4.0 · FIFO"/>
+                            </Border>
+                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="#E8ECF4" VerticalAlignment="Center" Text="FIFO Streaming Anti-RAM-Drain"/>
+                        </StackPanel>
+                        <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="#9BA4C0" TextWrapping="Wrap" LineHeight="20">
+                            <Run Foreground="#4AE896" Text="• [FIFO-01]"/><Run Text="  Guardado de snapshot: streaming ConcurrentQueue + JsonTextWriter directo al disco (−50% a −200% RAM pico)&#x0a;"/>
+                            <Run Foreground="#4AE896" Text="• [FIFO-02]"/><Run Text="  Carga de entries: ConvertFrom-Json nativo + ConcurrentQueue — DispatcherTimer drena en lotes de 500/tick&#x0a;"/>
+                            <Run Foreground="#4AE896" Text="• [FIFO-03]"/><Run Text="  Terminación limpia garantizada: GC + LOH compaction en bloque finally, incluso en error&#x0a;"/>
+                            <Run Foreground="#5BA3FF" Text="• [Fix]"/><Run Text="  Set-Content → File::WriteAllText en Save-Settings (evita 'Stream was not readable' en PS 5.1)&#x0a;"/>
+                            <Run Foreground="#5BA3FF" Text="• [Fix]"/><Run Text="  Toggle colapsar/expandir: Items.Refresh() explícito en LiveList (List&lt;T&gt;)&#x0a;"/>
+                            <Run Foreground="#5BA3FF" Text="• [Fix]"/><Run Text="  Parser FIFO-02: reemplazado regex frágil por ConvertFrom-Json nativo (compatible con snapshots v2.3 y v2.4.0)"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- v2.3.0 RAM + Snapshots -->
+                <Border CornerRadius="8" Background="#131625" BorderBrush="#9B7EFF" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Border CornerRadius="4" Background="#1A9B7EFF" Padding="6,2" Margin="0,0,8,0">
+                                <TextBlock FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="#9B7EFF" Text="v2.3.0 · RAM + SNAPSHOTS"/>
+                            </Border>
+                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="#E8ECF4" VerticalAlignment="Center" Text="Optimización RAM y comparador de snapshots"/>
+                        </StackPanel>
+                        <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="#9BA4C0" TextWrapping="Wrap" LineHeight="20">
+                            <Run Foreground="#4AE896" Text="• [RAM-01]"/><Run Text="  DiskItem_v211 sin INPC — wrapper DiskItemToggle_v230 ligero (−30 a −80 MB en escaneos grandes)&#x0a;"/>
+                            <Run Foreground="#4AE896" Text="• [RAM-02]"/><Run Text="  Exportación CSV/HTML con StreamWriter directo y flush por lotes (sin StringBuilder)&#x0a;"/>
+                            <Run Foreground="#4AE896" Text="• [RAM-04]"/><Run Text="  Load-SnapshotList: JsonTextReader línea a línea — Entries nunca en RAM al listar (−200 a −400 MB)&#x0a;"/>
+                            <Run Foreground="#4AE896" Text="• [RAM-05]"/><Run Text="  RunspacePool centralizado (1–3 runspaces) para operaciones async&#x0a;"/>
+                            <Run Foreground="#FFB547" Text="• [NEW]"/><Run Text="  Snapshots con checkboxes, botón 'Todo' y contador en tiempo real&#x0a;"/>
+                            <Run Foreground="#FFB547" Text="• [NEW]"/><Run Text="  Comparador en 3 modos: snapshot vs actual, snapshot A vs B, histórico&#x0a;"/>
+                            <Run Foreground="#FFB547" Text="• [NEW]"/><Run Text="  Eliminación en lote de snapshots con confirmación&#x0a;"/>
+                            <Run Foreground="#FFB547" Text="• [NEW]"/><Run Text="  Comparador O(1) con HashSet + Dictionary (antes O(n²))"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- v2.2.0 Explorador de archivos -->
+                <Border CornerRadius="8" Background="#131625" BorderBrush="#2EDFBF" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Border CornerRadius="4" Background="#1A2EDFBF" Padding="6,2" Margin="0,0,8,0">
+                                <TextBlock FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="#2EDFBF" Text="v2.2.0 · EXPLORADOR"/>
+                            </Border>
+                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="#E8ECF4" VerticalAlignment="Center" Text="Explorador de archivos y correcciones de rutas"/>
+                        </StackPanel>
+                        <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="#9BA4C0" TextWrapping="Wrap" LineHeight="20">
+                            <Run Foreground="#2EDFBF" Text="• [BF1]"/><Run Text="  Snapshots: ruta movida a .\snapshots (relativo al script)&#x0a;"/>
+                            <Run Foreground="#2EDFBF" Text="• [BF3]"/><Run Text="  Fix crítico en Load-SnapshotList: snapshots que no aparecían en la lista&#x0a;"/>
+                            <Run Foreground="#2EDFBF" Text="• [BF4]"/><Run Text="  Diálogo de confirmación: escape de comillas dobles en nombres de snapshot&#x0a;"/>
+                            <Run Foreground="#FFB547" Text="• [N1]"/><Run Text="  Snapshots con CheckBox y botón 'Todo' para marcar en lote&#x0a;"/>
+                            <Run Foreground="#FFB547" Text="• [N2]"/><Run Text="  Comparar mejorado: 3 modos (snapshot vs actual, A vs B)&#x0a;"/>
+                            <Run Foreground="#FFB547" Text="• [N3]"/><Run Text="  Eliminar snapshots en lote con confirmación"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- v2.1.3 UX -->
+                <Border CornerRadius="8" Background="#131625" BorderBrush="#252B40" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <Border CornerRadius="4" Background="#1F5BA3FF" Padding="6,2" Margin="0,0,8,0">
@@ -8094,7 +8156,7 @@ if ($null -ne $btnAbout) {
 # Mensaje de bienvenida simplificado en consola (novedades → botón ℹ)
 # ─────────────────────────────────────────────────────────────────────────────
 Write-ConsoleMain "═══════════════════════════════════════════════════════════"
-Write-ConsoleMain "SysOpt - Windows Optimizer GUI — VERSIÓN 2.3.0"
+Write-ConsoleMain "SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0"
 Write-ConsoleMain "═══════════════════════════════════════════════════════════"
 Write-ConsoleMain "Sistema iniciado correctamente"
 Write-ConsoleMain ""
