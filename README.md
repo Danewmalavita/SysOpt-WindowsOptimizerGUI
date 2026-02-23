@@ -1,4 +1,4 @@
-# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v1.0 — Windows System Optimizer (Español)
+# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.3 — Windows System Optimizer (Español)
 **Script PowerShell con interfaz gráfica — `SysOpt.ps1`**
 
 Este proyecto implementa un **optimizador avanzado para Windows**, desarrollado íntegramente en **PowerShell** y utilizando una interfaz gráfica basada en **WPF/XAML**. Permite ejecutar tareas de mantenimiento, limpieza, verificación y optimización del sistema desde una única ventana, con monitorización de recursos en tiempo real, barra de progreso, consola integrada y modo de análisis sin cambios.
@@ -9,7 +9,6 @@ Este proyecto implementa un **optimizador avanzado para Windows**, desarrollado 
 
 ![SysOpt GUI](./resources/captura_ejecucion.png)
 
-> *Captura proporcionada por el autor mostrando la ejecución real del script.*
 
 ---
 
@@ -110,7 +109,7 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 ---
 
-## 📝 Historial de cambios — v1.0
+## 📝 Historial de cambios — v2.3
 
 ### Bugs corregidos
 - `EmptyWorkingSet` real via Win32 API en lugar de `GC.Collect` (liberación de RAM efectiva)
@@ -138,7 +137,7 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 ---
 
-# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v1.0 — Windows System Optimizer (English)
+# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.3 — Windows System Optimizer (English)
 **PowerShell Script with Graphical Interface — `SysOpt.ps1`**
 
 This project provides an **advanced Windows optimization tool**, fully developed in **PowerShell** and using a graphical interface built with **WPF/XAML**. It allows you to perform maintenance, cleanup, verification, and system optimization tasks from a single window, featuring real-time resource monitoring, a progress bar, an integrated console, and an analysis mode with no changes applied.
@@ -149,7 +148,6 @@ This project provides an **advanced Windows optimization tool**, fully developed
 
 ![SysOpt GUI](./resources/captura_ejecucion.png)
 
-> *Screenshot provided by the author showing the script running in real conditions.*
 
 ---
 
