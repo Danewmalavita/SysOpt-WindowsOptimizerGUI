@@ -29,7 +29,7 @@ Este proyecto implementa un **optimizador avanzado para Windows**, desarrollado 
 
 Escáner de carpetas estilo **TreeSize**: analiza de forma recursiva y paralela cualquier unidad o directorio y muestra el uso real de disco por carpeta con barras visuales proporcionales, permitiendo identificar de un vistazo qué ocupa más espacio.
 
-![Explorador de Disco](./resources/diskexplorer)
+![Explorador de Disco](./resources/captura_diskexplorer.png)
 
 - Escaneo recursivo paralelo con **ParallelScanner** (C# inline)
 - Árbol de carpetas con tamaños, porcentajes y barras visuales proporcionales
@@ -45,8 +45,8 @@ Escáner de carpetas estilo **TreeSize**: analiza de forma recursiva y paralela 
 
 La ventana de snapshots permite **guardar y cargar el estado completo de cualquier escaneo** como archivo JSON. Al abrir la lista de snapshots se muestran solo los metadatos (nombre, fecha, número de carpetas y tamaño total) sin cargar los entries en RAM — la carga de datos se produce únicamente al seleccionar un snapshot concreto.
 
-![Lista de Snapshots](./resources/capturasnapshotlist)
-![Lectura de Snapshot](./resources/captura_snapshotread)
+![Lista de Snapshots](./resources/captura_snapshotlist.png)
+![Lectura de Snapshot](./resources/captura_snapshotread.png)
 
 - **Guardar** el estado del escaneo actual como snapshot JSON con nombre personalizable
 - **Lista de snapshots** cargada en background sin bloquear la UI (solo metadatos vía streaming)
@@ -267,7 +267,7 @@ This project provides an **advanced Windows optimization tool**, fully developed
 
 A **TreeSize-style** folder scanner: recursively and in parallel analyzes any drive or directory and shows actual disk usage per folder with proportional visual bars, making it easy to spot what is taking up the most space at a glance.
 
-![Disk Explorer](./resources/diskexplorer)
+![Disk Explorer](./resources/captura_diskexplorer.png)
 
 - Recursive parallel scan with **ParallelScanner** (inline C#)
 - Folder tree with sizes, percentages and proportional visual bars
@@ -283,8 +283,8 @@ A **TreeSize-style** folder scanner: recursively and in parallel analyzes any dr
 
 The snapshot window lets you **save and load the complete state of any scan** as a JSON file. Opening the snapshot list shows only metadata (name, date, folder count, total size) without loading entries into RAM — data is only read when you select a specific snapshot.
 
-![Snapshot List](./resources/capturasnapshotlist)
-![Snapshot Read](./resources/captura_snapshotread)
+![Snapshot List](./resources/captura_snapshotlist.png)
+![Snapshot Read](./resources/captura_snapshotread.png)
 
 - **Save** the current scan state as a named JSON snapshot
 - **Snapshot list** loaded in background without blocking the UI (metadata-only streaming)
