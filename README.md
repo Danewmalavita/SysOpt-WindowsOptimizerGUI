@@ -1,7 +1,7 @@
-# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.3 — Windows System Optimizer (Español)
+# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.3.0 — Windows System Optimizer (Español)
 **Script PowerShell con interfaz gráfica — `SysOpt.ps1`**
 
-> **Nota de versión:** La versión pública estable es **v2.3**. La rama de desarrollo interno activa es **v2.4.0**, que incluye las optimizaciones FIFO de RAM y correcciones de estabilidad adicionales, aún no publicada como release estable.
+> **Nota de versión:** La versión pública estable es **v2.3.0**. La rama de desarrollo interno activa es **v2.4.0**, que incluye las optimizaciones FIFO de RAM y correcciones de estabilidad adicionales, aún no publicada como release estable.
 
 Este proyecto implementa un **optimizador avanzado para Windows**, desarrollado íntegramente en **PowerShell** y utilizando una interfaz gráfica basada en **WPF/XAML**. Permite ejecutar tareas de mantenimiento, limpieza, verificación y optimización del sistema desde una única ventana, con monitorización de recursos en tiempo real, barra de progreso, consola integrada y modo de análisis sin cambios.
 
@@ -26,22 +26,50 @@ Este proyecto implementa un **optimizador avanzado para Windows**, desarrollado 
 - Programar **CHKDSK /F /R** para el próximo reinicio
 
 ### 🔍 Explorador de Disco
+
+Escáner de carpetas estilo **TreeSize**: analiza de forma recursiva y paralela cualquier unidad o directorio y muestra el uso real de disco por carpeta con barras visuales proporcionales, permitiendo identificar de un vistazo qué ocupa más espacio.
+
+![Explorador de Disco](./resources/diskexplorer)
+
 - Escaneo recursivo paralelo con **ParallelScanner** (C# inline)
 - Árbol de carpetas con tamaños, porcentajes y barras visuales proporcionales
 - **Colapsar y expandir carpetas** sin bloqueo de UI (childMap cacheado, DFS con frame stack)
 - **Filtro en tiempo real** por nombre de carpeta
 - **Menú contextual** oscuro temático: abrir, copiar ruta, escanear subcarpeta, eliminar
-- **Exportar a CSV** y a **HTML** con informe visual completo (async, con barra de progreso)
-- **Explorador de archivos** por carpeta — escaneo streaming con ConcurrentQueue, filtro, ordenación y eliminación directa
+- **Exportar a CSV** con `StreamWriter` directo (sin materializar el CSV en RAM)
+- **Exportar a HTML** con informe visual completo (async, con barra de progreso) — genera un documento navegable con la jerarquía de carpetas, tamaños y colores codificados por uso
+- **Explorador de archivos** por carpeta — escaneo streaming con `ConcurrentQueue`, filtro, ordenación y eliminación directa
 - Memoria adaptativa según RAM libre (BATCH + intervalo de timer ajustados automáticamente)
 
 ### 📸 Historial de Escaneos (Snapshots)
-- Guardar el estado de cualquier escaneo como snapshot JSON
-- **Lista de snapshots** cargada en background sin bloquear la UI (solo metadatos vía streaming — los entries no se deserializan al listar)
-- **Comparar escaneos**: snapshot vs escaneo actual, o dos snapshots históricos entre sí
+
+La ventana de snapshots permite **guardar y cargar el estado completo de cualquier escaneo** como archivo JSON. Al abrir la lista de snapshots se muestran solo los metadatos (nombre, fecha, número de carpetas y tamaño total) sin cargar los entries en RAM — la carga de datos se produce únicamente al seleccionar un snapshot concreto.
+
+![Lista de Snapshots](./resources/capturasnapshotlist)
+![Lectura de Snapshot](./resources/captura_snapshotread)
+
+- **Guardar** el estado del escaneo actual como snapshot JSON con nombre personalizable
+- **Lista de snapshots** cargada en background sin bloquear la UI (solo metadatos vía streaming)
+- **Cargar snapshot**: restaura la vista del explorador con los datos guardados
+- **Comparar escaneos**: detecta carpetas nuevas, eliminadas y cambios de tamaño entre dos estados del sistema — soporta tres modos:
+  - Snapshot vs escaneo actual cargado
+  - Snapshot A vs Snapshot B (comparación histórica entre dos fechas)
 - Selección múltiple con checkboxes, botón "Todo" para marcar/desmarcar en lote
 - Eliminación en lote con confirmación
-- Comparador O(1) con HashSet + Dictionary (sin iteraciones cuadráticas)
+- Comparador O(1) con `HashSet<string>` + `Dictionary<string,long>` (sin iteraciones cuadráticas)
+
+### 📊 Pestaña Rendimiento
+
+Monitorización en tiempo real del sistema al estilo Task Manager, con gráficas actualizadas automáticamente.
+
+![Rendimiento](./resources/captura_rendimiento.png)
+
+- **CPU**: porcentaje de uso con gráfica histórica
+- **RAM**: uso actual y disponible en tiempo real
+- **Disco**: actividad de lectura/escritura
+- **Red**: velocidad de subida y bajada en tiempo real, con detección de tipo de interfaz (Ethernet 🔌 / WiFi 📶)
+- **SMART del disco**: estado de salud del disco principal
+- **Auto-refresco configurable**: intervalos de 5, 15, 30 y 60 segundos
 
 ### 💾 Memoria y Procesos
 - Liberar RAM real mediante **EmptyWorkingSet** (Win32 API nativa)
@@ -133,7 +161,7 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 #### Optimizaciones FIFO de RAM
 - **[FIFO-01]** Guardado de snapshot con `ConcurrentQueue` + `StreamWriter` directo al disco. El hilo UI encola items uno a uno mientras el background los drena y escribe en paralelo — el JSON completo nunca existe en RAM. Ahorro: −50% a −200% RAM pico.
-- **[FIFO-02]** Carga de entries con `ConvertFrom-Json` nativo + `ConcurrentQueue`. Eliminada la dependencia de `Newtonsoft.Json` en runspaces background (no se hereda en PS 5.1). Los entries se encolan uno a uno. DispatcherTimer drena en lotes de 500/tick.
+- **[FIFO-02]** Carga de entries con `ConvertFrom-Json` nativo + `ConcurrentQueue`. Eliminada la dependencia de `Newtonsoft.Json` en runspaces background (no se hereda en PS 5.1). Los entries se encolan uno a uno. `DispatcherTimer` drena en lotes de 500/tick.
 - **[FIFO-03]** Terminación limpia garantizada: liberación de streams + GC agresivo con LOH compaction en bloque `finally`, incluso en caso de error.
 
 #### Bugs corregidos
@@ -143,7 +171,7 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 ---
 
-### v2.3 *(versión pública estable)*
+### v2.3.0 *(versión pública estable)*
 
 #### Optimizaciones de RAM
 - **[RAM-01]** `DiskItem_v211` sin `INotifyPropertyChanged`. Toggle extraído a `DiskItemToggle_v230` (wrapper INPC ligero que no retiene event listeners en los miles de items).
@@ -208,10 +236,10 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 ---
 
-# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.3 — Windows System Optimizer (English)
+# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.3.0 — Windows System Optimizer (English)
 **PowerShell Script with Graphical Interface — `SysOpt.ps1`**
 
-> **Version note:** The public stable release is **v2.3**. The active internal developer branch is **v2.4.0**, which includes FIFO RAM optimizations and additional stability fixes, not yet published as a stable release.
+> **Version note:** The public stable release is **v2.3.0**. The active internal developer branch is **v2.4.0**, which includes FIFO RAM optimizations and additional stability fixes, not yet published as a stable release.
 
 This project provides an **advanced Windows optimization tool**, fully developed in **PowerShell** with a graphical interface built on **WPF/XAML**. It allows you to run maintenance, cleanup, verification, and system optimization tasks from a single window, with real-time resource monitoring, a progress bar, an integrated console, and an analysis mode that makes no changes.
 
@@ -236,22 +264,50 @@ This project provides an **advanced Windows optimization tool**, fully developed
 - Schedule **CHKDSK /F /R** for the next reboot
 
 ### 🔍 Disk Explorer
+
+A **TreeSize-style** folder scanner: recursively and in parallel analyzes any drive or directory and shows actual disk usage per folder with proportional visual bars, making it easy to spot what is taking up the most space at a glance.
+
+![Disk Explorer](./resources/diskexplorer)
+
 - Recursive parallel scan with **ParallelScanner** (inline C#)
 - Folder tree with sizes, percentages and proportional visual bars
 - **Collapse and expand folders** without UI blocking (cached childMap, DFS with frame stack)
 - **Real-time filter** by folder name
 - **Dark-themed context menu**: open, copy path, scan subfolder, delete
-- **Export to CSV** and **HTML** with full visual report (async, with progress bar)
-- **File explorer** per folder — streaming scan with ConcurrentQueue, filter, sort and direct deletion
+- **Export to CSV** with direct `StreamWriter` (CSV never materialized in RAM)
+- **Export to HTML** with full visual report (async, with progress bar) — generates a navigable document with the folder hierarchy, sizes and colour-coded usage
+- **File explorer** per folder — streaming scan with `ConcurrentQueue`, filter, sort and direct deletion
 - Adaptive memory usage based on free RAM (BATCH + timer interval auto-adjusted)
 
 ### 📸 Scan History (Snapshots)
-- Save any scan state as a JSON snapshot
-- **Snapshot list** loaded in background without blocking the UI (metadata-only streaming — entries never deserialized during listing)
-- **Compare scans**: snapshot vs current, or two historical snapshots
+
+The snapshot window lets you **save and load the complete state of any scan** as a JSON file. Opening the snapshot list shows only metadata (name, date, folder count, total size) without loading entries into RAM — data is only read when you select a specific snapshot.
+
+![Snapshot List](./resources/capturasnapshotlist)
+![Snapshot Read](./resources/captura_snapshotread)
+
+- **Save** the current scan state as a named JSON snapshot
+- **Snapshot list** loaded in background without blocking the UI (metadata-only streaming)
+- **Load snapshot**: restores the explorer view with the saved data
+- **Compare scans**: detects new folders, deleted folders and size changes between two system states — supports three modes:
+  - Snapshot vs current loaded scan
+  - Snapshot A vs Snapshot B (historical comparison between two dates)
 - Multi-select with checkboxes, "All" button to check/uncheck in bulk
 - Batch deletion with confirmation
-- O(1) comparator using HashSet + Dictionary (no quadratic iteration)
+- O(1) comparator using `HashSet<string>` + `Dictionary<string,long>` (no quadratic iteration)
+
+### 📊 Performance Tab
+
+Real-time system monitoring in the style of Task Manager, with automatically refreshing charts.
+
+![Performance](./resources/captura_rendimiento.png)
+
+- **CPU**: usage percentage with historical chart
+- **RAM**: current usage and available memory in real time
+- **Disk**: read/write activity
+- **Network**: upload and download speed in real time, with interface type detection (Ethernet 🔌 / WiFi 📶)
+- **Disk SMART**: health status of the primary drive
+- **Configurable auto-refresh**: intervals of 5, 15, 30 and 60 seconds
 
 ### 💾 Memory and Processes
 - Release RAM using the native **EmptyWorkingSet** Win32 API call
@@ -341,7 +397,7 @@ No PowerShell required, no execution policy changes needed. Simply right-click `
 
 #### FIFO RAM Optimizations
 - **[FIFO-01]** Snapshot save with `ConcurrentQueue` + `StreamWriter` writing directly to disk. The UI thread enqueues items one by one while the background drains and writes in parallel — the full JSON never exists in RAM. Saving: −50% to −200% RAM peak.
-- **[FIFO-02]** Entry loading with native `ConvertFrom-Json` + `ConcurrentQueue`. Removed `Newtonsoft.Json` dependency from background runspaces (not inherited in PS 5.1). Entries enqueued one by one. DispatcherTimer drains in batches of 500/tick.
+- **[FIFO-02]** Entry loading with native `ConvertFrom-Json` + `ConcurrentQueue`. Removed `Newtonsoft.Json` dependency from background runspaces (not inherited in PS 5.1). Entries enqueued one by one. `DispatcherTimer` drains in batches of 500/tick.
 - **[FIFO-03]** Guaranteed clean termination: stream release + aggressive GC with LOH compaction in `finally` block, even on error.
 
 #### Bug Fixes
@@ -351,7 +407,7 @@ No PowerShell required, no execution policy changes needed. Simply right-click `
 
 ---
 
-### v2.3 *(public stable release)*
+### v2.3.0 *(public stable release)*
 
 #### RAM Optimizations
 - **[RAM-01]** `DiskItem_v211` without `INotifyPropertyChanged`. Toggle extracted to `DiskItemToggle_v230` (lightweight INPC wrapper that doesn't retain event listeners across thousands of items).
