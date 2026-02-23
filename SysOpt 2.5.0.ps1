@@ -1,4 +1,4 @@
-﻿#﻿Requires -RunAsAdministrator
+#﻿Requires -RunAsAdministrator
 <#
 .SYNOPSIS
     Optimizador de Sistema Windows con Interfaz Gráfica
@@ -5069,12 +5069,15 @@ function Show-TasksWindow {
                                            FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold"
                                            Foreground="#E8ECF4" Margin="0,0,0,4"
                                            TextTrimming="CharacterEllipsis"/>
-                                <Border Height="5" CornerRadius="3"
-                                        Background="#1A1E2F" Margin="0,0,0,4">
-                                    <Border HorizontalAlignment="Left" CornerRadius="3"
-                                            Width="{Binding BarWidth}"
-                                            Background="{Binding BarColor}"/>
-                                </Border>
+                                <!-- [FIX-BUG5] Barra responsive: columna estrella proporcional a Pct/100-Pct -->
+                                <Grid Height="5" Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="{Binding BarStarFill}"/>
+                                        <ColumnDefinition Width="{Binding BarStarEmpty}"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" CornerRadius="3" Background="{Binding BarColor}"/>
+                                    <Border Grid.Column="1" CornerRadius="3" Background="#1A1E2F"/>
+                                </Grid>
                                 <TextBlock Text="{Binding Detail}"
                                            FontFamily="Segoe UI" FontSize="10"
                                            Foreground="#7880A0" TextTrimming="CharacterEllipsis"/>
@@ -5118,7 +5121,15 @@ function Show-TasksWindow {
     $btnClear                    = $tw.FindName("btnTasksClearDone")
 
     $btnClear.Add_Click(({
-        $toRemove = @($script:TaskPool.Keys | Where-Object { $script:TaskPool[$_].Status -ne "running" })
+        # [FIX] ConcurrentDictionary: la clave puede desaparecer entre Keys y el acceso []
+        # Usar TryGetValue para evitar "Cannot index into a null array" por race condition
+        $toRemove = [System.Collections.Generic.List[string]]::new()
+        foreach ($k in @($script:TaskPool.Keys)) {
+            $t = $null
+            if ($script:TaskPool.TryGetValue($k, [ref]$t) -and $null -ne $t -and $t.Status -ne "running") {
+                $toRemove.Add($k)
+            }
+        }
         foreach ($k in $toRemove) { $removed = $null; $script:TaskPool.TryRemove($k, [ref]$removed) | Out-Null }
         Refresh-TasksPanel
     }.GetNewClosure()))
@@ -5154,8 +5165,10 @@ function Refresh-TasksPanel {
     $lbTasks          = $script:lbTasksWin
     $txtTasksSubtitle = $script:txtTasksSubtitleWin
     $txtTasksStatus   = $script:txtTasksStatusWin
+    # [FIX-BUG3] Todas las referencias pueden ser null si la ventana fue cerrada entre ticks
     if ($null -eq $lbTasks) { return }
-    $tasks  = @($script:TaskPool.Values | Sort-Object { $_.StartTime } -Descending)
+    # [FIX] ConcurrentDictionary.Values puede contener nulls si TryRemove corre en paralelo
+    $tasks  = @($script:TaskPool.Values | Where-Object { $null -ne $_ } | Sort-Object { $_.StartTime } -Descending)
     $active = @($tasks | Where-Object { $_.Status -eq "running" })
     $done   = @($tasks | Where-Object { $_.Status -ne "running" })
 
@@ -5164,13 +5177,13 @@ function Refresh-TasksPanel {
         $sm      = $script:TaskStatusMap[$t.Status]
         $elapsed = if ($t.EndTime) {
             $d = $t.EndTime - $t.StartTime
-            if ($d.TotalHours -ge 1) { $d.ToString("h\:mm\:ss") }
+            if ($d.TotalHours -ge 1)   { $d.ToString("h\:mm\:ss") }
             elseif ($d.TotalMinutes -ge 1) { $d.ToString("m\:ss") + " min" }
             else { "$([int]$d.TotalSeconds) s" }
         } else {
             $d = [datetime]::Now - $t.StartTime
-            if ($d.TotalHours -ge 1) { $d.ToString("h\:mm\:ss") }
-            elseif ($d.TotalMinutes -ge 1) { $d.ToString("m\:ss") }
+            if ($d.TotalHours -ge 1)   { $d.ToString("h\:mm\:ss") }
+            elseif ($d.TotalMinutes -ge 1) { $d.ToString("m\:ss") + " min" }  # [FIX-BUG6] igual que EndTime
             else { "$([int]$d.TotalSeconds) s" }
         }
 
@@ -5190,21 +5203,25 @@ function Refresh-TasksPanel {
         }
         $icon = if ($t.Status -eq "running") { $t.Icon } else { $script:TaskIconMap[$t.Status] }
 
+        $barFill  = [math]::Max(1, $pct)   # mínimo 1* para evitar columna cero
+        $barEmpty = [math]::Max(1, 100 - $pct)
+
         $items.Add([PSCustomObject]@{
-            Id         = $t.Id
-            Name       = $t.Name
-            Icon       = $icon
-            IconBg     = $iconBg
-            StatusText = $sm.Text
-            StatusBg   = $sm.Bg
-            StatusFg   = $sm.Fg
-            Pct        = $pct
-            PctStr     = if ($t.Status -eq "running") { "$pct%" } elseif ($t.Status -eq "done") { "100%" } else { "" }
-            PctColor   = $pctColor
-            BarWidth   = [double]($pct * 3.4)   # max ~340 px a 100%
-            BarColor   = $barColor
-            Detail     = [string]$t.Detail
-            Elapsed    = $elapsed
+            Id          = $t.Id
+            Name        = $t.Name
+            Icon        = $icon
+            IconBg      = $iconBg
+            StatusText  = $sm.Text
+            StatusBg    = $sm.Bg
+            StatusFg    = $sm.Fg
+            Pct         = $pct
+            PctStr      = if ($t.Status -eq "running") { "$pct%" } elseif ($t.Status -eq "done") { "100%" } else { "" }
+            PctColor    = $pctColor
+            BarStarFill  = "$barFill*"   # [FIX-BUG5] columna star proporcional al porcentaje
+            BarStarEmpty = "$barEmpty*"
+            BarColor    = $barColor
+            Detail      = [string]$t.Detail
+            Elapsed     = $elapsed
         })
     }
 
@@ -5212,12 +5229,16 @@ function Refresh-TasksPanel {
     $nActive = $active.Count
     $nDone   = $done.Count
 
-    $txtTasksSubtitle.Text = if ($nActive -eq 0) {
-        if ($nDone -eq 0) { "Sin tareas" } else { "$nDone tarea(s) completada(s)" }
-    } else {
-        "$nActive tarea(s) en curso · $nDone completada(s)"
+    if ($null -ne $txtTasksSubtitle) {
+        $txtTasksSubtitle.Text = if ($nActive -eq 0) {
+            if ($nDone -eq 0) { "Sin tareas" } else { "$nDone tarea(s) completada(s)" }
+        } else {
+            "$nActive tarea(s) en curso · $nDone completada(s)"
+        }
     }
-    $txtTasksStatus.Text = "Pool: $nActive activa(s) · $nDone completada(s)/error"
+    if ($null -ne $txtTasksStatus) {
+        $txtTasksStatus.Text = "Pool: $nActive activa(s) · $nDone completada(s)/error"
+    }
 }
 
 # Timer de refresco cada 1 s (solo actualiza si la ventana está abierta)
@@ -5751,6 +5772,9 @@ $btnDedup.Add_Click({
 
     $btnDedup.IsEnabled     = $false
     $txtDiskScanStatus.Text = "⏳ Calculando hashes SHA256 (archivos >10 MB)..."
+
+    # [FIX-BUG1] Definir $rootPath ANTES de Register-Task (que lo usa en el nombre)
+    $rootPath = $txtDiskScanPath.Text
     Register-Task -Id "dedup" -Name "Deduplicación SHA256: $rootPath" -Icon "🔍" -IconBg "#1A1A2F" | Out-Null
 
     # Estado compartido entre runspace y UI
@@ -5761,9 +5785,6 @@ $btnDedup.Add_Click({
         TotalFiles = 0
         TotalWaste = 0L        # bytes recuperables
     })
-
-    # Recoger rutas de archivos >10 MB del escaneo actual
-    $rootPath = $txtDiskScanPath.Text
     $dedupParams = @{
         State    = $script:DedupState
         RootPath = $rootPath
@@ -5842,13 +5863,14 @@ $btnDedup.Add_Click({
     $ctx.PS.AddScript($bgDedupScript).AddParameter("State", $script:DedupState).AddParameter("RootPath", $rootPath) | Out-Null
     $dedupAsync = $ctx.PS.BeginInvoke()
 
-    # Timer que espera el resultado y luego abre la ventana
+    # [FIX-BUG2] Guardar en script: para que Add_Closed pueda pararlo si la app se cierra
     $dedupTimer = New-Object System.Windows.Threading.DispatcherTimer
+    $script:_dedupTimer = $dedupTimer
     $dedupTimer.Interval = [TimeSpan]::FromMilliseconds(400)
     $dedupTimer.Add_Tick({
         if (-not $script:DedupState.Done) { return }
         $dedupTimer.Stop()
-        try { $ctx.PS.EndInvoke($dedupAsync) } catch {}
+        $script:_dedupTimer = $null
         Dispose-PooledPS $ctx
 
         $btnDedup.IsEnabled = $true
@@ -8714,7 +8736,14 @@ $window.Add_Closed({
     # [A3] Parar auto-refresco si activo
     try { if ($null -ne $script:AutoRefreshTimer) { $script:AutoRefreshTimer.Stop(); $script:AutoRefreshTimer = $null } } catch {}
     # [TASKPOOL] Parar timer de tareas
-    try { if ($null -ne $script:TaskTimer) { $script:TaskTimer.Stop(); $script:TaskTimer = $null } } catch {}
+    try { if ($null -ne $script:TaskTimer)     { $script:TaskTimer.Stop();     $script:TaskTimer     = $null } } catch {}
+    # Parar timers de operaciones async que puedan estar corriendo
+    try { if ($null -ne $script:_csvTimer)     { $script:_csvTimer.Stop();     $script:_csvTimer     = $null } } catch {}
+    try { if ($null -ne $script:_htmlTimer)    { $script:_htmlTimer.Stop();    $script:_htmlTimer    = $null } } catch {}
+    try { if ($null -ne $script:_dedupTimer)   { $script:_dedupTimer.Stop();   $script:_dedupTimer   = $null } } catch {}
+    try { if ($null -ne $script:_loadTimer)    { $script:_loadTimer.Stop();    $script:_loadTimer    = $null } } catch {}
+    try { if ($null -ne $script:_entTimer)     { $script:_entTimer.Stop();     $script:_entTimer     = $null } } catch {}
+    try { if ($null -ne $script:_saveTimer)    { $script:_saveTimer.Stop();    $script:_saveTimer    = $null } } catch {}
     # [C3] Guardar configuración al cerrar
     try { Save-Settings } catch {}
     # [LOG] Cerrar logger
