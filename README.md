@@ -45,8 +45,8 @@ Escáner de carpetas estilo **TreeSize**: analiza de forma recursiva y paralela 
 
 La ventana de snapshots permite **guardar y cargar el estado completo de cualquier escaneo** como archivo JSON. Al abrir la lista de snapshots se muestran solo los metadatos (nombre, fecha, número de carpetas y tamaño total) sin cargar los entries en RAM — la carga de datos se produce únicamente al seleccionar un snapshot concreto.
 
-![Lista de Snapshots](./resources/captura_snapshotlist.png)
 ![Lectura de Snapshot](./resources/captura_snapshotread.png)
+![Lista de Snapshots](./resources/captura_snapshotlist.png)
 
 - **Guardar** el estado del escaneo actual como snapshot JSON con nombre personalizable
 - **Lista de snapshots** cargada en background sin bloquear la UI (solo metadatos vía streaming)
@@ -283,8 +283,8 @@ A **TreeSize-style** folder scanner: recursively and in parallel analyzes any dr
 
 The snapshot window lets you **save and load the complete state of any scan** as a JSON file. Opening the snapshot list shows only metadata (name, date, folder count, total size) without loading entries into RAM — data is only read when you select a specific snapshot.
 
-![Snapshot List](./resources/captura_snapshotlist.png)
 ![Snapshot Read](./resources/captura_snapshotread.png)
+![Snapshot List](./resources/captura_snapshotlist.png)
 
 - **Save** the current scan state as a named JSON snapshot
 - **Snapshot list** loaded in background without blocking the UI (metadata-only streaming)
