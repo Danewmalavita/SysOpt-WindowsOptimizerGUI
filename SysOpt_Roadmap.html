@@ -704,33 +704,35 @@
 
   <!-- ── Header ── -->
   <header>
-    <div class="version-badge">SysOpt v2.3.0 · Estable · v2.4.0 completado — próximamente estable</div>
+    <div class="version-badge">SysOpt v2.5.0 · Estable · Hoja de Ruta hacia v3.0</div>
     <h1><span class="accent">SYS</span><span class="accent2">OPT</span><br>Plan de Estabilidad y Mejora</h1>
-    <p class="subtitle">Análisis de bugs corregidos, mejoras implementadas y vías de evolución para una aplicación de optimización Windows robusta y escalable.</p>
+    <p class="subtitle">Análisis de bugs corregidos, mejoras implementadas y vías de evolución hacia v3.0 — plataforma modular, extensible y con arquitectura limpia.</p>
   </header>
 
   <!-- ── Banner estado actual ── -->
   <div class="dev-banner">
-    <div class="dev-banner-icon">🧪</div>
+    <div class="dev-banner-icon">🚀</div>
     <div>
-      <div class="dev-banner-title">Estado actual — v2.3.0 pública estable / v2.4.0 completada, pendiente release</div>
+      <div class="dev-banner-title">Estado actual — v2.5.0 versión pública estable / Desarrollando hacia v3.0</div>
       <div class="dev-banner-desc">
-        <code>SysOpt v2.3.0</code> completamente operativo como versión pública estable. La rama developer
-        <code>v2.4.0</code> está completa: optimizaciones FIFO de RAM implementadas y verificadas,
-        pre-cálculo de top-files activo durante el escaneo, y todos los bugs críticos corregidos.
-        Pendiente de publicar como release estable oficial.
+        <code>SysOpt v2.5.0</code> completamente operativo como versión pública estable. Incluye logging estructurado
+        rotante, error boundary global, CimSession con timeout, deduplicación SHA256, panel TaskPool de tareas async
+        y todos los bugs críticos corregidos (incluyendo el fix de botones en blanco en el historial de snapshots).
+        La arquitectura está consolidada — próximo objetivo: refactorización mayor hacia <code>v3.0</code>.
       </div>
       <div class="dev-banner-chips">
-        <span class="dchip done">✓ v2.3.0 estable publicada</span>
-        <span class="dchip done">✓ RAM-01…06 implementados</span>
-        <span class="dchip done">✓ FIFO-01 save streaming</span>
-        <span class="dchip done">✓ FIFO-02 load streaming</span>
-        <span class="dchip done">✓ FIFO-03 terminación limpia</span>
-        <span class="dchip done">✓ Fix toggle colapsar/expandir</span>
-        <span class="dchip done">✓ Fix Set-Content → WriteAllText</span>
-        <span class="dchip done">✓ A2 Top-files pre-cálculo implementado</span>
-        <span class="dchip">B5 Deduplicación SHA256 → v2.5.0</span>
-        <span class="dchip">Error boundary global → v2.5.0</span>
+        <span class="dchip done">✓ v2.5.0 estable publicada</span>
+        <span class="dchip done">✓ Logging estructurado [LOG]</span>
+        <span class="dchip done">✓ Error boundary global [ERR]</span>
+        <span class="dchip done">✓ CimSession timeout 5s [WMI]</span>
+        <span class="dchip done">✓ Deduplicación SHA256 [B5]</span>
+        <span class="dchip done">✓ Panel TaskPool [⚡]</span>
+        <span class="dchip done">✓ Fix botones historial blanco</span>
+        <span class="dchip done">✓ Fix timers async cleanup</span>
+        <span class="dchip done">✓ Fix race condition Split-Path</span>
+        <span class="dchip wip">C1 Tema claro/oscuro → v3.0</span>
+        <span class="dchip wip">C2 Toast notifications → v3.0</span>
+        <span class="dchip wip">DLL externo tipos C# → v3.0</span>
       </div>
     </div>
   </div>
@@ -910,6 +912,76 @@
 
   </div>
 
+  <!-- ── SECCIÓN: Bugs v2.5.0 ── -->
+  <div class="section-label">Bugs corregidos en v2.5.0</div>
+  <div class="section-title">🔵 Fixes de estabilidad y UX — v2.5.0 estable</div>
+  <div class="bugs-grid">
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · BOTONES HISTORIAL</div>
+      <div class="bug-name">Botones del panel de snapshots aparecían en blanco</div>
+      <div class="bug-desc">Los botones Guardar, Comparar y Eliminar en la pestaña Historial tenían colores hardcodeados directamente en el XAML (<code>Background</code>, <code>Foreground</code>, <code>BorderBrush</code>). WPF ignoraba esos atributos en estados hover y disabled porque el <code>ControlTemplate</code> nativo pintaba encima, resultando en botones blancos.</div>
+      <div class="bug-fix">FIX: Reemplazados los atributos hardcodeados por <code>Style="{StaticResource BtnSecondary}"</code>, <code>BtnPrimary</code> y <code>BtnDanger</code> respectivamente — el template temático se aplica en todos los estados.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · RACE CONDITION</div>
+      <div class="bug-name">NullReference en Split-Path cuando Result llega antes que Done</div>
+      <div class="bug-desc">En operaciones async de escaneo, el resultado podía llegar a la hashtable sincronizada antes de que se señalizara <code>Done = $true</code>. El consumer leía <code>Result</code> y llamaba <code>Split-Path</code> sobre un valor aún nulo, causando <code>NullReferenceException</code> silenciosa.</div>
+      <div class="bug-fix">FIX: Null-guard añadido antes de <code>Split-Path</code>: se verifica que el valor exista y no sea nulo antes de procesarlo. El consumer espera correctamente ambas señales.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · TIMERS ASYNC</div>
+      <div class="bug-name">6 timers async no se detenían al cerrar la ventana</div>
+      <div class="bug-desc">Los timers de las operaciones csv, html, dedup, load, ent y save seguían activos tras cerrar la ventana del explorador, intentando acceder a controles ya destruidos y dejando runspaces huérfanos.</div>
+      <div class="bug-fix">FIX: Los 6 timers ahora se detienen explícitamente en el handler <code>Add_Closed</code> antes de hacer dispose de los runspaces. Cleanup completo garantizado.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · FRAMEWORK FACTORY</div>
+      <div class="bug-name">FrameworkElementFactory obsoleto en Show-TasksWindow</div>
+      <div class="bug-desc">La ventana de tareas en segundo plano usaba <code>FrameworkElementFactory</code> para construir el DataTemplate programáticamente — API obsoleta en WPF moderno que requería 254 líneas de código repetitivo y propenso a errores.</div>
+      <div class="bug-fix">FIX: Reemplazado por XAML string con <code>XamlReader.Parse()</code>, reduciendo el código a ~40 líneas declarativas, más legibles y mantenibles.</div>
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: Bugs v2.5.0 ── -->
+  <div class="section-label">Bugs corregidos en v2.5.0</div>
+  <div class="section-title">🔵 Fixes de estabilidad y UX — v2.5.0 estable</div>
+  <div class="bugs-grid">
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · BOTONES HISTORIAL</div>
+      <div class="bug-name">Botones del panel de snapshots aparecían en blanco</div>
+      <div class="bug-desc">Los botones Guardar, Comparar y Eliminar en la pestaña Historial tenían colores hardcodeados directamente en XAML. WPF ignoraba esos atributos en estados hover y disabled porque el <code>ControlTemplate</code> nativo pintaba encima, mostrando botones en blanco.</div>
+      <div class="bug-fix">FIX: Reemplazados los atributos hardcodeados por <code>Style="{StaticResource BtnSecondary}"</code>, <code>BtnPrimary</code> y <code>BtnDanger</code> — el template temático se aplica correctamente en todos los estados.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · RACE CONDITION</div>
+      <div class="bug-name">NullReference en Split-Path cuando Result llega antes que Done</div>
+      <div class="bug-desc">En operaciones async de escaneo, el resultado podía llegar a la hashtable sincronizada antes de que se señalizara <code>Done = $true</code>. El consumer leía <code>Result</code> y llamaba <code>Split-Path</code> sobre un valor nulo, causando excepción silenciosa.</div>
+      <div class="bug-fix">FIX: Null-guard añadido antes de <code>Split-Path</code>. El consumer verifica que el valor exista antes de procesarlo.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · TIMERS ASYNC</div>
+      <div class="bug-name">6 timers async no se detenían al cerrar la ventana</div>
+      <div class="bug-desc">Los timers de csv, html, dedup, load, ent y save seguían activos tras cerrar la ventana, intentando acceder a controles destruidos y dejando runspaces huérfanos en memoria.</div>
+      <div class="bug-fix">FIX: Los 6 timers se detienen explícitamente en <code>Add_Closed</code> antes del dispose de runspaces. Cleanup completo garantizado.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · FRAMEWORK FACTORY</div>
+      <div class="bug-name">FrameworkElementFactory obsoleto en Show-TasksWindow</div>
+      <div class="bug-desc">La ventana TaskPool usaba <code>FrameworkElementFactory</code> para construir DataTemplates programáticamente — API obsoleta que requería 254 líneas de código repetitivo y difícil de mantener.</div>
+      <div class="bug-fix">FIX: Reemplazado por XAML string con <code>XamlReader.Parse()</code>, reduciendo el código a ~40 líneas declarativas. Eliminadas 254 líneas obsoletas.</div>
+    </div>
+
+  </div>
+
   <!-- ── SECCIÓN: Roadmap v2.3 — todo completado ── -->
   <div class="section-label">Objetivos v2.3 — Completados</div>
   <div class="section-title">🗺️ Hoja de Ruta v2.3 — Implementada</div>
@@ -1021,12 +1093,12 @@
             <div class="item-tags"><span class="tag done-tag">✓ Implementado en v2.4.0</span><span class="tag">UX</span><span class="tag">Pre-cálculo</span></div>
           </div>
         </div>
-        <div class="item-card">
+        <div class="item-card done">
           <div class="item-id-box">B5</div>
           <div class="item-content">
             <div class="item-name">Detección de archivos duplicados</div>
-            <div class="item-desc">Hash SHA256 de archivos grandes (&gt;10 MB) durante el escaneo. Panel que agrupe duplicados por hash y calcule el espacio recuperable.</div>
-            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">SHA256</span><span class="tag">Deduplication</span></div>
+            <div class="item-desc">Hash SHA256 de archivos grandes (&gt;10 MB) en runspace background. Panel con grupos de duplicados, espacio recuperable y eliminación directa. Implementado en v2.5.0.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Implementado en v2.5.0</span><span class="tag">SHA256</span><span class="tag">Deduplication</span></div>
           </div>
         </div>
         <div class="item-card">
@@ -1178,7 +1250,7 @@
   </div>
 
   <!-- ── SECCIÓN: FIFO Streaming v2.4.0 ── -->
-  <div class="section-label">FIFO Streaming — v2.4.0 developer</div>
+  <div class="section-label">FIFO Streaming — v2.4.0 integrado en v2.5.0</div>
   <div class="section-title">⚡ Optimización FIFO — Snapshots sin RAM pico</div>
 
   <div class="fifo-section">
@@ -1216,46 +1288,52 @@ LOH compaction + EmptyWorkingSet post-op</div>
   </div>
 
   <!-- ── SECCIÓN: Estabilidad ── -->
-  <div class="section-label">Vías de estabilidad técnica — pendientes</div>
-  <div class="section-title">🛡️ Estabilidad — Objetivos futuros</div>
+  <div class="section-label">Estabilidad técnica — implementada en v2.5.0</div>
+  <div class="section-title">🛡️ Estabilidad v2.5.0 — Implementada</div>
 
   <div class="stability-section">
     <div class="stability-grid">
 
-      <div class="stability-card">
+      <div class="stability-card" style="border-color:rgba(74,232,150,.3)">
         <div class="stability-icon">📋</div>
-        <div class="stability-name">Logging estructurado</div>
-        <div class="stability-desc">Función centralizada que escriba a la UI, a un archivo de log rotante en <code>%TEMP%\SysOpt.log</code> y a un buffer en memoria para diagnóstico.</div>
+        <div class="stability-name" style="color:var(--green)">✓ Logging estructurado [LOG]</div>
+        <div class="stability-desc">Implementado en v2.5.0. <code>Write-Log</code> centralizado escribe a UI + <code>.\logs\SysOpt_YYYY-MM-DD.log</code> con rotación diaria automática. Thread-safe con Mutex de nombre. <code>Write-ConsoleMain</code> es alias de <code>Write-Log</code>.</div>
       </div>
 
-      <div class="stability-card">
-        <div class="stability-icon">🧪</div>
-        <div class="stability-name">DLL externo para tipos C#</div>
-        <div class="stability-desc">Compilar los tipos C# (<code>DiskItem_v211</code>, <code>ScanCtl211</code>, <code>PScanner211</code>) a un DLL externo cargado con <code>Add-Type -Path</code>, eliminando la recompilación por completo.</div>
-      </div>
-
-      <div class="stability-card">
-        <div class="stability-icon">🔍</div>
-        <div class="stability-name">WMI con timeout configurable</div>
-        <div class="stability-desc">Envolver todas las llamadas CIM en un <code>CimSession</code> con <code>OperationTimeout</code> de 5 s para garantizar respuesta en sistemas con WMI dañado.</div>
-      </div>
-
-      <div class="stability-card">
+      <div class="stability-card" style="border-color:rgba(74,232,150,.3)">
         <div class="stability-icon">🪝</div>
-        <div class="stability-name">Error boundary global</div>
-        <div class="stability-desc">Handler <code>[System.AppDomain]::CurrentDomain.UnhandledException</code> que capture excepciones no controladas de runspaces, las logee y muestre un mensaje amigable.</div>
+        <div class="stability-name" style="color:var(--green)">✓ Error boundary global [ERR]</div>
+        <div class="stability-desc">Implementado en v2.5.0. <code>AppDomain.UnhandledException</code> captura crashes de runspaces background. <code>Dispatcher.UnhandledException</code> captura errores del hilo WPF. Ambos logean y muestran diálogo amigable.</div>
       </div>
 
-      <div class="stability-card">
+      <div class="stability-card" style="border-color:rgba(74,232,150,.3)">
+        <div class="stability-icon">🔍</div>
+        <div class="stability-name" style="color:var(--green)">✓ CimSession con timeout [WMI]</div>
+        <div class="stability-desc">Implementado en v2.5.0. <code>Invoke-CimQuery</code> centraliza todas las llamadas WMI con <code>OperationTimeoutSec=5</code>. La sesión se recrea automáticamente si muere. Elimina los congelamientos de UI en sistemas con WMI dañado.</div>
+      </div>
+
+      <div class="stability-card" style="border-color:rgba(74,232,150,.3)">
+        <div class="stability-icon">⚡</div>
+        <div class="stability-name" style="color:var(--green)">✓ Panel TaskPool [TASKPOOL]</div>
+        <div class="stability-desc">Implementado en v2.5.0. Pestaña dedicada con vista estilo torrent de todas las operaciones async. Barra de progreso responsive, badge de estado, tiempo transcurrido. Botón "Limpiar completadas". Timer 1s sin impacto en UI.</div>
+      </div>
+
+      <div class="stability-card" style="border-color:rgba(155,126,255,.3)">
+        <div class="stability-icon">🧪</div>
+        <div class="stability-name">DLL externo para tipos C# → v3.0</div>
+        <div class="stability-desc">Compilar <code>DiskItem_v211</code>, <code>ScanCtl211</code> y <code>PScanner211</code> a un DLL externo cargado con <code>Add-Type -Path</code>. Elimina la recompilación por completo y permite reutilización entre versiones.</div>
+      </div>
+
+      <div class="stability-card" style="border-color:rgba(155,126,255,.3)">
         <div class="stability-icon">📦</div>
-        <div class="stability-name">Abstracción de la capa de datos</div>
-        <div class="stability-desc">Extraer toda la lógica WMI/CIM a funciones <code>Get-*Data</code> puras separadas del código de rendering. Facilita testing y mantenimiento futuro.</div>
+        <div class="stability-name">Abstracción capa de datos → v3.0</div>
+        <div class="stability-desc">Extraer toda la lógica WMI/CIM a funciones <code>Get-*Data</code> puras separadas del rendering. Paso previo necesario para testing unitario y mantenimiento escalable.</div>
       </div>
 
-      <div class="stability-card">
+      <div class="stability-card" style="border-color:rgba(155,126,255,.3)">
         <div class="stability-icon">🔄</div>
-        <div class="stability-name">CancellationToken unificado</div>
-        <div class="stability-desc">Usar un único <code>CancellationTokenSource</code> global vinculado a <code>ScanControl.Stop</code>. Parada limpia sin sleep polling de 150 ms.</div>
+        <div class="stability-name">CancellationToken unificado → v3.0</div>
+        <div class="stability-desc">Único <code>CancellationTokenSource</code> global vinculado a <code>ScanControl.Stop</code>. Parada limpia sin sleep polling de 150 ms. Requiere refactorización de todos los runspaces.</div>
       </div>
 
     </div>
@@ -1296,7 +1374,7 @@ LOH compaction + EmptyWorkingSet post-op</div>
       </div>
 
       <div class="tl-item done">
-        <div class="tl-ver">v2.3 · COMPLETADO ✓ — VERSIÓN PÚBLICA ESTABLE</div>
+        <div class="tl-ver">v2.3 · COMPLETADO ✓</div>
         <div class="tl-title">Funcionalidad completa del Explorador + Optimización RAM</div>
         <ul class="tl-list">
           <li class="done-li">B1: Filtro por nombre en árbol de carpetas</li>
@@ -1311,37 +1389,44 @@ LOH compaction + EmptyWorkingSet post-op</div>
       </div>
 
       <div class="tl-item done">
-        <div class="tl-ver">v2.4.0 · COMPLETADO ✓ — RAMA DEVELOPER</div>
+        <div class="tl-ver">v2.4.0 · COMPLETADO ✓ — integrado en v2.5.0</div>
         <div class="tl-title">FIFO Streaming + Pre-cálculo + Estabilidad</div>
         <ul class="tl-list">
-          <li class="done-li">✓ FIFO-01: Save streaming sin RAM pico (ConcurrentQueue + StreamWriter)</li>
-          <li class="done-li">✓ FIFO-02: Load entries con ConvertFrom-Json nativo (sin Newtonsoft)</li>
-          <li class="done-li">✓ FIFO-03: Terminación limpia garantizada en finally</li>
-          <li class="done-li">✓ Fix: Set-Content → File::WriteAllText en Save-Settings</li>
-          <li class="done-li">✓ Fix: Toggle colapsar/expandir + Items.Refresh()</li>
-          <li class="done-li">✓ A2: Pre-cálculo de top 10 archivos durante escaneo (acumulador en background)</li>
+          <li class="done-li">FIFO-01: Save streaming sin RAM pico (ConcurrentQueue + StreamWriter)</li>
+          <li class="done-li">FIFO-02: Load entries con ConvertFrom-Json nativo (sin Newtonsoft)</li>
+          <li class="done-li">FIFO-03: Terminación limpia garantizada en finally</li>
+          <li class="done-li">Fix: Set-Content → File::WriteAllText en Save-Settings</li>
+          <li class="done-li">Fix: Toggle colapsar/expandir + Items.Refresh()</li>
+          <li class="done-li">A2: Pre-cálculo de top 10 archivos durante escaneo</li>
+        </ul>
+      </div>
+
+      <div class="tl-item done">
+        <div class="tl-ver">v2.5.0 · COMPLETADO ✓ — VERSIÓN PÚBLICA ESTABLE</div>
+        <div class="tl-title">Estabilidad avanzada + Deduplicación + TaskPool</div>
+        <ul class="tl-list">
+          <li class="done-li">[LOG] Logging estructurado rotante diario con Mutex thread-safe</li>
+          <li class="done-li">[ERR] Error boundary global: AppDomain + Dispatcher</li>
+          <li class="done-li">[WMI] CimSession compartida con OperationTimeoutSec=5</li>
+          <li class="done-li">[B5] Deduplicación SHA256 archivos &gt;10 MB en background</li>
+          <li class="done-li">[TASKPOOL] Panel de tareas async estilo torrent</li>
+          <li class="done-li">Fix botones historial: hardcoded → estilos temáticos</li>
+          <li class="done-li">Fix race condition Split-Path: null-guard en consumer</li>
+          <li class="done-li">Fix 6 timers async: cleanup en Add_Closed</li>
+          <li class="done-li">Fix FrameworkElementFactory → XamlReader (−254 líneas)</li>
         </ul>
       </div>
 
       <div class="tl-item next">
-        <div class="tl-ver">v2.5.0 · PLANIFICADO</div>
-        <div class="tl-title">Deduplicación, estabilidad avanzada y funcionalidades extra</div>
+        <div class="tl-ver">v3.0.0 · EN PLANIFICACIÓN</div>
+        <div class="tl-title">Plataforma modular — Refactorización mayor</div>
         <ul class="tl-list">
-          <li>B5: Deduplicación por SHA256 en archivos grandes (&gt;10 MB)</li>
-          <li>Error boundary global con UnhandledException en AppDomain</li>
-          <li>Logging estructurado a archivo rotante en %TEMP%\SysOpt.log</li>
-          <li>WMI con timeout configurable via CimSession (5 s)</li>
-        </ul>
-      </div>
-
-      <div class="tl-item future">
-        <div class="tl-ver">v3.0.0 · VISIÓN</div>
-        <div class="tl-title">Plataforma modular y extensible</div>
-        <ul class="tl-list">
-          <li>Tipos C# compilados a DLL externo (sin Add-Type inline)</li>
-          <li>C1: Tema claro/oscuro con ResourceDictionary</li>
-          <li>C2: Notificaciones Toast nativas de Windows</li>
-          <li>C4: Integración con el Programador de tareas</li>
+          <li>DLL externo para tipos C# (DiskItem, ScanCtl, PScanner)</li>
+          <li>C1: Tema claro/oscuro con ResourceDictionary intercambiable</li>
+          <li>C2: Notificaciones Toast nativas de Windows (WinRT)</li>
+          <li>C4: Integración con el Programador de tareas de Windows</li>
+          <li>CancellationToken unificado (sin sleep polling 150ms)</li>
+          <li>Abstracción capa de datos: funciones Get-*Data puras</li>
           <li>Plugin system para módulos de limpieza externos</li>
         </ul>
       </div>
@@ -1349,15 +1434,264 @@ LOH compaction + EmptyWorkingSet post-op</div>
     </div>
   </div>
 
+  <!-- ── SECCIÓN: Roadmap v3.0 ── -->
+  <div class="section-label">Objetivos v3.0 — En planificación</div>
+  <div class="section-title">🔮 Hoja de Ruta v3.0 — Plataforma Modular</div>
+
+  <div class="roadmap">
+
+    <div class="priority-block p-high">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Alta · Arquitectura</div>
+          <div class="priority-title">Refactorización estructural — base para v3.x</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card">
+          <div class="item-id-box">DLL</div>
+          <div class="item-content">
+            <div class="item-name">Tipos C# compilados a DLL externo</div>
+            <div class="item-desc">Compilar <code>DiskItem_v211</code>, <code>ScanCtl211</code> y <code>PScanner211</code> a un DLL externo cargado con <code>Add-Type -Path</code>. Elimina la recompilación por sesión y permite compartir los tipos entre versiones del script sin recompilar.</div>
+            <div class="item-tags"><span class="tag">C#</span><span class="tag">DLL</span><span class="tag">Add-Type</span><span class="tag">Arquitectura</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">CTK</div>
+          <div class="item-content">
+            <div class="item-name">CancellationToken unificado</div>
+            <div class="item-desc">Único <code>CancellationTokenSource</code> global vinculado a <code>ScanControl.Stop</code>. Elimina el sleep polling de 150 ms en todos los runspaces y permite cancelación limpia e inmediata. Requiere refactorización de todos los loops async.</div>
+            <div class="item-tags"><span class="tag">CancellationToken</span><span class="tag">Runspace</span><span class="tag">Performance</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">DAL</div>
+          <div class="item-content">
+            <div class="item-name">Abstracción de la capa de datos</div>
+            <div class="item-desc">Extraer toda la lógica WMI/CIM a funciones <code>Get-CpuData</code>, <code>Get-RamData</code>, <code>Get-DiskData</code> puras, separadas del código de rendering. Paso necesario para tests unitarios y mantenimiento escalable a largo plazo.</div>
+            <div class="item-tags"><span class="tag">WMI</span><span class="tag">CIM</span><span class="tag">Separación UI/Datos</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="priority-block p-medium">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Media · Funcionalidad</div>
+          <div class="priority-title">Nuevas características de usuario</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card">
+          <div class="item-id-box">C1</div>
+          <div class="item-content">
+            <div class="item-name">Tema claro / oscuro</div>
+            <div class="item-desc">Toggle en la toolbar. Mover todos los colores del XAML a un <code>ResourceDictionary</code> intercambiable en runtime. El tema seleccionado se persiste en <code>settings.json</code>. Requiere auditar y refactorizar todos los colores hardcodeados restantes.</div>
+            <div class="item-tags"><span class="tag">Theming</span><span class="tag">ResourceDictionary</span><span class="tag">XAML</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">C2</div>
+          <div class="item-content">
+            <div class="item-name">Notificaciones Toast nativas</div>
+            <div class="item-desc">Usar <code>[Windows.UI.Notifications.ToastNotificationManager]</code> para emitir notificaciones nativas de Windows al finalizar operaciones largas en segundo plano (exportación, escaneo, deduplicación).</div>
+            <div class="item-tags"><span class="tag">Toast</span><span class="tag">WinRT</span><span class="tag">UX</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">C4</div>
+          <div class="item-content">
+            <div class="item-name">Programador de tareas integrado</div>
+            <div class="item-desc">Interfaz para crear, editar y eliminar tareas en el Programador de Windows (<code>Register-ScheduledTask</code>) para ejecutar optimizaciones automáticas en horario configurable (diario/semanal).</div>
+            <div class="item-tags"><span class="tag">TaskScheduler</span><span class="tag">Automatización</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">PLG</div>
+          <div class="item-content">
+            <div class="item-name">Plugin system para módulos externos</div>
+            <div class="item-desc">Arquitectura de plugins que permita cargar módulos de limpieza externos (<code>.ps1</code> o DLL) desde una carpeta <code>.\plugins\</code>. Cada plugin declara nombre, descripción, icono y punto de entrada — la UI los integra automáticamente.</div>
+            <div class="item-tags"><span class="tag">Plugin</span><span class="tag">Extensibilidad</span><span class="tag">Modular</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="priority-block p-low">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Baja · UX &amp; Polish</div>
+          <div class="priority-title">Mejoras de experiencia de usuario</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card">
+          <div class="item-id-box">I18N</div>
+          <div class="item-content">
+            <div class="item-name">Internacionalización (i18n)</div>
+            <div class="item-desc">Externalizar todas las cadenas de texto a un fichero de recursos por idioma. Soporte inicial: Español + Inglés. La detección del idioma del sistema puede activarlo automáticamente.</div>
+            <div class="item-tags"><span class="tag">i18n</span><span class="tag">Localización</span><span class="tag">ResourceDictionary</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">UPD</div>
+          <div class="item-content">
+            <div class="item-name">Auto-actualización integrada</div>
+            <div class="item-desc">Check de versión contra un endpoint o repositorio al arrancar. Si hay versión nueva disponible, mostrar badge en la UI con opción de descargar. Sin actualización silenciosa — siempre con confirmación del usuario.</div>
+            <div class="item-tags"><span class="tag">Update</span><span class="tag">GitHub Releases</span><span class="tag">UX</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">RPT</div>
+          <div class="item-content">
+            <div class="item-name">Informe de sesión en PDF/HTML</div>
+            <div class="item-desc">Generar un informe completo de la sesión de optimización: acciones realizadas, espacio liberado, tiempo, puntuación del sistema antes/después. Exportable como PDF o HTML con plantilla visual.</div>
+            <div class="item-tags"><span class="tag">Reporting</span><span class="tag">PDF</span><span class="tag">HTML Export</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── SECCIÓN: Roadmap v3.0 ── -->
+  <div class="section-label">Objetivos v3.0 — En planificación</div>
+  <div class="section-title">🔮 Hoja de Ruta v3.0 — Plataforma Modular</div>
+
+  <div class="roadmap">
+
+    <div class="priority-block p-high">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Alta · Arquitectura</div>
+          <div class="priority-title">Refactorización estructural — base para v3.x</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card">
+          <div class="item-id-box">DLL</div>
+          <div class="item-content">
+            <div class="item-name">Tipos C# compilados a DLL externo</div>
+            <div class="item-desc">Compilar <code>DiskItem_v211</code>, <code>ScanCtl211</code> y <code>PScanner211</code> a un DLL externo cargado con <code>Add-Type -Path</code>. Elimina la recompilación por sesión y permite compartir los tipos entre versiones sin recompilar.</div>
+            <div class="item-tags"><span class="tag">C#</span><span class="tag">DLL</span><span class="tag">Add-Type</span><span class="tag">Arquitectura</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">CTK</div>
+          <div class="item-content">
+            <div class="item-name">CancellationToken unificado</div>
+            <div class="item-desc">Único <code>CancellationTokenSource</code> global vinculado a <code>ScanControl.Stop</code>. Elimina el sleep polling de 150 ms en todos los runspaces y permite cancelación limpia e inmediata. Requiere refactorización de todos los loops async.</div>
+            <div class="item-tags"><span class="tag">CancellationToken</span><span class="tag">Runspace</span><span class="tag">Performance</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">DAL</div>
+          <div class="item-content">
+            <div class="item-name">Abstracción de la capa de datos</div>
+            <div class="item-desc">Extraer toda la lógica WMI/CIM a funciones <code>Get-CpuData</code>, <code>Get-RamData</code>, <code>Get-DiskData</code> puras, separadas del rendering. Paso necesario para tests unitarios y mantenimiento escalable.</div>
+            <div class="item-tags"><span class="tag">WMI</span><span class="tag">CIM</span><span class="tag">Separación UI/Datos</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="priority-block p-medium">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Media · Funcionalidad</div>
+          <div class="priority-title">Nuevas características de usuario</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card">
+          <div class="item-id-box">C1</div>
+          <div class="item-content">
+            <div class="item-name">Tema claro / oscuro</div>
+            <div class="item-desc">Toggle en la toolbar. Mover colores del XAML a un <code>ResourceDictionary</code> intercambiable en runtime. Requiere auditar y refactorizar todos los colores hardcodeados restantes en el script.</div>
+            <div class="item-tags"><span class="tag">Theming</span><span class="tag">ResourceDictionary</span><span class="tag">XAML</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">C2</div>
+          <div class="item-content">
+            <div class="item-name">Notificaciones Toast nativas</div>
+            <div class="item-desc">Usar <code>[Windows.UI.Notifications.ToastNotificationManager]</code> para notificaciones nativas al finalizar operaciones largas en background (exportación, escaneo, deduplicación).</div>
+            <div class="item-tags"><span class="tag">Toast</span><span class="tag">WinRT</span><span class="tag">UX</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">C4</div>
+          <div class="item-content">
+            <div class="item-name">Programador de tareas integrado</div>
+            <div class="item-desc">Interfaz para crear, editar y eliminar tareas en el Programador de Windows (<code>Register-ScheduledTask</code>) para optimizaciones automáticas en horario configurable.</div>
+            <div class="item-tags"><span class="tag">TaskScheduler</span><span class="tag">Automatización</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">PLG</div>
+          <div class="item-content">
+            <div class="item-name">Plugin system para módulos externos</div>
+            <div class="item-desc">Arquitectura de plugins que cargue módulos externos desde <code>.\plugins\</code>. Cada plugin declara nombre, descripción, icono y punto de entrada — la UI los integra automáticamente en la interfaz.</div>
+            <div class="item-tags"><span class="tag">Plugin</span><span class="tag">Extensibilidad</span><span class="tag">Modular</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="priority-block p-low">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Baja · UX &amp; Polish</div>
+          <div class="priority-title">Mejoras de experiencia de usuario</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card">
+          <div class="item-id-box">I18N</div>
+          <div class="item-content">
+            <div class="item-name">Internacionalización (i18n)</div>
+            <div class="item-desc">Externalizar cadenas de texto a ficheros de recursos por idioma. Soporte inicial: Español + Inglés. Detección automática del idioma del sistema Windows.</div>
+            <div class="item-tags"><span class="tag">i18n</span><span class="tag">Localización</span><span class="tag">ResourceDictionary</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">UPD</div>
+          <div class="item-content">
+            <div class="item-name">Auto-actualización integrada</div>
+            <div class="item-desc">Check de versión contra repositorio al arrancar. Si hay versión nueva, badge en UI con opción de descarga. Sin actualización silenciosa — siempre con confirmación explícita del usuario.</div>
+            <div class="item-tags"><span class="tag">Update</span><span class="tag">GitHub Releases</span><span class="tag">UX</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">RPT</div>
+          <div class="item-content">
+            <div class="item-name">Informe de sesión en PDF/HTML</div>
+            <div class="item-desc">Generar informe completo de sesión: acciones realizadas, espacio liberado, tiempo, puntuación antes/después. Exportable como HTML con plantilla visual o PDF.</div>
+            <div class="item-tags"><span class="tag">Reporting</span><span class="tag">PDF</span><span class="tag">HTML Export</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <!-- ── Footer ── -->
   <footer>
-    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v2.3.0 estable · v2.4.0 completada, pendiente release estable</p>
+    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v2.5.0 estable · Desarrollando hacia v3.0</p>
     <div>
-      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>v2.3.0 estable</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>v2.4.0 completada</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>v2.5.0 estable</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>Logging + Error boundary</span>
       <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>FIFO streaming activo</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>C# inline types</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>Multi-runspace</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>TaskPool async</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--red)"></span>SHA256 dedup</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>Roadmap v3.0</span>
       <span class="chip"><span class="chip-dot" style="background:var(--muted)"></span>PowerShell + WPF</span>
     </div>
   </footer>

@@ -1,0 +1,218 @@
+﻿
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 09:04:37
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[09:04:37][INFO] ═══════════════════════════════════════════════════════════
+[09:04:37][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[09:04:37][INFO] ═══════════════════════════════════════════════════════════
+[09:04:37][INFO] Sistema iniciado correctamente
+[09:04:37][INFO] 
+[09:04:37][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[09:04:37][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[09:04:37][INFO] 
+[09:04:37][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[09:04:37][INFO] 
+[09:04:38][INFO] [WMI] CimSession creada (timeout=5s)
+[09:05:01][INFO] [TASK] Iniciada: Cargando historial de snapshots
+[09:05:08][INFO] [TASK] Completada (done): Cargando historial de snapshots
+[09:05:16][INFO] [TASK] Iniciada: Escaneo: C:\
+[09:06:11][INFO] [TASK] Completada (done): Escaneo: C:\
+[09:06:27][INFO] [TASK] Iniciada: Cargando snapshot — Escaneo 23/02/2026 10:57
+[09:07:08][INFO] [TASK] Iniciada: Cargando snapshot — Escaneo 23/02/2026 09:44
+
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 09:08:49
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[09:08:50][INFO] ═══════════════════════════════════════════════════════════
+[09:08:50][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[09:08:50][INFO] ═══════════════════════════════════════════════════════════
+[09:08:50][INFO] Sistema iniciado correctamente
+[09:08:50][INFO] 
+[09:08:50][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[09:08:50][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[09:08:50][INFO] 
+[09:08:50][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[09:08:50][INFO] 
+[09:08:51][INFO] [WMI] CimSession creada (timeout=5s)
+[09:09:29][INFO] [TASK] Iniciada: Cargando historial de snapshots
+[09:09:35][INFO] [TASK] Completada (done): Cargando historial de snapshots
+[09:09:43][INFO] Sesión cerrada por el usuario.
+
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 09:10:08
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[09:10:08][INFO] ═══════════════════════════════════════════════════════════
+[09:10:08][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[09:10:08][INFO] ═══════════════════════════════════════════════════════════
+[09:10:08][INFO] Sistema iniciado correctamente
+[09:10:08][INFO] 
+[09:10:08][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[09:10:08][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[09:10:08][INFO] 
+[09:10:08][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[09:10:08][INFO] 
+[09:10:09][INFO] [WMI] CimSession creada (timeout=5s)
+[09:10:19][INFO] [TASK] Iniciada: Cargando historial de snapshots
+[09:10:24][INFO] [TASK] Completada (done): Cargando historial de snapshots
+[09:10:32][INFO] [TASK] Iniciada: Escaneo: C:\
+[09:10:40][INFO] Sesión cerrada por el usuario.
+
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 09:12:29
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[09:12:29][INFO] ═══════════════════════════════════════════════════════════
+[09:12:29][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[09:12:29][INFO] ═══════════════════════════════════════════════════════════
+[09:12:29][INFO] Sistema iniciado correctamente
+[09:12:29][INFO] 
+[09:12:29][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[09:12:29][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[09:12:29][INFO] 
+[09:12:29][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[09:12:29][INFO] 
+[09:12:29][INFO] [WMI] CimSession creada (timeout=5s)
+[09:12:45][INFO] [TASK] Iniciada: Escaneo: C:\
+[09:13:34][INFO] [TASK] Completada (done): Escaneo: C:\
+[09:13:50][INFO] Sesión cerrada por el usuario.
+
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 09:16:58
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[09:16:58][INFO] ═══════════════════════════════════════════════════════════
+[09:16:58][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[09:16:58][INFO] ═══════════════════════════════════════════════════════════
+[09:16:58][INFO] Sistema iniciado correctamente
+[09:16:58][INFO] 
+[09:16:58][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[09:16:58][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[09:16:58][INFO] 
+[09:16:58][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[09:16:58][INFO] 
+[09:16:59][INFO] [WMI] CimSession creada (timeout=5s)
+[09:17:25][INFO] [TASK] Iniciada: Cargando historial de snapshots
+[09:17:32][INFO] [TASK] Completada (done): Cargando historial de snapshots
+[09:25:12][INFO] Sesión cerrada por el usuario.
+
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 09:28:10
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[09:28:10][INFO] ═══════════════════════════════════════════════════════════
+[09:28:10][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[09:28:10][INFO] ═══════════════════════════════════════════════════════════
+[09:28:10][INFO] Sistema iniciado correctamente
+[09:28:10][INFO] 
+[09:28:10][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[09:28:10][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[09:28:10][INFO] 
+[09:28:10][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[09:28:10][INFO] 
+[09:28:11][INFO] [WMI] CimSession creada (timeout=5s)
+[09:33:20][INFO] Sesión cerrada por el usuario.
+
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 09:50:32
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[09:50:32][INFO] ═══════════════════════════════════════════════════════════
+[09:50:32][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[09:50:32][INFO] ═══════════════════════════════════════════════════════════
+[09:50:32][INFO] Sistema iniciado correctamente
+[09:50:32][INFO] 
+[09:50:32][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[09:50:32][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[09:50:32][INFO] 
+[09:50:32][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[09:50:32][INFO] 
+[09:50:33][INFO] [WMI] CimSession creada (timeout=5s)
+[09:51:31][INFO] [TASK] Iniciada: Cargando historial de snapshots
+[09:51:36][INFO] [TASK] Completada (done): Cargando historial de snapshots
+[09:51:39][INFO] [TASK] Iniciada: Cargando snapshot — Escaneo 23/02/2026 10:57
+[09:52:15][INFO] Sesión cerrada por el usuario.
+
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 10:43:33
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[10:43:34][INFO] ═══════════════════════════════════════════════════════════
+[10:43:34][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[10:43:34][INFO] ═══════════════════════════════════════════════════════════
+[10:43:34][INFO] Sistema iniciado correctamente
+[10:43:34][INFO] 
+[10:43:34][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[10:43:34][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[10:43:34][INFO] 
+[10:43:34][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[10:43:34][INFO] 
+[10:43:35][INFO] [WMI] CimSession creada (timeout=5s)
+[10:44:29][INFO] [TASK] Iniciada: Escaneo: C:\
+[10:45:13][INFO] [TASK] Completada (done): Escaneo: C:\
+
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 10:49:43
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[10:49:43][INFO] ═══════════════════════════════════════════════════════════
+[10:49:43][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[10:49:43][INFO] ═══════════════════════════════════════════════════════════
+[10:49:43][INFO] Sistema iniciado correctamente
+[10:49:43][INFO] 
+[10:49:43][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[10:49:43][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[10:49:43][INFO] 
+[10:49:43][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[10:49:43][INFO] 
+[10:49:43][INFO] [WMI] CimSession creada (timeout=5s)
+[10:49:59][INFO] [TASK] Iniciada: Escaneo: C:\
+[10:50:35][INFO] [TASK] Completada (done): Escaneo: C:\
+[10:52:17][INFO] [TASK] Iniciada: Cargando historial de snapshots
+[10:52:23][INFO] [TASK] Completada (done): Cargando historial de snapshots
+[10:52:30][INFO] Sesión cerrada por el usuario.
+
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 11:07:12
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[11:07:12][INFO] ═══════════════════════════════════════════════════════════
+[11:07:12][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[11:07:12][INFO] ═══════════════════════════════════════════════════════════
+[11:07:12][INFO] Sistema iniciado correctamente
+[11:07:12][INFO] 
+[11:07:12][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[11:07:12][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[11:07:12][INFO] 
+[11:07:12][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[11:07:12][INFO] 
+[11:07:13][INFO] [WMI] CimSession creada (timeout=5s)
+[11:09:35][INFO] [TASK] Iniciada: Escaneo: C:\
+[11:10:21][INFO] [TASK] Completada (done): Escaneo: C:\
+[11:10:42][INFO] [TASK] Iniciada: Cargando historial de snapshots
+[11:10:50][INFO] [TASK] Completada (done): Cargando historial de snapshots
+[11:11:09][INFO] [TASK] Iniciada: Cargando snapshot — Escaneo 23/02/2026 10:57
+[11:11:34][INFO] Sesión cerrada por el usuario.
+
+════════════════════════════════════════════════════════════
+  SysOpt v2.5.0  —  Sesión iniciada: 2026-02-24 11:12:17
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[11:12:17][INFO] ═══════════════════════════════════════════════════════════
+[11:12:17][INFO] SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0
+[11:12:17][INFO] ═══════════════════════════════════════════════════════════
+[11:12:17][INFO] Sistema iniciado correctamente
+[11:12:17][INFO] 
+[11:12:17][INFO] Selecciona las opciones y presiona '▶ Iniciar Optimización'
+[11:12:17][INFO]   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+[11:12:17][INFO] 
+[11:12:17][INFO] 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+[11:12:17][INFO] 
+[11:12:17][INFO] [WMI] CimSession creada (timeout=5s)
+[11:12:38][INFO] [TASK] Iniciada: Escaneo: C:\
+[11:13:06][INFO] [TASK] Iniciada: Cargando historial de snapshots
+[11:13:18][INFO] [TASK] Completada (done): Escaneo: C:\
+[11:13:20][INFO] [TASK] Completada (done): Cargando historial de snapshots
+[11:13:37][INFO] Sesión cerrada por el usuario.

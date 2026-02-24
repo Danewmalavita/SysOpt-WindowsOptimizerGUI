@@ -1,7 +1,7 @@
-# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.3.0 — Windows System Optimizer (Español)
+# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.5.0 — Windows System Optimizer (Español)
 **Script PowerShell con interfaz gráfica — `SysOpt.ps1`**
 
-> **Nota de versión:** La versión pública estable es **v2.3.0**. La rama de desarrollo interno activa es **v2.4.0**, que incluye las optimizaciones FIFO de RAM y correcciones de estabilidad adicionales, aún no publicada como release estable.
+> **Nota de versión:** La versión pública estable es **v2.5.0**, que incluye logging estructurado, error boundary global, deduplicación SHA256, CimSession compartida con timeout y el panel de tareas en segundo plano (TaskPool).
 
 Este proyecto implementa un **optimizador avanzado para Windows**, desarrollado íntegramente en **PowerShell** y utilizando una interfaz gráfica basada en **WPF/XAML**. Permite ejecutar tareas de mantenimiento, limpieza, verificación y optimización del sistema desde una única ventana, con monitorización de recursos en tiempo real, barra de progreso, consola integrada y modo de análisis sin cambios.
 
@@ -157,7 +157,25 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 ## 📝 Historial de cambios
 
-### v2.4.0 *(rama developer — no publicada aún)*
+### v2.5.0 *(versión pública estable)*
+
+#### Estabilidad, Deduplicación y TaskPool
+
+- **[LOG]** Logging estructurado a archivo rotante diario: `Write-Log` centralizado escribe a la UI y a `.\logs\SysOpt_YYYY-MM-DD.log` con rotación automática por día. Thread-safe mediante Mutex de nombre. `Write-ConsoleMain` es ahora alias de `Write-Log` (100% compatible).
+- **[ERR]** Error boundary global: `AppDomain.UnhandledException` captura excepciones de runspaces en background; `Dispatcher.UnhandledException` captura errores del hilo WPF. Ambos logean el error y muestran un diálogo amigable en lugar de crash.
+- **[WMI]** `CimSession` compartida con timeout de 5 s: `Invoke-CimQuery` reemplaza todos los `Get-CimInstance` directos del hilo UI. Si WMI tarda más de 5 s el timeout evita que la UI se congele, y la sesión se recrea automáticamente si falla.
+- **[B5]** Deduplicación SHA256 para archivos >10 MB: botón "🔍 Duplicados" en la barra del Explorador de Disco. Hash calculado en runspace background — la UI nunca bloquea. Ventana de resultados con grupos, espacio recuperable y eliminación de copias.
+- **[TASKPOOL]** Pestaña "⚡ Tareas" — panel de operaciones en segundo plano: todas las operaciones async (escaneo, CSV, HTML, dedup) se registran con barra de progreso responsive, badge de estado y tiempo transcurrido. Botón "Limpiar completadas" para purgar el historial. Timer de refresco de 1 s — impacto cero en UI.
+
+#### Bugs corregidos
+- **Fix `FrameworkElementFactory`**: reemplazado por XAML string en `Show-TasksWindow` (eliminadas 254 líneas obsoletas).
+- **Fix race condition `Split-Path`**: null-guard añadido cuando `Result` llega antes que `Done` en la hashtable sincronizada.
+- **Fix botones historial en blanco**: los botones Guardar, Comparar y Eliminar del panel de snapshots ahora usan los estilos temáticos (`BtnSecondary`, `BtnPrimary`, `BtnDanger`) en lugar de colores hardcodeados, lo que respeta correctamente el tema en todos los estados (normal, hover, disabled).
+- **Fix timers async**: los 6 timers async (csv/html/dedup/load/ent/save) ahora se detienen limpiamente en `Add_Closed`.
+
+---
+
+### v2.4.0 *(integrada en v2.5.0)*
 
 #### Optimizaciones FIFO de RAM
 - **[FIFO-01]** Guardado de snapshot con `ConcurrentQueue` + `StreamWriter` directo al disco. El hilo UI encola items uno a uno mientras el background los drena y escribe en paralelo — el JSON completo nunca existe en RAM. Ahorro: −50% a −200% RAM pico.
@@ -171,7 +189,7 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 ---
 
-### v2.3.0 *(versión pública estable)*
+### v2.3.0
 
 #### Optimizaciones de RAM
 - **[RAM-01]** `DiskItem_v211` sin `INotifyPropertyChanged`. Toggle extraído a `DiskItemToggle_v230` (wrapper INPC ligero que no retiene event listeners en los miles de items).
@@ -393,7 +411,25 @@ No PowerShell required, no execution policy changes needed. Simply right-click `
 
 ## 📝 Changelog
 
-### v2.4.0 *(developer branch — not yet published)*
+### v2.5.0 *(public stable release)*
+
+#### Stability, Deduplication and TaskPool
+
+- **[LOG]** Structured logging to daily rotating file: centralized `Write-Log` writes to the UI and to `.\logs\SysOpt_YYYY-MM-DD.log` with automatic daily rotation. Thread-safe via named Mutex. `Write-ConsoleMain` is now an alias for `Write-Log` (100% compatible).
+- **[ERR]** Global error boundary: `AppDomain.UnhandledException` catches background runspace exceptions; `Dispatcher.UnhandledException` catches WPF thread errors. Both log the error and show a friendly dialog instead of crashing.
+- **[WMI]** Shared `CimSession` with 5 s timeout: `Invoke-CimQuery` replaces all direct `Get-CimInstance` calls from the UI thread. If WMI takes longer than 5 s, the timeout prevents the UI from freezing, and the session is automatically recreated if it dies.
+- **[B5]** SHA256 deduplication for files >10 MB: "🔍 Duplicates" button in the Disk Explorer toolbar. Hash calculated in background runspace — UI never blocks. Results window with groups, recoverable space and copy deletion.
+- **[TASKPOOL]** "⚡ Tasks" tab — background operations panel: all async operations (scan, CSV, HTML, dedup) are registered with a responsive progress bar, status badge and elapsed time. "Clear completed" button to purge finished tasks. 1 s refresh timer — zero UI impact.
+
+#### Bug Fixes
+- **Fix `FrameworkElementFactory`**: replaced with XAML string in `Show-TasksWindow` (254 obsolete lines removed).
+- **Fix `Split-Path` race condition**: null-guard added when `Result` arrives before `Done` in the synchronized hashtable.
+- **Fix history buttons showing white**: Guardar, Comparar and Eliminar buttons in the snapshot panel now use themed styles (`BtnSecondary`, `BtnPrimary`, `BtnDanger`) instead of hardcoded colors, correctly respecting the theme in all states (normal, hover, disabled).
+- **Fix async timers**: all 6 async timers (csv/html/dedup/load/ent/save) now stop cleanly on `Add_Closed`.
+
+---
+
+### v2.4.0 *(merged into v2.5.0)*
 
 #### FIFO RAM Optimizations
 - **[FIFO-01]** Snapshot save with `ConcurrentQueue` + `StreamWriter` writing directly to disk. The UI thread enqueues items one by one while the background drains and writes in parallel — the full JSON never exists in RAM. Saving: −50% to −200% RAM peak.
@@ -407,7 +443,7 @@ No PowerShell required, no execution policy changes needed. Simply right-click `
 
 ---
 
-### v2.3.0 *(public stable release)*
+### v2.3.0
 
 #### RAM Optimizations
 - **[RAM-01]** `DiskItem_v211` without `INotifyPropertyChanged`. Toggle extracted to `DiskItemToggle_v230` (lightweight INPC wrapper that doesn't retain event listeners across thousands of items).
