@@ -4,69 +4,193 @@
     Optimizador de Sistema Windows con Interfaz Gráfica
 .DESCRIPTION
     Script completo de optimización con GUI, limpieza avanzada, verificación de sistema y registro.
+.NOTES
+    Requiere permisos de administrador
+    Versión: 3.0.0 (Dev)
+    Cambios v3.0.0 (Dev) — Arquitectura modular + CTK + DAL:
+      [DLL] Ensamblados C# externos en .\libs\:
+            SysOpt.DiskEngine.dll  — DiskItem_v211, DiskItemToggle_v230, ScanCtl211, PScanner211.
+            SysOpt.MemoryHelper.dll — MemoryHelper (EmptyWorkingSet, OpenProcess, CloseHandle).
+            Cargados con Add-Type -Path al inicio. Elimina recompilación inline por sesión.
+            Guard (-not [PSTypeName]'DiskItem_v211').Type evita TYPE_ALREADY_EXISTS.
+      [CTK] CancellationToken — parada limpia sin Start-Sleep polling:
+            Start-DiskScan ahora espera al runspace anterior via AsyncWaitHandle.WaitOne(500ms)
+            en lugar del antiguo Start-Sleep -Milliseconds 150 ciego.
+            Si el runspace no termina en 500 ms, se hace Close()+Dispose() igualmente.
+      [DAL] Abstraccion de capa de datos — funciones Get-*Data puras:
+            Get-CpuData    : Win32_Processor + Win32_PerfFormattedData_PerfOS_Processor.
+            Get-RamData    : Win32_OperatingSystem + Win32_PhysicalMemory.
+            Get-DiskData   : Get-PhysicalDisk + Get-StorageReliabilityCounter.
+            Get-NetData    : Get-NetAdapter + Get-NetIPAddress + Win32_PerfFormattedData_Tcpip_*.
+            Devuelven PSCustomObject puro — sin acceso a controles WPF.
+            Update-SystemInfo y Update-PerformanceTab son ahora capas de presentacion delgadas.
+    Cambios v2.5.0 (Estabilidad + Deduplicación + TaskPool):
+      [LOG] Logging estructurado a archivo rotante diario:
+            Write-Log centralizado — escribe a UI + .\logs\SysOpt_YYYY-MM-DD.log.
+            Rotación automática por día. Thread-safe con Mutex de nombre.
+            Write-ConsoleMain es ahora alias de Write-Log (100% compatible).
+      [ERR] Error boundary global:
+            AppDomain.UnhandledException captura excepciones de runspaces en background.
+            Dispatcher.UnhandledException captura errores del hilo WPF.
+            Ambos logean el error y muestran un diálogo amigable en lugar de crash.
+      [WMI] CimSession compartida con timeout de 5 s:
+            Invoke-CimQuery reemplaza todos los Get-CimInstance directos del hilo UI.
+            Si WMI tarda más de 5 s, el timeout evita que la UI se congele.
+            La sesión se recrea automáticamente si muere o falla.
+      [B5] Deduplicación SHA256 (archivos >10 MB):
+            Botón "🔍 Duplicados" en la barra del Explorador de Disco.
+            Hash calculado en runspace background — UI nunca bloquea.
+            Ventana de resultados con grupos, espacio recuperable y eliminación de copias.
+      [TASKPOOL] Pestaña "⚡ Tareas" — panel de operaciones en segundo plano:
+            Todas las operaciones async (escaneo, CSV, HTML, dedup) se registran.
+            Vista estilo torrent: nombre, barra de progreso, estado, tiempo transcurrido.
+            Botón "Limpiar completadas" para purgar el historial de tareas terminadas.
+            Timer de refresco de 1 s — impacto cero en UI.
+      [FIX] $dlg.Hide() null: GetNewClosure() captura $dlg en el scope de la función.
+      [FIX] $dlg.DragMove() null: idem con GetNewClosure().
+      [FIX] Elapsed time en Refresh-TasksPanel: [int]+string → interpolación "$([int]...)s".
+    Cambios v2.4.0 (FIFO Streaming Anti-RAM-Drain):
+      PROBLEMA RESUELTO:
+        El guardado de snapshot y la carga de entries materializaban TODA la colección
+        en RAM antes de procesarla, causando picos de consumo proporcionales al tamaño
+        del escaneo (escaneos de 50k+ carpetas podían duplicar el uso de RAM).
+
+      [FIFO-01] Guardado de snapshot — streaming FIFO con ConcurrentQueue + JsonTextWriter:
+                ANTES: $snapData (copia 1) → $entries (copia 2) → $json string (copia 3)
+                       → WriteAllText. Pico = 3x RAM del dataset.
+                AHORA: UI encola items 1 a 1 mientras background drena la queue y escribe
+                       con JsonTextWriter directo al disco. Nunca existe el JSON en RAM.
+                       Ahorro: -50% a -200% RAM en pico según tamaño del escaneo.
+
+      [FIFO-02] Carga de entries — FIFO con ConvertFrom-Json nativo + ConcurrentQueue:
+                ANTES: ReadAllText + ConvertFrom-Json + ConcurrentBag acumulado completo
+                       antes de entregar al hilo UI. Pico = 3x JSON en RAM.
+                AHORA: ConvertFrom-Json nativo (sin Newtonsoft, funciona en cualquier
+                       runspace). Entries se encolan uno a uno (FIFO) en ConcurrentQueue.
+                       DispatcherTimer drena en lotes de 500/tick — UI nunca bloquea.
+                       Ahorro: -30% RAM pico (elimina ConcurrentBag intermedio).
+
+      [FIFO-03] Terminación limpia garantizada en ambos flujos:
+                Runspace + GC.Collect() + LOH compaction liberados al terminar,
+                incluso en error (bloque finally). FeedDone en hashtable sincronizada
+                evita bloqueos si el productor falla antes de terminar.
+
+    Cambios v2.3.0 (Optimización RAM + Rendimiento):
+      OPTIMIZACIONES RAM:
+        [RAM-01] DiskItem_v211: INPC eliminado del modelo de datos puros.
+                 ToggleVisibility y ToggleIcon extraídos a DiskItemToggle_v230
+                 (wrapper INPC ligero). El objeto principal ya no retiene event
+                 listeners ni PropertyChangedEventArgs. Ahorro: ~30-80 MB en
+                 escaneos grandes.
+        [RAM-02] Exportación CSV: reemplazado StringBuilder por StreamWriter
+                 directo (flush por lotes). Nunca se materializa todo el CSV
+                 en memoria. Ahorro: −50 a −150 MB pico en exportaciones grandes.
+        [RAM-02b] Exportación HTML tabla: StreamWriter en archivo temporal para
+                 las filas HTML. El StringBuilder ya no crece ilimitado.
+        [RAM-03] bgExportScript y bgCsvScript reciben AllScannedItems por ref
+                 via hashtable de estado compartido — evita copia completa.
+        [RAM-04] Load-SnapshotList: metadatos leídos con JsonTextReader línea
+                 a línea. Los Entries nunca se deserializan en memoria al listar.
+                 Ahorro: −200 a −400 MB pico por snapshot grande.
+        [RAM-05] RunspacePool centralizado (1-3 runspaces, ISS mínimo) para
+                 operaciones async de exportación y top-files. Elimina overhead
+                 de arranque y carga de módulos por operación.
+        [RAM-06] GC agresivo post-exportación: LOH compaction + EmptyWorkingSet
+                 tras cada exportación o carga de snapshot.
+      NUEVAS OPTIMIZACIONES:
+        [NEW-01] DiskUiTimer: debounce de 80ms en Refresh-DiskView para evitar
+                 rebuildeos múltiples en ráfagas de datos del scanner.
+        [NEW-02] Comparador de snapshots: pre-cálculo de top 10 archivos
+                 durante el escaneo mediante acumulador en background.
+        [NEW-03] AllScannedItems capacity hint: se preasigna con Capacity
+                 estimado para evitar realocaciones de array interno.
+        [NEW-04] chartTimer: intervalo mínimo 1s en lugar de 400ms para
+                 reducir presión de GC en la pestaña Rendimiento.
+    Cambios v2.2.0 (BugFix + Paths):
+      BUGS CORREGIDOS:
+        [BF1] Snapshots: ruta cambiada de %APPDATA%\SysOpt\snapshots a .\snapshots
+              (relativo al script) — los snapshots ahora se guardan junto al script
+        [BF2] Logs: ruta por defecto del diálogo "Guardar log" cambiada a .\logs
+              (relativo al script) — se crea automáticamente si no existe
+        [BF3] Snapshots no se listaban: bug crítico en Load-SnapshotList — clave
+              de hashtable era una variable ($rootCount) dentro de @{}, lo que lanzaba
+              una excepción silenciosa en el catch{} e impedía añadir cualquier item
+              a la lista. Corregido: $rootCount se calcula antes del PSCustomObject
+        [BF4] Diálogo "Confirmar eliminación" fallaba con XML inválido cuando el
+              nombre del snapshot contenía comillas dobles (p.ej. "Escaneo 20/02/2026").
+              Corregido: $Title y $Message se escapan con &quot; antes de interpolarlos
+              en el XAML. Aplicado también a Show-ThemedInput.
+        [BF5] Alto consumo de RAM: Load-SnapshotList cargaba todos los Entries de
+              todos los JSONs en memoria permanentemente. Ahora solo guarda metadatos
+              (FilePath, Label, fechas, conteos) y lee Entries bajo demanda al
+              seleccionar o comparar, liberando la referencia inmediatamente tras su uso.
+        [BF6] Comparar bloqueaba la UI: el bucle de "carpetas nuevas" era O(n²)
+              — por cada item del escaneo actual iteraba todos los Entries del snapshot.
+              Corregido con un HashSet<string> (lookup O(1)) y un Dictionary<string,long>
+              para el mapa de tamaños. El comparador ahora escala correctamente aunque
+              el escaneo o el snapshot contengan decenas de miles de carpetas.
+      NUEVAS FUNCIONES v2.2.0:
+        [N1] Snapshots con CheckBox: cada snapshot tiene un checkbox para seleccion
+             individual. Boton "Todo" para marcar/desmarcar todos de golpe.
+             El contador muestra "N de M seleccionados" en tiempo real.
+        [N2] Comparar mejorado: soporta 3 modos segun los checks marcados:
+               - 1 check + escaneo actual cargado → snapshot vs escaneo actual
+               - 2 checks → snapshot A vs snapshot B (comparacion historica)
+             El boton cambia de texto dinamicamente segun el modo activo.
+        [N3] Eliminar en lote: elimina todos los snapshots marcados de una sola vez
+             con dialogo de confirmacion que lista los nombres afectados.
+    Cambios v2.1.3 (UX + BugFix):
+      MEJORAS UX:
+        [U1]  ComboBox con estilo oscuro temático (ya no aparece blanco)
+        [U2]  ContextMenu / MenuItem con estilo oscuro temático
+        [U3]  Botones de consola Output funcionales: rojo=ocultar, amarillo=minimizar/restaurar,
+              verde=expandir/restaurar. Botón "🖥 Output" en footer para reabrir.
+        [U4]  Menú contextual del Explorador incluye "Mostrar Output"
+        [U5]  Enlace GitHub en el About abre el navegador al hacer clic
+      BUGS CORREGIDOS v2.1.2:
+        [BF4] Logo: carga vía $script:AppDir unificado
+        [BF5] cmbRefreshInterval.SelectionChanged: timer se recrea correctamente
+        [BF6] Get-SizeColorFromStr duplicado eliminado
+    Cambios v2.0.2 (BugFix):
+      BUGS CORREGIDOS:
+        [BF1] Pestaña Rendimiento → Red: ahora muestra velocidad de subida/bajada
+              en tiempo real (delta bytes/s), detecta Ethernet vs WiFi por PhysicalMediaType
+              e InterfaceDescription, e indica el tipo con icono 📶/🔌
+        [BF2] Explorador de Disco: escaneo ahora es verdaderamente recursivo —
+              emite subcarpetas con indentación visual en tiempo real durante el barrido;
+              se añade propiedad Depth al objeto de cola y a ScanCtl211.Current
+        [BF3] Cierre del programa: Add_Closed vacía la cola ConcurrentQueue, limpia
+              LiveList/LiveItems, dispone el runspace de escaneo y el CancelTokenSource
+              de optimización → evita errores de estado cacheado al relanzar
+        [BF3b] ScanControl: añadida propiedad Current (volatile string) que faltaba
+               en la clase C# — corrige NullRef al leer [ScanCtl211]::Current
+      BUGS CORREGIDOS:
+        [B1]  GC.Collect reemplazado por EmptyWorkingSet real via Win32 API (RAM real)
+        [B2]  CleanRegistry ahora exige BackupRegistry o muestra advertencia bloqueante
+        [B3]  Mutex con AbandonedMutexException — ya no bloquea tras crash
+        [B4]  chkAutoRestart sincronizado con btnSelectAll correctamente
+        [B5]  Detección SSD por DeviceID en lugar de FriendlyName
+        [B6]  Opera / Opera GX / Brave con rutas de caché completas
+        [B7]  Firefox: limpia cache y cache2 (legacy + moderno)
+        [B8]  Timer valida runspace con try/catch — no queda bloqueado
+        [B9]  CHKDSK: orden corregido (dirty set ANTES de chkntfs)
+        [B10] btnSelectAll refleja estado real de todos los checkboxes
+        [B11] Aviso antes de limpiar consola si tiene contenido
+        [B12] Formato de duración corregido a dd\:hh\:mm\:ss
+        [B13] Limpieza de temporales refactorizada en función reutilizable
+      NUEVAS FUNCIONES:
+        [N1]  Panel de información del sistema (RAM, disco, CPU) al iniciar
+        [N2]  Modo Dry Run (análisis sin cambios)
+        [N3]  Limpieza de Windows Update Cache (SoftwareDistribution\Download)
+        [N4]  Limpieza de Event Viewer Logs (System, Application, Setup)
+        [N5]  Gestor de programas de inicio (ver y desactivar entradas de autoarranque)
+      MEJORAS INTERNAS:
+        [M1]  Clean-TempPaths — función unificada para limpieza de carpetas temp
+        [M2]  Dependencia BackupRegistry ↔ CleanRegistry
+        [M3]  Detección de disco robusta via DeviceID
+        [M4]  AbandonedMutexException manejada
+        [M5]  Rutas de navegadores completadas
 #>
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Metadatos de versión — mostrados en el About (Show-AboutWindow)
-# ─────────────────────────────────────────────────────────────────────────────
-$script:AppVersion = "3.0.0 (Dev)"
-$script:AppNotes   = @{
-    RequiresAdmin = $true
-    Cambios = [ordered]@{
-        "v3.0.0 (Dev)" = @{
-            Titulo = "DLL externos nativos + arquitectura modular"
-            Items  = @(
-                "[DLL] SysOpt.MemoryHelper.dll y SysOpt.DiskEngine.dll compilados como ensamblados externos en .\libs\",
-                "[DLL] Eliminada la compilación inline C# por sesión — los tipos se cargan con Add-Type -Path desde .\libs\",
-                "[DLL] Guard de tipo compartido: DiskItem_v211, DiskItemToggle_v230, ScanCtl211 y PScanner211 nunca se recompilan",
-                "[DLL] MemoryHelper.EmptyWorkingSet disponible sin Add-Type inline — carga única al inicio",
-                "[ARCH] Ruta de libs normalizada a .\libs\ relativa al script (PSScriptRoot)",
-                "[ARCH] Mensajes de error descriptivos si falta alguna DLL en .\libs\"
-            )
-        }
-        "v2.5.0" = @{
-            Titulo = "Estabilidad + Deduplicación + TaskPool"
-            Items  = @(
-                "[LOG] Write-Log centralizado — escribe a UI + .\logs\SysOpt_YYYY-MM-DD.log. Rotación diaria. Thread-safe con Mutex.",
-                "[LOG] Write-ConsoleMain es ahora alias de Write-Log (100% compatible).",
-                "[ERR] AppDomain.UnhandledException captura excepciones de runspaces en background.",
-                "[ERR] Dispatcher.UnhandledException captura errores del hilo WPF. Ambos logean y muestran diálogo amigable.",
-                "[WMI] Invoke-CimQuery reemplaza todos los Get-CimInstance directos del hilo UI. Timeout de 5 s. Sesión auto-recreada.",
-                "[B5] Deduplicación SHA256 archivos >10 MB. Hash en runspace background. Ventana con grupos, espacio recuperable y eliminación.",
-                "[TASKPOOL] Pestaña '⚡ Tareas' — vista async estilo torrent con barra, estado, tiempo. Timer 1 s, impacto cero en UI.",
-                "[FIX] GetNewClosure() captura `$dlg` en scope correcto (Hide/DragMove null resueltos).",
-                "[FIX] Elapsed time en Refresh-TasksPanel: interpolación correcta de entero+string."
-            )
-        }
-        "v2.4.0" = @{
-            Titulo = "FIFO Streaming Anti-RAM-Drain"
-            Items  = @(
-                "[FIFO-01] Guardado de snapshot con ConcurrentQueue + JsonTextWriter directo a disco. Ahorro: −50% a −200% RAM pico.",
-                "[FIFO-02] Carga de entries con ConvertFrom-Json nativo + ConcurrentQueue. Drenado en lotes de 500/tick. Ahorro: −30% RAM.",
-                "[FIFO-03] Terminación limpia garantizada: Runspace + GC.Collect() + LOH compaction en bloque finally."
-            )
-        }
-        "v2.3.0" = @{
-            Titulo = "Optimización RAM + Rendimiento"
-            Items  = @(
-                "[RAM-01] DiskItem_v211 sin INPC. ToggleVisibility/ToggleIcon en DiskItemToggle_v230 (wrapper ligero). Ahorro: ~30-80 MB.",
-                "[RAM-02] CSV con StreamWriter directo (flush/500 items). HTML con StreamWriter a temp. Sin StringBuilder ilimitado.",
-                "[RAM-03] AllScannedItems por referencia vía hashtable compartida — sin copia completa.",
-                "[RAM-04] Load-SnapshotList con JsonTextReader línea a línea. Entries nunca deserializados al listar. Ahorro: −200-400 MB.",
-                "[RAM-05] RunspacePool centralizado 1-3 runspaces, ISS mínimo.",
-                "[RAM-06] GC agresivo post-exportación: LOH compaction + EmptyWorkingSet.",
-                "[NEW-01] DiskUiTimer: debounce 80ms en Refresh-DiskView.",
-                "[NEW-04] chartTimer: intervalo mínimo 1 s (antes 400 ms)."
-            )
-        }
-        "v2.1.3" = @{
-            Titulo = "UX + BugFix"
-        }
-    }
-}
-
-# ── Alias de acceso rápido para el resto del script
-$script:AppDir = $PSScriptRoot
 
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
@@ -2499,6 +2623,268 @@ function Invoke-CimQuery {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# [DAL] Capa de datos — funciones puras sin acceso a controles WPF
+# Cada función devuelve un PSCustomObject con los datos ya formateados/calculados.
+# Update-SystemInfo y Update-PerformanceTab son capas de presentación delgadas
+# que sólo asignan .Text / .ItemsSource a partir de lo que devuelven estas funciones.
+# ─────────────────────────────────────────────────────────────────────────────
+
+function Get-CpuData {
+    <#
+    .SYNOPSIS Datos de CPU via WMI. Devuelve PSCustomObject puro, sin WPF.
+    .OUTPUTS  PSCustomObject con: Name, LoadPct, FreqGHz, Cores, LogicalCores, CoreItems (List)
+    #>
+    try {
+        $cpuObj  = Invoke-CimQuery -ClassName Win32_Processor | Select-Object -First 1
+        if (-not $cpuObj) { return $null }
+
+        $coreItems = [System.Collections.Generic.List[object]]::new()
+        try {
+            $cpuPerf = Invoke-CimQuery -ClassName Win32_PerfFormattedData_PerfOS_Processor -SilentOnFail |
+                       Where-Object { $_.Name -ne '_Total' } |
+                       Sort-Object { [int]($_.Name -replace '\D','0') }
+            if ($cpuPerf) {
+                foreach ($core in $cpuPerf) {
+                    $val = [math]::Round([double]$core.PercentProcessorTime, 1)
+                    $coreItems.Add([PSCustomObject]@{
+                        CoreLabel = "Core $($core.Name)"
+                        Usage     = "$val%"
+                        UsageNum  = $val
+                        Freq      = "$([math]::Round($cpuObj.CurrentClockSpeed / 1000.0, 2)) GHz"
+                    })
+                }
+            }
+        } catch {}
+
+        if ($coreItems.Count -eq 0) {
+            $val = [double]$cpuObj.LoadPercentage
+            $coreItems.Add([PSCustomObject]@{
+                CoreLabel = "CPU Total"; Usage = "$val%"; UsageNum = $val
+                Freq      = "$([math]::Round($cpuObj.CurrentClockSpeed / 1000.0, 2)) GHz"
+            })
+        }
+
+        $name = ($cpuObj.Name -replace '\s+', ' ')
+        if ($name.Length -gt 50) { $name = $name.Substring(0,50) + [char]0x2026 }
+
+        return [PSCustomObject]@{
+            Name         = $name
+            LoadPct      = [math]::Min(100, [math]::Max(0, [double]$cpuObj.LoadPercentage))
+            FreqGHz      = [math]::Round($cpuObj.CurrentClockSpeed / 1000.0, 2)
+            Cores        = $cpuObj.NumberOfCores
+            LogicalCores = $cpuObj.NumberOfLogicalProcessors
+            CoreItems    = $coreItems
+        }
+    } catch {
+        Write-Log "[DAL] Get-CpuData error: $($_.Exception.Message)" -Level "WARN" -NoUI
+        return $null
+    }
+}
+
+function Get-RamData {
+    <#
+    .SYNOPSIS Datos de RAM via WMI. Devuelve PSCustomObject puro, sin WPF.
+    .OUTPUTS  PSCustomObject con: TotalBytes, FreeBytes, UsedBytes, UsedPct, TotalGB, FreeGB,
+              Modules (List de PSCustomObject con Slot, Info, Size)
+    #>
+    try {
+        $os = Invoke-CimQuery -ClassName Win32_OperatingSystem
+        if (-not $os) { return $null }
+
+        $totalB = $os.TotalVisibleMemorySize * 1KB
+        $freeB  = $os.FreePhysicalMemory     * 1KB
+        $usedB  = $totalB - $freeB
+        $pct    = [math]::Round($usedB / [math]::Max($totalB, 1) * 100)
+
+        $fmt = { param($b)
+            if ($b -ge 1GB) { "{0:N1} GB" -f ($b / 1GB) }
+            elseif ($b -ge 1MB) { "{0:N0} MB" -f ($b / 1MB) }
+            else { "{0:N0} KB" -f ($b / 1KB) }
+        }
+
+        $modules = [System.Collections.Generic.List[object]]::new()
+        foreach ($mod in (Invoke-CimQuery -ClassName Win32_PhysicalMemory -SilentOnFail)) {
+            $type = switch ($mod.SMBIOSMemoryType) {
+                26 { "DDR4" } 34 { "DDR5" } 21 { "DDR2" } 24 { "DDR3" } default { "DDR" }
+            }
+            $modules.Add([PSCustomObject]@{
+                Slot = if ($mod.DeviceLocator) { $mod.DeviceLocator } else { "Ranura" }
+                Info = "$type  •  $(if($mod.Speed){"$($mod.Speed) MHz"}else{"—"})  •  Mfg: $(if($mod.Manufacturer){$mod.Manufacturer}else{"N/A"})"
+                Size = & $fmt ([long]$mod.Capacity)
+            })
+        }
+
+        return [PSCustomObject]@{
+            TotalBytes = $totalB
+            FreeBytes  = $freeB
+            UsedBytes  = $usedB
+            UsedPct    = $pct
+            TotalFmt   = & $fmt $totalB
+            UsedFmt    = & $fmt $usedB
+            FreeFmt    = & $fmt $freeB
+            TotalGB    = [math]::Round($totalB / 1GB, 1)
+            FreeGB     = [math]::Round($freeB  / 1GB, 1)
+            Modules    = $modules
+        }
+    } catch {
+        Write-Log "[DAL] Get-RamData error: $($_.Exception.Message)" -Level "WARN" -NoUI
+        return $null
+    }
+}
+
+function Get-DiskCData {
+    <#
+    .SYNOPSIS Datos del disco C: via Win32_LogicalDisk (hilo UI — sin módulo Storage).
+    .OUTPUTS  PSCustomObject con: TotalGB, FreeGB, UsedPct
+    #>
+    try {
+        $d = Invoke-CimQuery -ClassName Win32_LogicalDisk -Filter "DeviceID='C:'" -SilentOnFail |
+             Select-Object -First 1
+        if (-not $d) { return $null }
+        $totalGB = [math]::Round($d.Size      / 1GB, 1)
+        $freeGB  = [math]::Round($d.FreeSpace / 1GB, 1)
+        return [PSCustomObject]@{
+            TotalGB = $totalGB
+            FreeGB  = $freeGB
+            UsedPct = [math]::Round((($totalGB - $freeGB) / [math]::Max($totalGB, 1)) * 100)
+        }
+    } catch {
+        Write-Log "[DAL] Get-DiskCData error: $($_.Exception.Message)" -Level "WARN" -NoUI
+        return $null
+    }
+}
+
+function Get-PhysicalDiskData {
+    <#
+    .SYNOPSIS Datos SMART de discos físicos via Get-PhysicalDisk + StorageReliabilityCounter.
+    .OUTPUTS  List de PSCustomObject con: DiskName, Status, StatusBg, StatusFg, Attributes (List)
+    #>
+    $items = [System.Collections.Generic.List[object]]::new()
+    try {
+        foreach ($disk in (Get-PhysicalDisk -ErrorAction Stop)) {
+            $rel = $null
+            try { $rel = Get-StorageReliabilityCounter -PhysicalDisk $disk -ErrorAction Stop } catch {}
+
+            $health = $disk.HealthStatus
+            $bg = switch ($health) { "Healthy" { "#182A1E" } "Warning" { "#2A2010" } default { "#2A1018" } }
+            $fg = switch ($health) { "Healthy" { "#4AE896" } "Warning" { "#FFB547" } default { "#FF6B84" } }
+
+            $attrs = [System.Collections.Generic.List[object]]::new()
+            $sz = if ($disk.Size -ge 1GB) { "{0:N1} GB" -f ($disk.Size / 1GB) } else { "{0:N0} MB" -f ($disk.Size / 1MB) }
+            $attrs.Add([PSCustomObject]@{ Name="Tipo";    Value=$disk.MediaType; ValueColor="#B0BACC" })
+            $attrs.Add([PSCustomObject]@{ Name="Tamaño";  Value=$sz;             ValueColor="#5BA3FF" })
+            $attrs.Add([PSCustomObject]@{ Name="Bus";     Value=$disk.BusType;   ValueColor="#B0BACC" })
+            if ($rel) {
+                if ($null -ne $rel.PowerOnHours)   { $attrs.Add([PSCustomObject]@{ Name="Horas enc.";  Value="$($rel.PowerOnHours) h"; ValueColor="#FFB547" }) }
+                if ($null -ne $rel.Temperature) {
+                    $tc  = $rel.Temperature
+                    $tc2 = if ($tc -ge 55) { "#FF6B84" } elseif ($tc -ge 45) { "#FFB547" } else { "#4AE896" }
+                    $attrs.Add([PSCustomObject]@{ Name="Temperatura"; Value="${tc}°C"; ValueColor=$tc2 })
+                }
+                if ($null -ne $rel.ReadErrorsTotal) {
+                    $attrs.Add([PSCustomObject]@{ Name="Errores lect."; Value=$rel.ReadErrorsTotal
+                        ValueColor=if($rel.ReadErrorsTotal -gt 0){"#FF6B84"}else{"#4AE896"} })
+                }
+                if ($null -ne $rel.Wear) {
+                    $wc = if ($rel.Wear -ge 80) { "#FF6B84" } elseif ($rel.Wear -ge 50) { "#FFB547" } else { "#4AE896" }
+                    $attrs.Add([PSCustomObject]@{ Name="Desgaste"; Value="$($rel.Wear)%"; ValueColor=$wc })
+                }
+            }
+            $items.Add([PSCustomObject]@{
+                DiskName=$disk.FriendlyName; Status=$health; StatusBg=$bg; StatusFg=$fg; Attributes=$attrs
+            })
+        }
+    } catch {
+        Write-Log "[DAL] Get-PhysicalDiskData error: $($_.Exception.Message)" -Level "WARN" -NoUI
+        $items.Add([PSCustomObject]@{
+            DiskName="Error al leer SMART"; Status="N/A"; StatusBg="#2A1018"; StatusFg="#FF6B84"; Attributes=@()
+        })
+    }
+    return $items
+}
+
+function Get-NetData {
+    <#
+    .SYNOPSIS Datos de adaptadores de red via Get-NetAdapter (con fallback WMI).
+    .OUTPUTS  List de PSCustomObject por adaptador con: Name, Status, Mac, IP, LinkMbps,
+              RxFmt, TxFmt, RxBytesFmt, TxBytesFmt, StatusBg, StatusFg, IsUp
+    #>
+    $netItems = [System.Collections.Generic.List[object]]::new()
+    try {
+        # Tabla de velocidades WMI para calcular rx/tx en tiempo real
+        $wmiTable = @{}
+        try {
+            foreach ($row in (Invoke-CimQuery -ClassName Win32_PerfFormattedData_Tcpip_NetworkInterface -SilentOnFail)) {
+                $norm = ($row.Name -replace '\s*#\d+$','' -replace '_',' ').ToLower().Trim()
+                $wmiTable[$norm] = $row
+            }
+        } catch {}
+
+        function _FmtRate  { param([double]$b); if ($b -ge 1MB) { "{0:N1} MB/s" -f ($b/1MB) } elseif ($b -ge 1KB) { "{0:N0} KB/s" -f ($b/1KB) } elseif ($b -gt 0) { "{0:N0} B/s" -f $b } else { "0 B/s" } }
+        function _FmtBytes { param([double]$b); if ($b -ge 1GB) { "{0:N1} GB" -f ($b/1GB) } elseif ($b -ge 1MB) { "{0:N0} MB" -f ($b/1MB) } else { "{0:N0} KB" -f ($b/1KB) } }
+        function _FmtLink  { param([uint64]$bps); if ($bps -ge 1000000000) { "$([math]::Round($bps/1e9,0)) Gbps" } elseif ($bps -ge 1000000) { "$([math]::Round($bps/1e6,0)) Mbps" } elseif ($bps -gt 0) { "$bps bps" } else { "—" } }
+
+        try {
+            $adapters = Get-NetAdapter -ErrorAction Stop
+            foreach ($a in $adapters) {
+                $isUp   = $a.Status -eq 'Up'
+                $bg     = if ($isUp) { "#0D1E12" } else { "#1A1A24" }
+                $fg     = if ($isUp) { "#4AE896" } else { "#5A6080" }
+                $ip     = ""
+                try { $ip = (Get-NetIPAddress -InterfaceIndex $a.InterfaceIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue | Select-Object -First 1).IPAddress } catch {}
+
+                $rxB = 0.0; $txB = 0.0; $rxTotal = 0.0; $txTotal = 0.0
+                $norm = ($a.InterfaceDescription -replace '\s*#\d+$','' -replace '_',' ').ToLower().Trim()
+                if ($wmiTable.ContainsKey($norm)) {
+                    $row = $wmiTable[$norm]
+                    $rxB      = [double]$row.BytesReceivedPerSec
+                    $txB      = [double]$row.BytesSentPerSec
+                    $rxTotal  = [double]$row.BytesTotalPersec
+                    $txTotal  = [double]$row.BytesTotalPersec
+                }
+
+                $stats = $null
+                try { $stats = Get-NetAdapterStatistics -Name $a.Name -ErrorAction SilentlyContinue } catch {}
+
+                $netItems.Add([PSCustomObject]@{
+                    Name        = $a.Name
+                    Desc        = $a.InterfaceDescription
+                    Status      = $a.Status
+                    IsUp        = $isUp
+                    Mac         = $a.MacAddress
+                    IP          = if ($ip) { $ip } else { "—" }
+                    LinkFmt     = _FmtLink ([uint64]$a.LinkSpeed)
+                    RxFmt       = _FmtRate $rxB
+                    TxFmt       = _FmtRate $txB
+                    RxBytesFmt  = if ($stats) { _FmtBytes ([double]$stats.ReceivedBytes) } else { "—" }
+                    TxBytesFmt  = if ($stats) { _FmtBytes ([double]$stats.SentBytes)     } else { "—" }
+                    StatusBg    = $bg
+                    StatusFg    = $fg
+                })
+            }
+            return $netItems
+        } catch {}
+
+        # ── Fallback WMI puro si Get-NetAdapter no disponible ───────────────
+        foreach ($nic in (Invoke-CimQuery -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled=True" -SilentOnFail)) {
+            $nicName = (Invoke-CimQuery -ClassName Win32_NetworkAdapter -Filter "DeviceID='$($nic.Index)'" -SilentOnFail).NetConnectionID
+            $ip = if ($nic.IPAddress) { $nic.IPAddress | Where-Object { $_ -match '^\d+\.\d+\.\d+\.\d+$' } | Select-Object -First 1 } else { "—" }
+            $netItems.Add([PSCustomObject]@{
+                Name = if ($nicName) { $nicName } else { "Adaptador $($nic.Index)" }
+                Desc = $nic.Description; Status = "Up"; IsUp = $true
+                Mac = $nic.MACAddress; IP = if ($ip) { $ip } else { "—" }
+                LinkFmt = "—"; RxFmt = "—"; TxFmt = "—"
+                RxBytesFmt = "—"; TxBytesFmt = "—"
+                StatusBg = "#0D1E12"; StatusFg = "#4AE896"
+            })
+        }
+    } catch {
+        Write-Log "[DAL] Get-NetData error: $($_.Exception.Message)" -Level "WARN" -NoUI
+    }
+    return $netItems
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Chart history buffers (60 samples each)
 # ─────────────────────────────────────────────────────────────────────────────
 $script:CpuHistory  = [System.Collections.Generic.List[double]]::new()
@@ -2613,24 +2999,11 @@ function Draw-SparkLine {
 #      (<150 ms) no congelan la UI en un tick de 2 segundos.
 # ─────────────────────────────────────────────────────────────────────────────
 function Update-SystemInfo {
+    # [DAL] Datos via funciones puras — presentación desacoplada de la obtención
     try {
-        $os  = Invoke-CimQuery -ClassName Win32_OperatingSystem
-        $cpu = Invoke-CimQuery -ClassName Win32_Processor | Select-Object -First 1
-
-        $totalGB = [math]::Round($os.TotalVisibleMemorySize / 1MB, 1)
-        $freeGB  = [math]::Round($os.FreePhysicalMemory     / 1MB, 1)
-        $usedPct = [math]::Round((($totalGB - $freeGB) / [math]::Max($totalGB, 1)) * 100)
-
-        # Disco C: via Win32_LogicalDisk — no requiere módulo Storage
-        $diskCim     = Invoke-CimQuery -ClassName Win32_LogicalDisk -Filter "DeviceID='C:'" -SilentOnFail |
-                           Select-Object -First 1
-        $diskTotalGB = if ($diskCim) { [math]::Round($diskCim.Size      / 1GB, 1) } else { 0 }
-        $diskFreeGB  = if ($diskCim) { [math]::Round($diskCim.FreeSpace / 1GB, 1) } else { 0 }
-        $diskUsedPct = [math]::Round((($diskTotalGB - $diskFreeGB) / [math]::Max($diskTotalGB, 1)) * 100)
-
-        $cpuLoad = [math]::Min(100, [math]::Max(0, [double]$cpu.LoadPercentage))
-        $cpuName = ($cpu.Name -replace '\s+', ' ')
-        if ($cpuName.Length -gt 35) { $cpuName = $cpuName.Substring(0, 35) + [char]0x2026 }
+        $cpu  = Get-CpuData
+        $ram  = Get-RamData
+        $disk = Get-DiskCData
 
         # Actividad de disco via PerformanceCounter
         $diskActivity = 0.0
@@ -2639,6 +3012,8 @@ function Update-SystemInfo {
         }
 
         # Actualizar buffers de historial
+        $cpuLoad = if ($cpu)  { $cpu.LoadPct  } else { 0.0 }
+        $usedPct = if ($ram)  { $ram.UsedPct  } else { 0.0 }
         $script:CpuHistory.Add($cpuLoad)
         $script:RamHistory.Add([double]$usedPct)
         $script:DiskHistory.Add($diskActivity)
@@ -2646,14 +3021,22 @@ function Update-SystemInfo {
         if ($script:RamHistory.Count  -gt 60) { $script:RamHistory.RemoveAt(0) }
         if ($script:DiskHistory.Count -gt 60) { $script:DiskHistory.RemoveAt(0) }
 
-        # Actualizar etiquetas del panel superior
-        $InfoCPU.Text  = $cpuName
-        $InfoRAM.Text  = "$freeGB GB libre / $totalGB GB"
-        $InfoDisk.Text = "$diskFreeGB GB libre / $diskTotalGB GB"
+        # ── Capa de presentación: asignar valores a controles WPF ──
+        if ($cpu) {
+            $cpuName = $cpu.Name; if ($cpuName.Length -gt 35) { $cpuName = $cpuName.Substring(0,35) + [char]0x2026 }
+            $InfoCPU.Text = $cpuName
+            $CpuPctText.Text = "  $([int]$cpu.LoadPct)%"
+        } else { $InfoCPU.Text = "No disponible"; $CpuPctText.Text = "  —" }
 
-        $CpuPctText.Text  = "  $([int]$cpuLoad)%"
-        $RamPctText.Text  = "  $usedPct%"
-        $DiskPctText.Text = "  $diskUsedPct% usado"
+        if ($ram) {
+            $InfoRAM.Text    = "$($ram.FreeFmt) libre / $($ram.TotalFmt)"
+            $RamPctText.Text = "  $($ram.UsedPct)%"
+        } else { $InfoRAM.Text = "No disponible"; $RamPctText.Text = "  —" }
+
+        if ($disk) {
+            $InfoDisk.Text    = "$($disk.FreeGB) GB libre / $($disk.TotalGB) GB"
+            $DiskPctText.Text = "  $($disk.UsedPct)% usado"
+        } else { $InfoDisk.Text = "No disponible"; $DiskPctText.Text = "  —" }
 
         # Dibujar gráficas sparkline
         Draw-SparkLine -Canvas $CpuChart  -Data $script:CpuHistory  -LineColor "#5BA3FF" -FillColor "#5BA3FF"
@@ -2799,267 +3182,69 @@ function Get-LinkBps {
 }
 
 function Update-PerformanceTab {
+    # [DAL] Capa de presentación delgada — obtiene datos via Get-*Data y los asigna a controles WPF.
     if ($script:AppClosing) { return }   # [FIX] No ejecutar si la app está cerrando
     $txtPerfStatus.Text = "Recopilando datos…"
 
-    # [FIX-A3] Asegurar módulos disponibles (necesario si PowerShell no los importa automáticamente)
+    # [FIX-A3] Asegurar módulos disponibles
     try { Import-Module Storage    -ErrorAction SilentlyContinue } catch {}
     try { Import-Module NetAdapter -ErrorAction SilentlyContinue } catch {}
     try { Import-Module NetTCPIP   -ErrorAction SilentlyContinue } catch {}
 
-    # ── CPU Cores ──────────────────────────────────────────────
-    try {
-        $cpuObj = Invoke-CimQuery -ClassName Win32_Processor | Select-Object -First 1
-        $txtCpuName.Text = "$($cpuObj.Name)  |  $($cpuObj.NumberOfCores) núcleos  /  $($cpuObj.NumberOfLogicalProcessors) lógicos"
+    # ── CPU ────────────────────────────────────────────────────
+    $cpu = Get-CpuData
+    if ($cpu) {
+        $txtCpuName.Text = "$($cpu.Name)  |  $($cpu.Cores) núcleos  /  $($cpu.LogicalCores) lógicos"
+        $icCpuCores.ItemsSource = $cpu.CoreItems
+    } else { $txtCpuName.Text = "No disponible" }
 
-        $coreItems = [System.Collections.Generic.List[object]]::new()
-        try {
-            $cpuPerf = Invoke-CimQuery -ClassName Win32_PerfFormattedData_PerfOS_Processor -SilentOnFail |
-                       Where-Object { $_.Name -ne '_Total' } |
-                       Sort-Object { [int]($_.Name -replace '\D','0') }
-            if ($cpuPerf) {
-                foreach ($core in $cpuPerf) {
-                    $val = [math]::Round([double]$core.PercentProcessorTime, 1)
-                    $coreItems.Add([PSCustomObject]@{
-                        CoreLabel = "Core $($core.Name)"
-                        Usage     = "$val%"
-                        UsageNum  = $val
-                        Freq      = "$([math]::Round($cpuObj.CurrentClockSpeed / 1000.0, 2)) GHz"
-                    })
-                }
-            } else {
-                $val = [double]$cpuObj.LoadPercentage
-                $coreItems.Add([PSCustomObject]@{
-                    CoreLabel = "CPU Total"; Usage = "$val%"; UsageNum = $val
-                    Freq      = "$([math]::Round($cpuObj.CurrentClockSpeed / 1000.0, 2)) GHz"
-                })
-            }
-        } catch {
-            $coreItems.Add([PSCustomObject]@{
-                CoreLabel = "CPU Total"; Usage = "$($cpuObj.LoadPercentage)%"
-                UsageNum  = [double]$cpuObj.LoadPercentage
-                Freq      = "$([math]::Round($cpuObj.CurrentClockSpeed / 1000.0, 2)) GHz"
-            })
-        }
-        $icCpuCores.ItemsSource = $coreItems
-    } catch { $txtCpuName.Text = "No disponible" }
-
-    # ── RAM Detallada ──────────────────────────────────────────
-    try {
-        $os     = Invoke-CimQuery -ClassName Win32_OperatingSystem
-        $totalB = $os.TotalVisibleMemorySize * 1KB
-        $freeB  = $os.FreePhysicalMemory     * 1KB
-        $usedB  = $totalB - $freeB
-        $pct    = [math]::Round($usedB / $totalB * 100)
-
-        $fmt = { param($b)
-            if ($b -ge 1GB) { "{0:N1} GB" -f ($b / 1GB) }
-            elseif ($b -ge 1MB) { "{0:N0} MB" -f ($b / 1MB) }
-            else { "{0:N0} KB" -f ($b / 1KB) }
-        }
-
-        $txtRamTotal.Text = & $fmt $totalB
-        $txtRamUsed.Text  = & $fmt $usedB
-        $txtRamFree.Text  = & $fmt $freeB
-        $txtRamPct.Text   = "$pct%"
-        $pbRam.Value      = $pct
-
-        $modItems = [System.Collections.Generic.List[object]]::new()
-        foreach ($mod in (Invoke-CimQuery -ClassName Win32_PhysicalMemory -SilentOnFail)) {
-            $type = switch ($mod.SMBIOSMemoryType) {
-                26 { "DDR4" } 34 { "DDR5" } 21 { "DDR2" } 24 { "DDR3" } default { "DDR" }
-            }
-            $modItems.Add([PSCustomObject]@{
-                Slot = if ($mod.DeviceLocator) { $mod.DeviceLocator } else { "Ranura" }
-                Info = "$type  •  $(if($mod.Speed){"$($mod.Speed) MHz"}else{"—"})  •  Mfg: $(if($mod.Manufacturer){$mod.Manufacturer}else{"N/A"})"
-                Size = & $fmt ([long]$mod.Capacity)
-            })
-        }
-        $icRamModules.ItemsSource = $modItems
-    } catch { $txtRamTotal.Text = "N/A" }
+    # ── RAM ────────────────────────────────────────────────────
+    $ram = Get-RamData
+    if ($ram) {
+        $txtRamTotal.Text = $ram.TotalFmt
+        $txtRamUsed.Text  = $ram.UsedFmt
+        $txtRamFree.Text  = $ram.FreeFmt
+        $txtRamPct.Text   = "$($ram.UsedPct)%"
+        $pbRam.Value      = $ram.UsedPct
+        $icRamModules.ItemsSource = $ram.Modules
+    } else { $txtRamTotal.Text = "N/A" }
 
     # ── SMART del Disco ────────────────────────────────────────
-    try {
-        $smartItems = [System.Collections.Generic.List[object]]::new()
-        foreach ($disk in (Get-PhysicalDisk -ErrorAction Stop)) {
-            $rel = $null
-            try { $rel = Get-StorageReliabilityCounter -PhysicalDisk $disk -ErrorAction Stop } catch {}
-
-            $health = $disk.HealthStatus
-            $bg = switch ($health) { "Healthy" { "#182A1E" } "Warning" { "#2A2010" } default { "#2A1018" } }
-            $fg = switch ($health) { "Healthy" { "#4AE896" } "Warning" { "#FFB547" } default { "#FF6B84" } }
-
-            $attrs = [System.Collections.Generic.List[object]]::new()
-            $sz = if ($disk.Size -ge 1GB) { "{0:N1} GB" -f ($disk.Size / 1GB) } else { "{0:N0} MB" -f ($disk.Size / 1MB) }
-            $attrs.Add([PSCustomObject]@{ Name="Tipo";    Value=$disk.MediaType; ValueColor="#B0BACC" })
-            $attrs.Add([PSCustomObject]@{ Name="Tamaño";  Value=$sz;             ValueColor="#5BA3FF" })
-            $attrs.Add([PSCustomObject]@{ Name="Bus";     Value=$disk.BusType;   ValueColor="#B0BACC" })
-            if ($rel) {
-                if ($null -ne $rel.PowerOnHours) {
-                    $attrs.Add([PSCustomObject]@{ Name="Horas enc."; Value="$($rel.PowerOnHours) h"; ValueColor="#FFB547" })
-                }
-                if ($null -ne $rel.Temperature) {
-                    $tc = $rel.Temperature
-                    $tc2 = if ($tc -ge 55) { "#FF6B84" } elseif ($tc -ge 45) { "#FFB547" } else { "#4AE896" }
-                    $attrs.Add([PSCustomObject]@{ Name="Temperatura"; Value="${tc}°C"; ValueColor=$tc2 })
-                }
-                if ($null -ne $rel.ReadErrorsTotal) {
-                    $attrs.Add([PSCustomObject]@{ Name="Errores lect."; Value=$rel.ReadErrorsTotal
-                        ValueColor=if($rel.ReadErrorsTotal -gt 0){"#FF6B84"}else{"#4AE896"} })
-                }
-                if ($null -ne $rel.Wear) {
-                    $wc = if ($rel.Wear -ge 80) { "#FF6B84" } elseif ($rel.Wear -ge 50) { "#FFB547" } else { "#4AE896" }
-                    $attrs.Add([PSCustomObject]@{ Name="Desgaste"; Value="$($rel.Wear)%"; ValueColor=$wc })
-                }
-            }
-            $smartItems.Add([PSCustomObject]@{
-                DiskName=$disk.FriendlyName; Status=$health; StatusBg=$bg; StatusFg=$fg; Attributes=$attrs
-            })
-        }
-        $icSmartDisks.ItemsSource = $smartItems
-    } catch {
-        $icSmartDisks.ItemsSource = @([PSCustomObject]@{
-            DiskName="Error al leer SMART"; Status="N/A"; StatusBg="#2A1018"; StatusFg="#FF6B84"; Attributes=@()
-        })
-    }
+    $smartData = Get-PhysicalDiskData
+    $icSmartDisks.ItemsSource = $smartData
 
     # ── Tarjetas de Red ────────────────────────────────────────
-    try {
-        # Tabla de velocidades WMI para calcular rx/tx en tiempo real
-        $wmiTable = @{}
-        try {
-            foreach ($row in (Invoke-CimQuery -ClassName Win32_PerfFormattedData_Tcpip_NetworkInterface -SilentOnFail)) {
-                $norm = ($row.Name -replace '\s*#\d+$','' -replace '_',' ').ToLower().Trim()
-                $wmiTable[$norm] = $row
-            }
-        } catch {}
+    # Get-NetData devuelve datos normalizados; los formateamos para el ItemTemplate de red
+    $rawNet = Get-NetData
+    $netItems = [System.Collections.Generic.List[object]]::new()
 
-        # Funciones de formato inline (sin scriptblock para evitar problemas de scope)
-        function Format-NetRate  { param([double]$b); if ($b -ge 1MB) { return "{0:N1} MB/s" -f ($b/1MB) } elseif ($b -ge 1KB) { return "{0:N0} KB/s" -f ($b/1KB) } elseif ($b -gt 0) { return "{0:N0} B/s" -f $b } else { return "0 B/s" } }
-        function Format-NetBytes { param([double]$b); if ($b -ge 1GB) { return "{0:N1} GB" -f ($b/1GB) } elseif ($b -ge 1MB) { return "{0:N0} MB" -f ($b/1MB) } else { return "{0:N0} KB" -f ($b/1KB) } }
-        function Format-LinkBps  { param([uint64]$bps); if ($bps -ge 1000000000) { return "$([math]::Round($bps/1e9,0)) Gbps" } elseif ($bps -ge 1000000) { return "$([math]::Round($bps/1e6,0)) Mbps" } elseif ($bps -gt 0) { return "$bps bps" } else { return "—" } }
+    foreach ($n in $rawNet) {
+        $adType = "🔌 Ethernet"
+        if ($n.Desc -match 'Wi.?Fi|Wireless|WLAN|802\.11') { $adType = "📶 WiFi" }
+        elseif ($n.Desc -match 'Loopback|Pseudo|Miniport|Hyper-V|VMware|VirtualBox|TAP|TUN|VPN') { $adType = "🔷 Virtual" }
 
-        $netItems = [System.Collections.Generic.List[object]]::new()
+        $ioStr = if ($n.RxBytesFmt -ne "—") { "Total ↓ $($n.RxBytesFmt)  ↑ $($n.TxBytesFmt)" } else { "" }
+        $stColor = if ($n.IsUp) { "#4AE896" } else { "#9BA4C0" }
+        $stLine  = "$($n.Status)   ↓ $($n.RxFmt)   ↑ $($n.TxFmt)"
 
-        # ── Intentar con Get-NetAdapter (módulo NetAdapter) ──────────────
-        $gotNetAdapter = $false
-        try {
-            $adapters = Get-NetAdapter -ErrorAction Stop
-            $gotNetAdapter = $true
-
-            foreach ($a in $adapters) {
-                # IP
-                $ip = "Sin IP"
-                try {
-                    $ipObj = Get-NetIPAddress -InterfaceIndex $a.InterfaceIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue | Select-Object -First 1
-                    if ($ipObj -and $ipObj.IPAddress) { $ip = $ipObj.IPAddress }
-                } catch {}
-
-                # Tipo de adaptador
-                $desc = "$($a.InterfaceDescription)"
-                $adType = "🔌 Ethernet"
-                if (($desc -match 'Wi.?Fi|Wireless|WLAN|802\.11') -or ("$($a.PhysicalMediaType)" -match '802\.11|Wireless|NativeWifi')) {
-                    $adType = "📶 WiFi"
-                } elseif ($desc -match 'Loopback|Pseudo|Miniport|Hyper-V|VMware|VirtualBox|TAP|TUN|VPN') {
-                    $adType = "🔷 Virtual"
-                }
-
-                # Velocidad de enlace
-                $linkBps = [uint64]0
-                $lsStr = "$($a.LinkSpeed)"
-                $lsParsed = [uint64]0
-                if ([uint64]::TryParse($lsStr, [ref]$lsParsed)) {
-                    $linkBps = $lsParsed
-                } elseif ($lsStr -match '([\d\.]+)\s*(G|M|K)?bps') {
-                    $lv = [double]$Matches[1]; $lu = "$($Matches[2])"
-                    $lm = 1
-                    if ($lu -eq 'G') { $lm = 1000000000 } elseif ($lu -eq 'M') { $lm = 1000000 } elseif ($lu -eq 'K') { $lm = 1000 }
-                    $linkBps = [uint64]($lv * $lm)
-                }
-                $speedStr = Format-LinkBps $linkBps
-
-                # Velocidad rx/tx desde WMI
-                $descNorm = ($desc -replace '\s*#\d+$','').ToLower().Trim()
-                $wmiRow = $wmiTable[$descNorm]
-                if (-not $wmiRow) {
-                    foreach ($k in $wmiTable.Keys) {
-                        if ($descNorm -like "*$k*" -or $k -like "*$($a.Name.ToLower().Trim())*") { $wmiRow = $wmiTable[$k]; break }
-                    }
-                }
-                $rxBps = 0.0; $txBps = 0.0
-                if ($null -ne $wmiRow) { $rxBps = [double]$wmiRow.BytesReceivedPersec; $txBps = [double]$wmiRow.BytesSentPersec }
-
-                # Bytes totales
-                $ioStr = ""
-                try {
-                    $stats = Get-NetAdapterStatistics -Name $a.Name -ErrorAction SilentlyContinue
-                    if ($stats) { $ioStr = "Total ↓ $(Format-NetBytes $stats.ReceivedBytes)  ↑ $(Format-NetBytes $stats.SentBytes)" }
-                } catch {}
-
-                # Color de estado
-                $stColor = "#9BA4C0"
-                if ($a.Status -eq "Up") { $stColor = "#4AE896" }
-
-                $netItems.Add([PSCustomObject]@{
-                    Name        = "$adType  $($a.Name)"
-                    IP          = "IP: $ip  |  MAC: $($a.MacAddress)"
-                    MAC         = $desc
-                    Speed       = $speedStr
-                    Status      = "$($a.Status)   ↓ $(Format-NetRate $rxBps)   ↑ $(Format-NetRate $txBps)"
-                    StatusColor = $stColor
-                    BytesIO     = $ioStr
-                })
-            }
-        } catch {}
-
-        # ── Fallback WMI puro si Get-NetAdapter no está disponible ───────
-        if (-not $gotNetAdapter -or $netItems.Count -eq 0) {
-            try {
-                foreach ($nic in (Invoke-CimQuery -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled=True" -SilentOnFail)) {
-                    $nicName = (Invoke-CimQuery -ClassName Win32_NetworkAdapter -Filter "DeviceID='$($nic.Index)'" -SilentOnFail).NetConnectionID
-                    if (-not $nicName) { $nicName = $nic.Description }
-                    $ip  = if ($nic.IPAddress)    { $nic.IPAddress[0]    } else { "Sin IP" }
-                    $mac = if ($nic.MACAddress)   { $nic.MACAddress      } else { "—" }
-                    $gw  = if ($nic.DefaultIPGateway) { $nic.DefaultIPGateway[0] } else { "Sin GW" }
-
-                    $adType = "🔌 Ethernet"
-                    if ($nic.Description -match 'Wi.?Fi|Wireless|WLAN|802\.11') { $adType = "📶 WiFi" }
-                    elseif ($nic.Description -match 'Hyper-V|VMware|VirtualBox|TAP|TUN|VPN') { $adType = "🔷 Virtual" }
-
-                    $netItems.Add([PSCustomObject]@{
-                        Name        = "$adType  $nicName"
-                        IP          = "IP: $ip  |  MAC: $mac"
-                        MAC         = $nic.Description
-                        Speed       = "—"
-                        Status      = "Activa  ↓ —  ↑ —  |  GW: $gw"
-                        StatusColor = "#4AE896"
-                        BytesIO     = ""
-                    })
-                }
-            } catch {
-                $netItems.Add([PSCustomObject]@{
-                    Name="⚠ Error WMI al leer red"; IP=$_.Exception.Message
-                    MAC=""; Speed=""; Status="Error"; StatusColor="#FF6B84"; BytesIO=""
-                })
-            }
-        }
-
-        if ($netItems.Count -eq 0) {
-            $netItems.Add([PSCustomObject]@{
-                Name="ℹ Sin adaptadores activos"; IP="No se detectaron tarjetas de red activas"
-                MAC=""; Speed=""; Status="—"; StatusColor="#7880A0"; BytesIO=""
-            })
-        }
-
-        $icNetAdapters.ItemsSource = $netItems
-
-    } catch {
-        $icNetAdapters.ItemsSource = @([PSCustomObject]@{
-            Name="⚠ Error al leer adaptadores"
-            IP="[$($_.Exception.GetType().Name)] $($_.Exception.Message)"
-            MAC=""; Speed=""; Status="Error"; StatusColor="#FF6B84"; BytesIO=""
+        $netItems.Add([PSCustomObject]@{
+            Name        = "$adType  $($n.Name)"
+            IP          = "IP: $($n.IP)  |  MAC: $($n.Mac)"
+            MAC         = $n.Desc
+            Speed       = $n.LinkFmt
+            Status      = $stLine
+            StatusColor = $stColor
+            BytesIO     = $ioStr
         })
     }
+
+    if ($netItems.Count -eq 0) {
+        $netItems.Add([PSCustomObject]@{
+            Name="ℹ Sin adaptadores activos"; IP="No se detectaron tarjetas de red activas"
+            MAC=""; Speed=""; Status="—"; StatusColor="#7880A0"; BytesIO=""
+        })
+    }
+    $icNetAdapters.ItemsSource = $netItems
 
     $txtPerfStatus.Text = "Actualizado: $(Get-Date -Format 'HH:mm:ss')"
 }
@@ -3272,9 +3457,26 @@ function Start-DiskScan {
         return
     }
 
-    # Señalizar parada al runspace anterior si hubiera uno corriendo
+    # [CTK] Señalizar parada al runspace anterior y esperar terminacion limpia.
+    # AsyncWaitHandle.WaitOne(500) sustituye Start-Sleep -Milliseconds 150 ciego:
+    # si el runspace ya termino, retorna inmediatamente; si tarda >500 ms se fuerza Close().
     [ScanCtl211]::Stop = $true
-    Start-Sleep -Milliseconds 150
+    if ($null -ne $script:DiskScanAsync -and $null -ne $script:DiskScanPS) {
+        try {
+            $finished = $script:DiskScanAsync.AsyncWaitHandle.WaitOne(500)
+            if (-not $finished) {
+                Write-Log "[CTK] Runspace de escaneo no termino en 500ms — forzando cierre" -Level "WARN" -NoUI
+            }
+        } catch {}
+        try { $script:DiskScanPS.Dispose() } catch {}
+        $script:DiskScanPS    = $null
+        $script:DiskScanAsync = $null
+    }
+    if ($null -ne $script:DiskScanRunspace) {
+        try { $script:DiskScanRunspace.Close()   } catch {}
+        try { $script:DiskScanRunspace.Dispose() } catch {}
+        $script:DiskScanRunspace = $null
+    }
     [ScanCtl211]::Reset()
 
     $script:CollapsedPaths.Clear()
@@ -8623,22 +8825,20 @@ function Show-AboutWindow {
                 <!-- Separador -->
                 <Rectangle Height="1" Fill="#252B40" Margin="0,0,0,16"/>
 
-                <!-- v3.0.0 (Dev) DLL externos + Arquitectura modular -->
+                <!-- v3.0.0 (Dev) — Arquitectura modular + CTK + DAL -->
                 <Border CornerRadius="8" Background="#131625" BorderBrush="#9B7EFF" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <Border CornerRadius="4" Background="#1A9B7EFF" Padding="6,2" Margin="0,0,8,0">
                                 <TextBlock FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="#9B7EFF" Text="v3.0.0 (Dev) · ARQUITECTURA"/>
                             </Border>
-                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="#E8ECF4" VerticalAlignment="Center" Text="DLL externos nativos — Ensamblados en .\libs\"/>
+                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="#E8ECF4" VerticalAlignment="Center" Text="DLL externos + CTK + DAL"/>
                         </StackPanel>
                         <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="#9BA4C0" TextWrapping="Wrap" LineHeight="20">
-                            <Run Foreground="#9B7EFF" Text="• [DLL]"/><Run Text="  SysOpt.MemoryHelper.dll y SysOpt.DiskEngine.dll compilados como ensamblados externos en .\libs\&#x0a;"/>
-                            <Run Foreground="#9B7EFF" Text="• [DLL]"/><Run Text="  Eliminada la compilación inline C# por sesión — tipos cargados con Add-Type -Path una sola vez&#x0a;"/>
-                            <Run Foreground="#9B7EFF" Text="• [DLL]"/><Run Text="  Guard de tipo compartido: DiskItem_v211, DiskItemToggle_v230, ScanCtl211, PScanner211 sin recompilación&#x0a;"/>
-                            <Run Foreground="#9B7EFF" Text="• [DLL]"/><Run Text="  MemoryHelper.EmptyWorkingSet disponible sin Add-Type inline — carga única al inicio&#x0a;"/>
-                            <Run Foreground="#9B7EFF" Text="• [ARCH]"/><Run Text="  Ruta de libs normalizada: .\libs\ relativa al script (PSScriptRoot)&#x0a;"/>
-                            <Run Foreground="#9B7EFF" Text="• [ARCH]"/><Run Text="  Mensajes de error descriptivos si falta alguna DLL en .\libs\"/>
+                            <Run Foreground="#9B7EFF" Text="• [DLL]"/><Run Text="  SysOpt.DiskEngine.dll + SysOpt.MemoryHelper.dll en .\libs\ — Add-Type -Path elimina recompilación inline&#x0a;"/>
+                            <Run Foreground="#9B7EFF" Text="• [CTK]"/><Run Text="  Parada limpia: AsyncWaitHandle.WaitOne(500ms) reemplaza Start-Sleep -Milliseconds 150 ciego&#x0a;"/>
+                            <Run Foreground="#9B7EFF" Text="• [DAL]"/><Run Text="  Get-CpuData / Get-RamData / Get-DiskCData / Get-PhysicalDiskData / Get-NetData — funciones puras sin WPF&#x0a;"/>
+                            <Run Foreground="#9B7EFF" Text="• [DAL]"/><Run Text="  Update-SystemInfo y Update-PerformanceTab son capas de presentación delgadas (solo asignan controles)"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
@@ -8907,7 +9107,7 @@ if ($null -ne $btnShowTasks) {
 # Mensaje de bienvenida simplificado en consola (novedades → botón ℹ)
 # ─────────────────────────────────────────────────────────────────────────────
 Write-ConsoleMain "═══════════════════════════════════════════════════════════"
-Write-ConsoleMain "SysOpt - Windows Optimizer GUI — VERSIÓN 3.0.0 (Dev)"
+Write-ConsoleMain "SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0"
 Write-ConsoleMain "═══════════════════════════════════════════════════════════"
 Write-ConsoleMain "Sistema iniciado correctamente"
 Write-ConsoleMain ""
