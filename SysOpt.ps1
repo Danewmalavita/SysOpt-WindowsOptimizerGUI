@@ -4,124 +4,72 @@
     Optimizador de Sistema Windows con Interfaz Gráfica
 .DESCRIPTION
     Script completo de optimización con GUI, limpieza avanzada, verificación de sistema y registro.
-.NOTES
-    Requiere permisos de administrador
-    Versión: 2.5.0
-    Cambios v2.5.0 (Estabilidad + Deduplicación + TaskPool):
-      [LOG] Logging estructurado a archivo rotante diario:
-            Write-Log centralizado — escribe a UI + .\logs\SysOpt_YYYY-MM-DD.log.
-            Rotación automática por día. Thread-safe con Mutex de nombre.
-            Write-ConsoleMain es ahora alias de Write-Log (100% compatible).
-      [ERR] Error boundary global:
-            AppDomain.UnhandledException captura excepciones de runspaces en background.
-            Dispatcher.UnhandledException captura errores del hilo WPF.
-            Ambos logean el error y muestran un diálogo amigable en lugar de crash.
-      [WMI] CimSession compartida con timeout de 5 s:
-            Invoke-CimQuery reemplaza todos los Get-CimInstance directos del hilo UI.
-            Si WMI tarda más de 5 s, el timeout evita que la UI se congele.
-            La sesión se recrea automáticamente si muere o falla.
-      [B5] Deduplicación SHA256 (archivos >10 MB):
-            Botón "🔍 Duplicados" en la barra del Explorador de Disco.
-            Hash calculado en runspace background — UI nunca bloquea.
-            Ventana de resultados con grupos, espacio recuperable y eliminación de copias.
-      [TASKPOOL] Pestaña "⚡ Tareas" — panel de operaciones en segundo plano:
-            Todas las operaciones async (escaneo, CSV, HTML, dedup) se registran.
-            Vista estilo torrent: nombre, barra de progreso, estado, tiempo transcurrido.
-            Botón "Limpiar completadas" para purgar el historial de tareas terminadas.
-            Timer de refresco de 1 s — impacto cero en UI.
-      [FIX] $dlg.Hide() null: GetNewClosure() captura $dlg en el scope de la función.
-      [FIX] $dlg.DragMove() null: idem con GetNewClosure().
-      [FIX] Elapsed time en Refresh-TasksPanel: [int]+string → interpolación "$([int]...)s".
-    Cambios v2.4.0 (FIFO Streaming Anti-RAM-Drain):
-      PROBLEMA RESUELTO:
-        El guardado de snapshot y la carga de entries materializaban TODA la colección
-        en RAM antes de procesarla, causando picos de consumo proporcionales al tamaño
-        del escaneo (escaneos de 50k+ carpetas podían duplicar el uso de RAM).
+#>
 
-      [FIFO-01] Guardado de snapshot — streaming FIFO con ConcurrentQueue + JsonTextWriter:
-                ANTES: $snapData (copia 1) → $entries (copia 2) → $json string (copia 3)
-                       → WriteAllText. Pico = 3x RAM del dataset.
-                AHORA: UI encola items 1 a 1 mientras background drena la queue y escribe
-                       con JsonTextWriter directo al disco. Nunca existe el JSON en RAM.
-                       Ahorro: -50% a -200% RAM en pico según tamaño del escaneo.
+# ─────────────────────────────────────────────────────────────────────────────
+# Metadatos de versión — mostrados en el About (Show-AboutWindow)
+# ─────────────────────────────────────────────────────────────────────────────
+$script:AppVersion = "3.0.0 (Dev)"
+$script:AppNotes   = @{
+    RequiresAdmin = $true
+    Cambios = [ordered]@{
+        "v3.0.0 (Dev)" = @{
+            Titulo = "DLL externos nativos + arquitectura modular"
+            Items  = @(
+                "[DLL] SysOpt.MemoryHelper.dll y SysOpt.DiskEngine.dll compilados como ensamblados externos en .\libs\",
+                "[DLL] Eliminada la compilación inline C# por sesión — los tipos se cargan con Add-Type -Path desde .\libs\",
+                "[DLL] Guard de tipo compartido: DiskItem_v211, DiskItemToggle_v230, ScanCtl211 y PScanner211 nunca se recompilan",
+                "[DLL] MemoryHelper.EmptyWorkingSet disponible sin Add-Type inline — carga única al inicio",
+                "[ARCH] Ruta de libs normalizada a .\libs\ relativa al script (PSScriptRoot)",
+                "[ARCH] Mensajes de error descriptivos si falta alguna DLL en .\libs\"
+            )
+        }
+        "v3.0.0 (Dev)" = @{
+            Titulo = "Estabilidad + Deduplicación + TaskPool"
+            Items  = @(
+                "[LOG] Write-Log centralizado — escribe a UI + .\logs\SysOpt_YYYY-MM-DD.log. Rotación diaria. Thread-safe con Mutex.",
+                "[LOG] Write-ConsoleMain es ahora alias de Write-Log (100% compatible).",
+                "[ERR] AppDomain.UnhandledException captura excepciones de runspaces en background.",
+                "[ERR] Dispatcher.UnhandledException captura errores del hilo WPF. Ambos logean y muestran diálogo amigable.",
+                "[WMI] Invoke-CimQuery reemplaza todos los Get-CimInstance directos del hilo UI. Timeout de 5 s. Sesión auto-recreada.",
+                "[B5] Deduplicación SHA256 archivos >10 MB. Hash en runspace background. Ventana con grupos, espacio recuperable y eliminación.",
+                "[TASKPOOL] Pestaña '⚡ Tareas' — vista async estilo torrent con barra, estado, tiempo. Timer 1 s, impacto cero en UI.",
+                "[FIX] GetNewClosure() captura `$dlg` en scope correcto (Hide/DragMove null resueltos).",
+                "[FIX] Elapsed time en Refresh-TasksPanel: interpolación correcta de entero+string."
+            )
+        }
+        "v2.4.0" = @{
+            Titulo = "FIFO Streaming Anti-RAM-Drain"
+            Items  = @(
+                "[FIFO-01] Guardado de snapshot con ConcurrentQueue + JsonTextWriter directo a disco. Ahorro: −50% a −200% RAM pico.",
+                "[FIFO-02] Carga de entries con ConvertFrom-Json nativo + ConcurrentQueue. Drenado en lotes de 500/tick. Ahorro: −30% RAM.",
+                "[FIFO-03] Terminación limpia garantizada: Runspace + GC.Collect() + LOH compaction en bloque finally."
+            )
+        }
+        "v2.3.0" = @{
+            Titulo = "Optimización RAM + Rendimiento"
+            Items  = @(
+                "[RAM-01] DiskItem_v211 sin INPC. ToggleVisibility/ToggleIcon en DiskItemToggle_v230 (wrapper ligero). Ahorro: ~30-80 MB.",
+                "[RAM-02] CSV con StreamWriter directo (flush/500 items). HTML con StreamWriter a temp. Sin StringBuilder ilimitado.",
+                "[RAM-03] AllScannedItems por referencia vía hashtable compartida — sin copia completa.",
+                "[RAM-04] Load-SnapshotList con JsonTextReader línea a línea. Entries nunca deserializados al listar. Ahorro: −200-400 MB.",
+                "[RAM-05] RunspacePool centralizado 1-3 runspaces, ISS mínimo.",
+                "[RAM-06] GC agresivo post-exportación: LOH compaction + EmptyWorkingSet.",
+                "[NEW-01] DiskUiTimer: debounce 80ms en Refresh-DiskView.",
+                "[NEW-04] chartTimer: intervalo mínimo 1 s (antes 400 ms)."
+            )
+        }
+        "v2.1.3" = @{
+            Titulo = "UX + BugFix"
+        }
+    }
+}
 
-      [FIFO-02] Carga de entries — FIFO con ConvertFrom-Json nativo + ConcurrentQueue:
-                ANTES: ReadAllText + ConvertFrom-Json + ConcurrentBag acumulado completo
-                       antes de entregar al hilo UI. Pico = 3x JSON en RAM.
-                AHORA: ConvertFrom-Json nativo (sin Newtonsoft, funciona en cualquier
-                       runspace). Entries se encolan uno a uno (FIFO) en ConcurrentQueue.
-                       DispatcherTimer drena en lotes de 500/tick — UI nunca bloquea.
-                       Ahorro: -30% RAM pico (elimina ConcurrentBag intermedio).
+# ── Alias de acceso rápido para el resto del script
+$script:AppDir = $PSScriptRoot
 
-      [FIFO-03] Terminación limpia garantizada en ambos flujos:
-                Runspace + GC.Collect() + LOH compaction liberados al terminar,
-                incluso en error (bloque finally). FeedDone en hashtable sincronizada
-                evita bloqueos si el productor falla antes de terminar.
-
-    Cambios v2.3.0 (Optimización RAM + Rendimiento):
-      OPTIMIZACIONES RAM:
-        [RAM-01] DiskItem_v211: INPC eliminado del modelo de datos puros.
-                 ToggleVisibility y ToggleIcon extraídos a DiskItemToggle_v230
-                 (wrapper INPC ligero). El objeto principal ya no retiene event
-                 listeners ni PropertyChangedEventArgs. Ahorro: ~30-80 MB en
-                 escaneos grandes.
-        [RAM-02] Exportación CSV: reemplazado StringBuilder por StreamWriter
-                 directo (flush por lotes). Nunca se materializa todo el CSV
-                 en memoria. Ahorro: −50 a −150 MB pico en exportaciones grandes.
-        [RAM-02b] Exportación HTML tabla: StreamWriter en archivo temporal para
-                 las filas HTML. El StringBuilder ya no crece ilimitado.
-        [RAM-03] bgExportScript y bgCsvScript reciben AllScannedItems por ref
-                 via hashtable de estado compartido — evita copia completa.
-        [RAM-04] Load-SnapshotList: metadatos leídos con JsonTextReader línea
-                 a línea. Los Entries nunca se deserializan en memoria al listar.
-                 Ahorro: −200 a −400 MB pico por snapshot grande.
-        [RAM-05] RunspacePool centralizado (1-3 runspaces, ISS mínimo) para
-                 operaciones async de exportación y top-files. Elimina overhead
-                 de arranque y carga de módulos por operación.
-        [RAM-06] GC agresivo post-exportación: LOH compaction + EmptyWorkingSet
-                 tras cada exportación o carga de snapshot.
-      NUEVAS OPTIMIZACIONES:
-        [NEW-01] DiskUiTimer: debounce de 80ms en Refresh-DiskView para evitar
-                 rebuildeos múltiples en ráfagas de datos del scanner.
-        [NEW-02] Comparador de snapshots: pre-cálculo de top 10 archivos
-                 durante el escaneo mediante acumulador en background.
-        [NEW-03] AllScannedItems capacity hint: se preasigna con Capacity
-                 estimado para evitar realocaciones de array interno.
-        [NEW-04] chartTimer: intervalo mínimo 1s en lugar de 400ms para
-                 reducir presión de GC en la pestaña Rendimiento.
-    Cambios v2.2.0 (BugFix + Paths):
-      BUGS CORREGIDOS:
-        [BF1] Snapshots: ruta cambiada de %APPDATA%\SysOpt\snapshots a .\snapshots
-              (relativo al script) — los snapshots ahora se guardan junto al script
-        [BF2] Logs: ruta por defecto del diálogo "Guardar log" cambiada a .\logs
-              (relativo al script) — se crea automáticamente si no existe
-        [BF3] Snapshots no se listaban: bug crítico en Load-SnapshotList — clave
-              de hashtable era una variable ($rootCount) dentro de @{}, lo que lanzaba
-              una excepción silenciosa en el catch{} e impedía añadir cualquier item
-              a la lista. Corregido: $rootCount se calcula antes del PSCustomObject
-        [BF4] Diálogo "Confirmar eliminación" fallaba con XML inválido cuando el
-              nombre del snapshot contenía comillas dobles (p.ej. "Escaneo 20/02/2026").
-              Corregido: $Title y $Message se escapan con &quot; antes de interpolarlos
-              en el XAML. Aplicado también a Show-ThemedInput.
-        [BF5] Alto consumo de RAM: Load-SnapshotList cargaba todos los Entries de
-              todos los JSONs en memoria permanentemente. Ahora solo guarda metadatos
-              (FilePath, Label, fechas, conteos) y lee Entries bajo demanda al
-              seleccionar o comparar, liberando la referencia inmediatamente tras su uso.
-        [BF6] Comparar bloqueaba la UI: el bucle de "carpetas nuevas" era O(n²)
-              — por cada item del escaneo actual iteraba todos los Entries del snapshot.
-              Corregido con un HashSet<string> (lookup O(1)) y un Dictionary<string,long>
-              para el mapa de tamaños. El comparador ahora escala correctamente aunque
-              el escaneo o el snapshot contengan decenas de miles de carpetas.
-      NUEVAS FUNCIONES v2.2.0:
-        [N1] Snapshots con CheckBox: cada snapshot tiene un checkbox para seleccion
-             individual. Boton "Todo" para marcar/desmarcar todos de golpe.
-             El contador muestra "N de M seleccionados" en tiempo real.
-        [N2] Comparar mejorado: soporta 3 modos segun los checks marcados:
-               - 1 check + escaneo actual cargado → snapshot vs escaneo actual
-               - 2 checks → snapshot A vs snapshot B (comparacion historica)
-             El boton cambia de texto dinamicamente segun el modo activo.
-        [N3] Eliminar en lote: elimina todos los snapshots marcados de una sola vez
-             con dialogo de confirmacion que lista los nombres afectados.
+<#
+.NOTES — histórico de versiones (ver $script:AppNotes para uso programático)
     Cambios v2.1.3 (UX + BugFix):
       MEJORAS UX:
         [U1]  ComboBox con estilo oscuro temático (ya no aparece blanco)
@@ -391,7 +339,7 @@ Set-SplashProgress 40 "Analizando permisos..."
 $xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SysOpt - Windows Optimizer GUI v2.5.0" Height="980" Width="1220"
+        Title="SysOpt - Windows Optimizer GUI v3.0.0 (Dev)" Height="980" Width="1220"
         WindowStartupLocation="CenterScreen" ResizeMode="CanResize"
         Background="#0D0F1A">
     <Window.Resources>
@@ -749,7 +697,7 @@ $xaml = @"
                                    Foreground="#E8ECF4">
                             <Run Text="SYS"/>
                             <Run Foreground="#5BA3FF" Text="OPT"/>
-                            <Run Foreground="#B0BACC" FontSize="13" FontWeight="Normal" Text="  v2.5.0  ·  Windows Optimizer GUI"/>
+                            <Run Foreground="#B0BACC" FontSize="13" FontWeight="Normal" Text="  v3.0.0 (Dev)  ·  Windows Optimizer GUI"/>
                         </TextBlock>
                         <TextBlock Name="StatusText" FontFamily="Segoe UI" FontSize="11"
                                    Foreground="#9BA4C0" Margin="2,3,0,0"
@@ -2444,7 +2392,7 @@ function Initialize-Logger {
         # Cabecera de sesión en el log
         $script:LogWriter.WriteLine("")
         $script:LogWriter.WriteLine("════════════════════════════════════════════════════════════")
-        $script:LogWriter.WriteLine("  SysOpt v2.5.0  —  Sesión iniciada: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
+        $script:LogWriter.WriteLine("  SysOpt v3.0.0 (Dev)  —  Sesión iniciada: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
         $script:LogWriter.WriteLine("  Usuario: $env:USERNAME  |  Host: $env:COMPUTERNAME")
         $script:LogWriter.WriteLine("════════════════════════════════════════════════════════════")
     } catch {
@@ -5557,7 +5505,7 @@ $btnDiskReport.Add_Click({
                 -replace '{{REPORT_DATE}}',       $reportDate `
                 -replace '{{REPORT_DATE_LONG}}',  $dateLong `
                 -replace '{{SCAN_TIME}}',         $dateLong `
-                -replace '{{APP_VERSION}}',       "v2.5.0" `
+                -replace '{{APP_VERSION}}',       "v3.0.0 (Dev)" `
                 -replace '{{TOTAL_SIZE}}',        $totalStr `
                 -replace '{{TOTAL_FOLDERS}}',     $totalFolders `
                 -replace '{{TOTAL_FILES}}',       $totalFiles `
@@ -8723,12 +8671,32 @@ function Show-AboutWindow {
                     </StackPanel>
                     <Border CornerRadius="6" Background="#1A5BA3FF" BorderBrush="#405BA3FF" BorderThickness="1"
                             Padding="10,4" Margin="14,0,0,0" VerticalAlignment="Center">
-                        <TextBlock FontFamily="Consolas" FontSize="11" FontWeight="Bold" Foreground="#5BA3FF" Text="v2.5.0"/>
+                        <TextBlock FontFamily="Consolas" FontSize="11" FontWeight="Bold" Foreground="#5BA3FF" Text="v3.0.0 (Dev)"/>
                     </Border>
                 </StackPanel>
 
                 <!-- Separador -->
                 <Rectangle Height="1" Fill="#252B40" Margin="0,0,0,16"/>
+
+                <!-- v3.0.0 (Dev) DLL externos + Arquitectura modular -->
+                <Border CornerRadius="8" Background="#131625" BorderBrush="#9B7EFF" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Border CornerRadius="4" Background="#1A9B7EFF" Padding="6,2" Margin="0,0,8,0">
+                                <TextBlock FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="#9B7EFF" Text="v3.0.0 (Dev) · ARQUITECTURA"/>
+                            </Border>
+                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="#E8ECF4" VerticalAlignment="Center" Text="DLL externos nativos — Ensamblados en .\libs\"/>
+                        </StackPanel>
+                        <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="#9BA4C0" TextWrapping="Wrap" LineHeight="20">
+                            <Run Foreground="#9B7EFF" Text="• [DLL]"/><Run Text="  SysOpt.MemoryHelper.dll y SysOpt.DiskEngine.dll compilados como ensamblados externos en .\libs\&#x0a;"/>
+                            <Run Foreground="#9B7EFF" Text="• [DLL]"/><Run Text="  Eliminada la compilación inline C# por sesión — tipos cargados con Add-Type -Path una sola vez&#x0a;"/>
+                            <Run Foreground="#9B7EFF" Text="• [DLL]"/><Run Text="  Guard de tipo compartido: DiskItem_v211, DiskItemToggle_v230, ScanCtl211, PScanner211 sin recompilación&#x0a;"/>
+                            <Run Foreground="#9B7EFF" Text="• [DLL]"/><Run Text="  MemoryHelper.EmptyWorkingSet disponible sin Add-Type inline — carga única al inicio&#x0a;"/>
+                            <Run Foreground="#9B7EFF" Text="• [ARCH]"/><Run Text="  Ruta de libs normalizada: .\libs\ relativa al script (PSScriptRoot)&#x0a;"/>
+                            <Run Foreground="#9B7EFF" Text="• [ARCH]"/><Run Text="  Mensajes de error descriptivos si falta alguna DLL en .\libs\"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
 
                 <!-- v2.5.0 Estabilidad + Deduplicación + TaskPool -->
                 <Border CornerRadius="8" Background="#131625" BorderBrush="#4AE896" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
@@ -8994,7 +8962,7 @@ if ($null -ne $btnShowTasks) {
 # Mensaje de bienvenida simplificado en consola (novedades → botón ℹ)
 # ─────────────────────────────────────────────────────────────────────────────
 Write-ConsoleMain "═══════════════════════════════════════════════════════════"
-Write-ConsoleMain "SysOpt - Windows Optimizer GUI — VERSIÓN 2.4.0"
+Write-ConsoleMain "SysOpt - Windows Optimizer GUI — VERSIÓN 3.0.0 (Dev)"
 Write-ConsoleMain "═══════════════════════════════════════════════════════════"
 Write-ConsoleMain "Sistema iniciado correctamente"
 Write-ConsoleMain ""

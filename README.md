@@ -1,7 +1,7 @@
-# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.5.0 — Windows System Optimizer (Español)
+# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v3.0.0 (Dev) — Windows System Optimizer (Español)
 **Script PowerShell con interfaz gráfica — `SysOpt.ps1`**
 
-> **Nota de versión:** La versión pública estable es **v2.5.0**, que incluye logging estructurado, error boundary global, deduplicación SHA256, CimSession compartida con timeout y el panel de tareas en segundo plano (TaskPool).
+> **Nota de versión:** La versión en desarrollo activa es **v3.0.0 (Dev)**, que introduce ensamblados C# compilados como DLL externos en `.\libs\` — eliminando la recompilación inline por sesión. La última versión pública estable es **v2.5.0**.
 
 Este proyecto implementa un **optimizador avanzado para Windows**, desarrollado íntegramente en **PowerShell** y utilizando una interfaz gráfica basada en **WPF/XAML**. Permite ejecutar tareas de mantenimiento, limpieza, verificación y optimización del sistema desde una única ventana, con monitorización de recursos en tiempo real, barra de progreso, consola integrada y modo de análisis sin cambios.
 
@@ -156,6 +156,17 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 ---
 
 ## 📝 Historial de cambios
+
+### v3.0.0 (Dev) *(versión en desarrollo)*
+
+#### DLL externos nativos — Arquitectura modular
+
+- **[DLL]** `SysOpt.MemoryHelper.dll` y `SysOpt.DiskEngine.dll` compilados como ensamblados externos en `.\libs\`. Se cargan con `Add-Type -Path` al inicio — elimina la recompilación inline C# por sesión.
+- **[DLL]** Guard de tipo compartido aplicado a todos los tipos C#: `DiskItem_v211`, `DiskItemToggle_v230`, `ScanCtl211` y `PScanner211` nunca se recompilan aunque el script se relance en la misma sesión de PowerShell.
+- **[DLL]** `MemoryHelper.EmptyWorkingSet` disponible desde el primer frame de arranque, sin bloque `Add-Type` inline.
+- **[ARCH]** Ruta de libs normalizada a `.\libs\` relativa al script (`$PSScriptRoot`). Mensaje de error descriptivo si falta algún ensamblado.
+
+---
 
 ### v2.5.0 *(versión pública estable)*
 
@@ -410,6 +421,17 @@ No PowerShell required, no execution policy changes needed. Simply right-click `
 ---
 
 ## 📝 Changelog
+
+### v3.0.0 (Dev) *(active development build)*
+
+#### Native External DLLs — Modular Architecture
+
+- **[DLL]** `SysOpt.MemoryHelper.dll` and `SysOpt.DiskEngine.dll` compiled as external assemblies in `.\libs\`. Loaded via `Add-Type -Path` at startup — eliminates per-session inline C# recompilation.
+- **[DLL]** Type guard applied to all C# types: `DiskItem_v211`, `DiskItemToggle_v230`, `ScanCtl211` and `PScanner211` are never recompiled even when the script is relaunched in the same PowerShell session.
+- **[DLL]** `MemoryHelper.EmptyWorkingSet` available from the first startup frame, without inline `Add-Type` block.
+- **[ARCH]** Libs path normalized to `.\libs\` relative to the script (`$PSScriptRoot`). Descriptive error message if any assembly is missing.
+
+---
 
 ### v2.5.0 *(public stable release)*
 
