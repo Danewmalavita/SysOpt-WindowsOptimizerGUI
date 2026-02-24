@@ -1777,10 +1777,9 @@ $xaml = @"
                                          FontFamily="JetBrains Mono, Consolas"
                                          IsEnabled="False"/>
                                 <Button Name="btnSnapshotSave" Grid.Column="2" Content="💾  Guardar"
+                                        Style="{StaticResource BtnSecondary}"
                                         Margin="6,0,0,0" Padding="12,5"
-                                        Background="#1A3A5C" Foreground="#5BA3FF"
-                                        BorderBrush="#2A4A6C" BorderThickness="1" Cursor="Hand"
-                                        FontSize="12" IsEnabled="False"/>
+                                        Cursor="Hand" FontSize="12" IsEnabled="False"/>
                             </Grid>
 
                             <!-- Fila 2: acciones sobre snapshots existentes -->
@@ -1798,16 +1797,14 @@ $xaml = @"
                                            Text="Snapshots guardados" VerticalAlignment="Center"
                                            Foreground="#7880A0" FontSize="11" FontFamily="JetBrains Mono"/>
                                 <Button Name="btnSnapshotCompare" Grid.Column="2" Content="📊  Comparar"
+                                        Style="{StaticResource BtnPrimary}"
                                         Margin="0,0,6,0" Padding="10,4"
-                                        Background="#1A2F1A" Foreground="#4AE896"
-                                        BorderBrush="#2A4A2A" BorderThickness="1" Cursor="Hand"
-                                        FontSize="11" IsEnabled="False"
+                                        Cursor="Hand" FontSize="11" IsEnabled="False"
                                         ToolTip="Compara los snapshots marcados entre sí o contra el escaneo actual"/>
                                 <Button Name="btnSnapshotDelete" Grid.Column="3" Content="🗑  Eliminar"
+                                        Style="{StaticResource BtnDanger}"
                                         Padding="10,4"
-                                        Background="#2F1A1A" Foreground="#FF6B84"
-                                        BorderBrush="#4A2A2A" BorderThickness="1" Cursor="Hand"
-                                        FontSize="11" IsEnabled="False"
+                                        Cursor="Hand" FontSize="11" IsEnabled="False"
                                         ToolTip="Elimina todos los snapshots marcados"/>
                             </Grid>
                         </Grid>
