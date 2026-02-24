@@ -1,4 +1,4 @@
-#﻿Requires -RunAsAdministrator
+﻿#﻿Requires -RunAsAdministrator
 <#
 .SYNOPSIS
     Optimizador de Sistema Windows con Interfaz Gráfica
@@ -514,7 +514,7 @@ Set-SplashProgress 40 "Analizando permisos..."
 $xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SysOpt - Windows Optimizer GUI v2.4.0" Height="980" Width="1220"
+        Title="SysOpt - Windows Optimizer GUI v2.5.0" Height="980" Width="1220"
         WindowStartupLocation="CenterScreen" ResizeMode="CanResize"
         Background="#0D0F1A">
     <Window.Resources>
@@ -872,7 +872,7 @@ $xaml = @"
                                    Foreground="#E8ECF4">
                             <Run Text="SYS"/>
                             <Run Foreground="#5BA3FF" Text="OPT"/>
-                            <Run Foreground="#B0BACC" FontSize="13" FontWeight="Normal" Text="  v2.4.0  ·  Windows Optimizer GUI"/>
+                            <Run Foreground="#B0BACC" FontSize="13" FontWeight="Normal" Text="  v2.5.0  ·  Windows Optimizer GUI"/>
                         </TextBlock>
                         <TextBlock Name="StatusText" FontFamily="Segoe UI" FontSize="11"
                                    Foreground="#9BA4C0" Margin="2,3,0,0"
@@ -5069,15 +5069,14 @@ function Show-TasksWindow {
                                            FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold"
                                            Foreground="#E8ECF4" Margin="0,0,0,4"
                                            TextTrimming="CharacterEllipsis"/>
-                                <!-- [FIX-BUG5] Barra responsive: columna estrella proporcional a Pct/100-Pct -->
-                                <Grid Height="5" Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="{Binding BarStarFill}"/>
-                                        <ColumnDefinition Width="{Binding BarStarEmpty}"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Border Grid.Column="0" CornerRadius="3" Background="{Binding BarColor}"/>
-                                    <Border Grid.Column="1" CornerRadius="3" Background="#1A1E2F"/>
-                                </Grid>
+                                <!-- Barra de progreso responsive: ScaleTransform sobre Border interior -->
+                                <Border Height="5" CornerRadius="3" Background="#1A1E2F" Margin="0,0,0,4"
+                                        ClipToBounds="True">
+                                    <Border Name="BarFill" CornerRadius="3"
+                                            Background="{Binding BarColor}"
+                                            HorizontalAlignment="Left"
+                                            Width="{Binding BarPx}"/>
+                                </Border>
                                 <TextBlock Text="{Binding Detail}"
                                            FontFamily="Segoe UI" FontSize="10"
                                            Foreground="#7880A0" TextTrimming="CharacterEllipsis"/>
@@ -5120,19 +5119,22 @@ function Show-TasksWindow {
     $script:txtTasksStatusWin    = $tw.FindName("txtTasksStatus")
     $btnClear                    = $tw.FindName("btnTasksClearDone")
 
-    $btnClear.Add_Click(({
-        # [FIX] ConcurrentDictionary: la clave puede desaparecer entre Keys y el acceso []
-        # Usar TryGetValue para evitar "Cannot index into a null array" por race condition
-        $toRemove = [System.Collections.Generic.List[string]]::new()
-        foreach ($k in @($script:TaskPool.Keys)) {
+    $btnClear.Add_Click({
+        # [FIX] Null-guard: TaskPool puede ser null si la app se está cerrando
+        $pool = $script:TaskPool
+        if ($null -eq $pool) { return }
+        # [FIX] Iterar snapshot de Keys para evitar race entre enumeración y TryRemove
+        $snapshot = @($pool.Keys)
+        foreach ($k in $snapshot) {
             $t = $null
-            if ($script:TaskPool.TryGetValue($k, [ref]$t) -and $null -ne $t -and $t.Status -ne "running") {
-                $toRemove.Add($k)
+            # TryGetValue es seguro aunque la clave haya desaparecido entre Keys y aquí
+            if ($pool.TryGetValue($k, [ref]$t) -and $null -ne $t -and $t.Status -ne "running") {
+                $removed = $null
+                $pool.TryRemove($k, [ref]$removed) | Out-Null
             }
         }
-        foreach ($k in $toRemove) { $removed = $null; $script:TaskPool.TryRemove($k, [ref]$removed) | Out-Null }
         Refresh-TasksPanel
-    }.GetNewClosure()))
+    })
 
     $tw.Add_Closed(({
         $script:TasksWin            = $null
@@ -5205,6 +5207,8 @@ function Refresh-TasksPanel {
 
         $barFill  = [math]::Max(1, $pct)   # mínimo 1* para evitar columna cero
         $barEmpty = [math]::Max(1, 100 - $pct)
+        # BarPx: ancho en px proporcional al porcentaje. La columna central (~280px disponibles)
+        $barPx = [double]($pct * 2.8)   # 100% → 280px, 0% → 0px
 
         $items.Add([PSCustomObject]@{
             Id          = $t.Id
@@ -5217,8 +5221,9 @@ function Refresh-TasksPanel {
             Pct         = $pct
             PctStr      = if ($t.Status -eq "running") { "$pct%" } elseif ($t.Status -eq "done") { "100%" } else { "" }
             PctColor    = $pctColor
-            BarStarFill  = "$barFill*"   # [FIX-BUG5] columna star proporcional al porcentaje
+            BarStarFill  = "$barFill*"
             BarStarEmpty = "$barEmpty*"
+            BarPx       = $barPx
             BarColor    = $barColor
             Detail      = [string]$t.Detail
             Elapsed     = $elapsed
@@ -5678,7 +5683,7 @@ $btnDiskReport.Add_Click({
                 -replace '{{REPORT_DATE}}',       $reportDate `
                 -replace '{{REPORT_DATE_LONG}}',  $dateLong `
                 -replace '{{SCAN_TIME}}',         $dateLong `
-                -replace '{{APP_VERSION}}',       "v2.4.0" `
+                -replace '{{APP_VERSION}}',       "v2.5.0" `
                 -replace '{{TOTAL_SIZE}}',        $totalStr `
                 -replace '{{TOTAL_FOLDERS}}',     $totalFolders `
                 -replace '{{TOTAL_FILES}}',       $totalFiles `
@@ -8845,12 +8850,34 @@ function Show-AboutWindow {
                     </StackPanel>
                     <Border CornerRadius="6" Background="#1A5BA3FF" BorderBrush="#405BA3FF" BorderThickness="1"
                             Padding="10,4" Margin="14,0,0,0" VerticalAlignment="Center">
-                        <TextBlock FontFamily="Consolas" FontSize="11" FontWeight="Bold" Foreground="#5BA3FF" Text="v2.4.0"/>
+                        <TextBlock FontFamily="Consolas" FontSize="11" FontWeight="Bold" Foreground="#5BA3FF" Text="v2.5.0"/>
                     </Border>
                 </StackPanel>
 
                 <!-- Separador -->
                 <Rectangle Height="1" Fill="#252B40" Margin="0,0,0,16"/>
+
+                <!-- v2.5.0 Estabilidad + Deduplicación + TaskPool -->
+                <Border CornerRadius="8" Background="#131625" BorderBrush="#4AE896" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Border CornerRadius="4" Background="#1A4AE896" Padding="6,2" Margin="0,0,8,0">
+                                <TextBlock FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="#4AE896" Text="v2.5.0 · ESTABILIDAD"/>
+                            </Border>
+                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="#E8ECF4" VerticalAlignment="Center" Text="Deduplicación + TaskPool + Error Boundary"/>
+                        </StackPanel>
+                        <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="#9BA4C0" TextWrapping="Wrap" LineHeight="20">
+                            <Run Foreground="#4AE896" Text="• [B5]"/><Run Text="  Deduplicación SHA256: hash de archivos &gt;10 MB en background — ventana con grupos y espacio recuperable&#x0a;"/>
+                            <Run Foreground="#4AE896" Text="• [LOG]"/><Run Text="  Logging estructurado: Write-Log a UI + .\logs\SysOpt_YYYY-MM-DD.log con rotación diaria (Mutex thread-safe)&#x0a;"/>
+                            <Run Foreground="#4AE896" Text="• [ERR]"/><Run Text="  Error boundary global: AppDomain.UnhandledException + Dispatcher.UnhandledException&#x0a;"/>
+                            <Run Foreground="#4AE896" Text="• [WMI]"/><Run Text="  CimSession compartida con OperationTimeoutSec=5 — todas las queries WMI centralizadas en Invoke-CimQuery&#x0a;"/>
+                            <Run Foreground="#4AE896" Text="• [⚡]"/><Run Text="  TaskPool: ventana flotante de tareas async con barra responsive, badge de estado y tiempo transcurrido&#x0a;"/>
+                            <Run Foreground="#FFB547" Text="• [Fix]"/><Run Text="  FrameworkElementFactory → XAML string en Show-TasksWindow (eliminados 254 líneas obsoletas)&#x0a;"/>
+                            <Run Foreground="#FFB547" Text="• [Fix]"/><Run Text="  Race condition Split-Path: null-guard cuando Result llega antes que Done en hashtable sincronizado&#x0a;"/>
+                            <Run Foreground="#FFB547" Text="• [Fix]"/><Run Text="  6 timers async (csv/html/dedup/load/ent/save) ahora se paran limpiamente en Add_Closed"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
 
                 <!-- v2.4.0 FIFO Streaming -->
                 <Border CornerRadius="8" Background="#131625" BorderBrush="#3D8EFF" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
