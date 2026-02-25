@@ -1,0 +1,99 @@
+# SysOpt Theme — windows-light.theme
+# Windows 11 Fluent Light — v3.0
+# AccentBlue y TextPrimary OSCUROS para que los textos hardcodeados sean legibles
+
+[meta]
+Name        = Windows 11 Light
+Author      = Danew Malavita
+Version     = 3.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #D0D0D0
+BgCard                = #FAFAFA
+BgInput               = #BECCD8
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #A8A8A8
+BorderActive          = #005AC0
+BorderHover           = #787878
+# ── Acentos — AccentBlue sustituye #5BA3FF hardcoded → debe ser oscuro ───────
+AccentBlue            = #005AC0
+AccentCyan            = #005060
+AccentAmber           = #643A00
+AccentRed             = #A81410
+AccentGreen           = #0A6208
+AccentPurple          = #521C7C
+# ── Texto — TextPrimary sustituye #E8ECF4/#F0F3FA hardcoded → OSCURO ─────────
+TextPrimary           = #080808
+TextSecondary         = #222222
+TextMuted             = #505050
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #005AC0
+ProgressEnd           = #005060
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #005AC0
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #0044A0
+BtnPrimaryHover       = #0044A0
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #D8D8D8
+BtnSecondaryFg        = #181818
+BtnSecondaryBorder    = #989898
+BtnSecondaryHover     = #C4C4C4
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #98CDD0
+BtnCyanFg             = #002830
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #E8CCA0
+BtnAmberFg            = #482C00
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #E8AAAA
+BtnDangerFg           = #700808
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #D8D8D8
+BtnGhostBorder        = #989898
+BtnGhostFg            = #383838
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #D8D8D8
+HdrBtnBorder          = #989898
+HdrBtnHover           = #C4C4C4
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #98CBC8
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #B0D4F2
+ComboSelected         = #98C4F0
+ComboSelectedFg       = #003890
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #B0D4F2
+CtxSepFill            = #B8B8B8
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #E0E0E0
+DetailBorder          = #989898
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #FAFAFA
+TabHoverBg            = #E4E4E4
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #EBEBEB
+PurpleBlobBg          = #EAE0FF
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #E0E0E0
+ConsoleFg             = #0A5008
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #C8C8C8
+ScrollBarThumb        = #888888
+ScrollBarThumbHover   = #585858
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #0A6208
+StatusWarning         = #643A00
+StatusError           = #A81410
+StatusInfo            = #005AC0
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #D8F0D8
+BgStatusWarn          = #F0E4C0
+BgStatusErr           = #F0D0D0
+BgStatusInfo          = #D0E4F8
+FgStatusOk            = #0A6208
+FgStatusWarn          = #643A00
+FgStatusErr           = #A81410
+FgStatusInfo          = #005AC0

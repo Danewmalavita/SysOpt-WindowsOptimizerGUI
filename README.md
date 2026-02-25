@@ -1,7 +1,7 @@
-# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.3.0 — Windows System Optimizer (Español)
+# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v3.1.0 (Dev) — Windows System Optimizer (Español)
 **Script PowerShell con interfaz gráfica — `SysOpt.ps1`**
 
-> **Nota de versión:** La versión pública estable es **v2.3.0**. La rama de desarrollo interno activa es **v2.4.0**, que incluye las optimizaciones FIFO de RAM y correcciones de estabilidad adicionales, aún no publicada como release estable.
+> **Nota de versión:** La versión en desarrollo activa es **v3.1.0 (Dev)**, que añade un sistema completo de temas visuales (11 temas), soporte multiidioma (ES/EN/PT-BR), ventana de opciones y nuevas DLLs modulares (`SysOpt.Core.dll`, `SysOpt.ThemeEngine.dll`). La última versión pública estable es **v2.5.0**.
 
 Este proyecto implementa un **optimizador avanzado para Windows**, desarrollado íntegramente en **PowerShell** y utilizando una interfaz gráfica basada en **WPF/XAML**. Permite ejecutar tareas de mantenimiento, limpieza, verificación y optimización del sistema desde una única ventana, con monitorización de recursos en tiempo real, barra de progreso, consola integrada y modo de análisis sin cambios.
 
@@ -120,10 +120,45 @@ Construida en XAML, incluye:
 - Consola estilo terminal con colores tipo PowerShell
 - Barra de progreso con gradiente y porcentaje exacto
 - **Diálogo de progreso con botón "Segundo plano"** para exportaciones y cargas largas
+- **Sistema de temas completo** — 11 temas intercambiables en runtime con cobertura total de la UI
+- **Soporte multiidioma** — ES, EN, PT-BR con cambio en caliente sin reiniciar
+- **Ventana de opciones** para personalizar tema e idioma
 - Opción de reinicio automático al finalizar
 - Protección contra doble ejecución simultánea (Mutex global)
 
 ---
+
+
+### 🎨 Sistema de Temas
+
+Motor de temas completo que permite cambiar la apariencia visual de toda la aplicación en tiempo real. Incluye 11 temas preinstalados con paletas de colores distintas.
+
+- **11 temas incluidos**: Default, Default Light, Ice Blue, Ice Cream, Manga Japan, Matrix, PipBoy, Simpsons, Votorantim, Windows, Windows Light
+- **Tematización dual**: XAML principal via `{DynamicResource}` + UI dinámica via `Get-TC` (298 llamadas)
+- **Cobertura total**: barras de progreso, badges de estado, iconos, ComboBox dropdowns, gradientes, diálogos y 8 ventanas dinámicas
+- **Archivos `.theme`** externos en `.\assets\themes\` — formato clave=valor fácil de editar
+- **SysOpt.ThemeEngine.dll** — parser de temas compilado en C# para carga rápida
+- **Barra de progreso** al cargar un tema (hilo en segundo plano)
+- **Persistencia automática** — el tema seleccionado se guarda en `%APPDATA%\SysOpt\settings.json`
+
+### 🌐 Sistema Multiidioma (i18n)
+
+Soporte completo de internacionalización con archivos de idioma externos y aplicación inmediata sin reiniciar.
+
+- **3 idiomas incluidos**: Español (es-es), English (en-us), Português (pt-br)
+- **Archivos `.lang`** externos en `.\assets\lang\` — formato clave=valor editable
+- **LangEngine** en `SysOpt.Core.dll` — parser de idiomas compilado en C#
+- **Actualización inmediata** de todos los textos de la UI al cambiar idioma
+- **Persistencia automática** — el idioma seleccionado se guarda en settings.json
+- **Detección de idiomas disponibles** al abrir la ventana de opciones
+
+### ⚙️ Ventana de Opciones
+
+Nuevo botón Settings/Opciones entre Tareas y Acerca de, con panel dedicado para personalización.
+
+- **Selector de tema** — ComboBox con todos los temas disponibles, aplicación inmediata
+- **Selector de idioma** — ComboBox con todos los idiomas disponibles, aplicación inmediata
+- **ComboBox tematizados** — los dropdowns del selector también cambian con el tema activo (popup, items, texto)
 
 ## 🔐 Requisitos
 
@@ -157,7 +192,61 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 ## 📝 Historial de cambios
 
-### v2.4.0 *(rama developer — no publicada aún)*
+### v3.1.0 (Dev) *(versión en desarrollo)*
+
+#### Sistema de Temas, Multiidioma y Ventana de Opciones
+
+- **[THEME]** Motor de temas completo con estrategia dual: `{DynamicResource}` para XAML principal (293 bindings) + `Get-TC` para UI dinámica (298 llamadas). Cobertura de 111 de 115 colores XAML.
+- **[THEME]** 11 temas preinstalados en `.\assets\themes\`: Default, Default Light, Ice Blue, Ice Cream, Manga Japan, Matrix, PipBoy, Simpsons, Votorantim, Windows, Windows Light.
+- **[THEME]** Tematización completa de ComboBox: `Apply-ComboBoxDarkTheme` con hook `DropDownOpened` para popup, items y texto del selector.
+- **[THEME]** Barras de progreso, badges de estado, iconos y 8 ventanas dinámicas tematizadas con `Get-TC` + `Update-DynamicThemeValues`.
+- **[THEME]** `SysOpt.ThemeEngine.dll` — parser C# para archivos `.theme` (clave=valor).
+- **[I18N]** Sistema multiidioma con 3 idiomas: Español (es-es), English (en-us), Português (pt-br).
+- **[I18N]** Archivos `.lang` externos en `.\assets\lang\` con `LangEngine` (C# en `SysOpt.Core.dll`).
+- **[I18N]** Actualización inmediata de todos los textos UI al cambiar idioma (sin reinicio).
+- **[DLL]** `SysOpt.Core.dll` — LangEngine + SettingsHelper compilados como ensamblado externo.
+- **[DLL]** `SysOpt.ThemeEngine.dll` — ThemeParser compilado como ensamblado externo.
+- **[UI]** Ventana de Opciones con selectores de tema e idioma entre botones Tareas y Acerca de.
+- **[UI]** Símbolo `©` en la ventana Acerca de (reemplaza `(c)`).
+- **[UI]** Metadatos de versión actualizados: muestra solo versión actual + 3 anteriores.
+- **[SETTINGS]** Persistencia de tema e idioma en `%APPDATA%\SysOpt\settings.json`.
+- **[SETTINGS]** Flujo de inicio corregido: `Load-Settings` → `Load-Language` → `Apply-Theme` dentro de `Add_Loaded`.
+- **[FIX]** `Invoke-CimQuery` copiada al runspace de liberación de RAM para evitar error de función no encontrada.
+- **[FIX]** Barras de progreso en Tasks: conversión explícita de string hex a `SolidColorBrush` objects.
+- **[FIX]** Texto de ComboBox: `Foreground` establecido con color `TextPrimary` del tema activo.
+
+---
+
+### v3.0.0 (Dev) *(versión en desarrollo)*
+
+#### DLL externos nativos — Arquitectura modular
+
+- **[DLL]** `SysOpt.MemoryHelper.dll` y `SysOpt.DiskEngine.dll` compilados como ensamblados externos en `.\libs\`. Se cargan con `Add-Type -Path` al inicio — elimina la recompilación inline C# por sesión.
+- **[DLL]** Guard de tipo compartido aplicado a todos los tipos C#: `DiskItem_v211`, `DiskItemToggle_v230`, `ScanCtl211` y `PScanner211` nunca se recompilan aunque el script se relance en la misma sesión de PowerShell.
+- **[DLL]** `MemoryHelper.EmptyWorkingSet` disponible desde el primer frame de arranque, sin bloque `Add-Type` inline.
+- **[ARCH]** Ruta de libs normalizada a `.\libs\` relativa al script (`$PSScriptRoot`). Mensaje de error descriptivo si falta algún ensamblado.
+
+---
+
+### v2.5.0 *(versión pública estable)*
+
+#### Estabilidad, Deduplicación y TaskPool
+
+- **[LOG]** Logging estructurado a archivo rotante diario: `Write-Log` centralizado escribe a la UI y a `.\logs\SysOpt_YYYY-MM-DD.log` con rotación automática por día. Thread-safe mediante Mutex de nombre. `Write-ConsoleMain` es ahora alias de `Write-Log` (100% compatible).
+- **[ERR]** Error boundary global: `AppDomain.UnhandledException` captura excepciones de runspaces en background; `Dispatcher.UnhandledException` captura errores del hilo WPF. Ambos logean el error y muestran un diálogo amigable en lugar de crash.
+- **[WMI]** `CimSession` compartida con timeout de 5 s: `Invoke-CimQuery` reemplaza todos los `Get-CimInstance` directos del hilo UI. Si WMI tarda más de 5 s el timeout evita que la UI se congele, y la sesión se recrea automáticamente si falla.
+- **[B5]** Deduplicación SHA256 para archivos >10 MB: botón "🔍 Duplicados" en la barra del Explorador de Disco. Hash calculado en runspace background — la UI nunca bloquea. Ventana de resultados con grupos, espacio recuperable y eliminación de copias.
+- **[TASKPOOL]** Pestaña "⚡ Tareas" — panel de operaciones en segundo plano: todas las operaciones async (escaneo, CSV, HTML, dedup) se registran con barra de progreso responsive, badge de estado y tiempo transcurrido. Botón "Limpiar completadas" para purgar el historial. Timer de refresco de 1 s — impacto cero en UI.
+
+#### Bugs corregidos
+- **Fix `FrameworkElementFactory`**: reemplazado por XAML string en `Show-TasksWindow` (eliminadas 254 líneas obsoletas).
+- **Fix race condition `Split-Path`**: null-guard añadido cuando `Result` llega antes que `Done` en la hashtable sincronizada.
+- **Fix botones historial en blanco**: los botones Guardar, Comparar y Eliminar del panel de snapshots ahora usan los estilos temáticos (`BtnSecondary`, `BtnPrimary`, `BtnDanger`) en lugar de colores hardcodeados, lo que respeta correctamente el tema en todos los estados (normal, hover, disabled).
+- **Fix timers async**: los 6 timers async (csv/html/dedup/load/ent/save) ahora se detienen limpiamente en `Add_Closed`.
+
+---
+
+### v2.4.0 *(integrada en v2.5.0)*
 
 #### Optimizaciones FIFO de RAM
 - **[FIFO-01]** Guardado de snapshot con `ConcurrentQueue` + `StreamWriter` directo al disco. El hilo UI encola items uno a uno mientras el background los drena y escribe en paralelo — el JSON completo nunca existe en RAM. Ahorro: −50% a −200% RAM pico.
@@ -171,7 +260,7 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 ---
 
-### v2.3.0 *(versión pública estable)*
+### v2.3.0
 
 #### Optimizaciones de RAM
 - **[RAM-01]** `DiskItem_v211` sin `INotifyPropertyChanged`. Toggle extraído a `DiskItemToggle_v230` (wrapper INPC ligero que no retiene event listeners en los miles de items).
@@ -236,10 +325,10 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 ---
 
-# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.3.0 — Windows System Optimizer (English)
+# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v3.1.0 (Dev) — Windows System Optimizer (English)
 **PowerShell Script with Graphical Interface — `SysOpt.ps1`**
 
-> **Version note:** The public stable release is **v2.3.0**. The active internal developer branch is **v2.4.0**, which includes FIFO RAM optimizations and additional stability fixes, not yet published as a stable release.
+> **Version note:** The active development version is **v3.1.0 (Dev)**, which adds a complete visual theme system (11 themes), multi-language support (ES/EN/PT-BR), options window and new modular DLLs (`SysOpt.Core.dll`, `SysOpt.ThemeEngine.dll`). The latest public stable release is **v2.5.0**.
 
 This project provides an **advanced Windows optimization tool**, fully developed in **PowerShell** with a graphical interface built on **WPF/XAML**. It allows you to run maintenance, cleanup, verification, and system optimization tasks from a single window, with real-time resource monitoring, a progress bar, an integrated console, and an analysis mode that makes no changes.
 
@@ -356,10 +445,45 @@ Built using XAML, featuring:
 - Terminal-style console with PowerShell-like colors
 - Gradient progress bar with exact percentage
 - **Progress dialog with "Background" button** for long exports and snapshot loads
+- **Complete theme system** — 11 swappable themes at runtime with full UI coverage
+- **Multi-language support** — ES, EN, PT-BR with hot-swap without restart
+- **Options window** to customize theme and language
 - Optional automatic restart when finished
 - Protection against simultaneous double execution (global Mutex)
 
 ---
+
+
+### 🎨 Theme System
+
+Complete theme engine that allows changing the entire application's visual appearance in real time. Includes 11 pre-installed themes with distinct color palettes.
+
+- **11 included themes**: Default, Default Light, Ice Blue, Ice Cream, Manga Japan, Matrix, PipBoy, Simpsons, Votorantim, Windows, Windows Light
+- **Dual theming strategy**: main XAML via `{DynamicResource}` + dynamic UI via `Get-TC` (298 calls)
+- **Full coverage**: progress bars, status badges, icons, ComboBox dropdowns, gradients, dialogs and 8 dynamic windows
+- **External `.theme` files** in `.\assets\themes\` — easy-to-edit key=value format
+- **SysOpt.ThemeEngine.dll** — compiled C# theme parser for fast loading
+- **Progress bar** shown when loading a theme (background thread)
+- **Automatic persistence** — selected theme saved to `%APPDATA%\SysOpt\settings.json`
+
+### 🌐 Multi-Language System (i18n)
+
+Complete internationalization support with external language files and instant application without restart.
+
+- **3 included languages**: Español (es-es), English (en-us), Português (pt-br)
+- **External `.lang` files** in `.\assets\lang\` — editable key=value format
+- **LangEngine** in `SysOpt.Core.dll` — compiled C# language parser
+- **Instant update** of all UI text when changing language
+- **Automatic persistence** — selected language saved to settings.json
+- **Automatic detection** of available languages when opening options window
+
+### ⚙️ Options Window
+
+New Settings/Options button between Tasks and About, with a dedicated panel for customization.
+
+- **Theme selector** — ComboBox listing all available themes, instant application
+- **Language selector** — ComboBox listing all available languages, instant application
+- **Themed ComboBoxes** — selector dropdowns also change with the active theme (popup, items, text)
 
 ## 🔐 Requirements
 
@@ -393,7 +517,61 @@ No PowerShell required, no execution policy changes needed. Simply right-click `
 
 ## 📝 Changelog
 
-### v2.4.0 *(developer branch — not yet published)*
+### v3.1.0 (Dev) *(active development build)*
+
+#### Theme System, Multi-Language and Options Window
+
+- **[THEME]** Complete theme engine with dual strategy: `{DynamicResource}` for main XAML (293 bindings) + `Get-TC` for dynamic UI (298 calls). Coverage of 111 out of 115 XAML colors.
+- **[THEME]** 11 pre-installed themes in `.\assets\themes\`: Default, Default Light, Ice Blue, Ice Cream, Manga Japan, Matrix, PipBoy, Simpsons, Votorantim, Windows, Windows Light.
+- **[THEME]** Complete ComboBox theming: `Apply-ComboBoxDarkTheme` with `DropDownOpened` hook for popup, items and selector text.
+- **[THEME]** Progress bars, status badges, icons and 8 dynamic windows themed via `Get-TC` + `Update-DynamicThemeValues`.
+- **[THEME]** `SysOpt.ThemeEngine.dll` — C# parser for `.theme` files (key=value format).
+- **[I18N]** Multi-language system with 3 languages: Español (es-es), English (en-us), Português (pt-br).
+- **[I18N]** External `.lang` files in `.\assets\lang\` with `LangEngine` (C# in `SysOpt.Core.dll`).
+- **[I18N]** Instant UI text update when switching language (no restart needed).
+- **[DLL]** `SysOpt.Core.dll` — LangEngine + SettingsHelper compiled as external assembly.
+- **[DLL]** `SysOpt.ThemeEngine.dll` — ThemeParser compiled as external assembly.
+- **[UI]** Options Window with theme and language selectors between Tasks and About buttons.
+- **[UI]** `©` symbol in About window (replaces `(c)`).
+- **[UI]** Version metadata updated: shows only current version + 3 previous versions.
+- **[SETTINGS]** Theme and language persistence in `%APPDATA%\SysOpt\settings.json`.
+- **[SETTINGS]** Startup flow fixed: `Load-Settings` → `Load-Language` → `Apply-Theme` inside `Add_Loaded`.
+- **[FIX]** `Invoke-CimQuery` copied into RAM liberation runspace to prevent missing function error.
+- **[FIX]** Task progress bars: explicit conversion from hex string to `SolidColorBrush` objects.
+- **[FIX]** ComboBox text: `Foreground` set with `TextPrimary` color from active theme.
+
+---
+
+### v3.0.0 (Dev) *(active development build)*
+
+#### Native External DLLs — Modular Architecture
+
+- **[DLL]** `SysOpt.MemoryHelper.dll` and `SysOpt.DiskEngine.dll` compiled as external assemblies in `.\libs\`. Loaded via `Add-Type -Path` at startup — eliminates per-session inline C# recompilation.
+- **[DLL]** Type guard applied to all C# types: `DiskItem_v211`, `DiskItemToggle_v230`, `ScanCtl211` and `PScanner211` are never recompiled even when the script is relaunched in the same PowerShell session.
+- **[DLL]** `MemoryHelper.EmptyWorkingSet` available from the first startup frame, without inline `Add-Type` block.
+- **[ARCH]** Libs path normalized to `.\libs\` relative to the script (`$PSScriptRoot`). Descriptive error message if any assembly is missing.
+
+---
+
+### v2.5.0 *(public stable release)*
+
+#### Stability, Deduplication and TaskPool
+
+- **[LOG]** Structured logging to daily rotating file: centralized `Write-Log` writes to the UI and to `.\logs\SysOpt_YYYY-MM-DD.log` with automatic daily rotation. Thread-safe via named Mutex. `Write-ConsoleMain` is now an alias for `Write-Log` (100% compatible).
+- **[ERR]** Global error boundary: `AppDomain.UnhandledException` catches background runspace exceptions; `Dispatcher.UnhandledException` catches WPF thread errors. Both log the error and show a friendly dialog instead of crashing.
+- **[WMI]** Shared `CimSession` with 5 s timeout: `Invoke-CimQuery` replaces all direct `Get-CimInstance` calls from the UI thread. If WMI takes longer than 5 s, the timeout prevents the UI from freezing, and the session is automatically recreated if it dies.
+- **[B5]** SHA256 deduplication for files >10 MB: "🔍 Duplicates" button in the Disk Explorer toolbar. Hash calculated in background runspace — UI never blocks. Results window with groups, recoverable space and copy deletion.
+- **[TASKPOOL]** "⚡ Tasks" tab — background operations panel: all async operations (scan, CSV, HTML, dedup) are registered with a responsive progress bar, status badge and elapsed time. "Clear completed" button to purge finished tasks. 1 s refresh timer — zero UI impact.
+
+#### Bug Fixes
+- **Fix `FrameworkElementFactory`**: replaced with XAML string in `Show-TasksWindow` (254 obsolete lines removed).
+- **Fix `Split-Path` race condition**: null-guard added when `Result` arrives before `Done` in the synchronized hashtable.
+- **Fix history buttons showing white**: Guardar, Comparar and Eliminar buttons in the snapshot panel now use themed styles (`BtnSecondary`, `BtnPrimary`, `BtnDanger`) instead of hardcoded colors, correctly respecting the theme in all states (normal, hover, disabled).
+- **Fix async timers**: all 6 async timers (csv/html/dedup/load/ent/save) now stop cleanly on `Add_Closed`.
+
+---
+
+### v2.4.0 *(merged into v2.5.0)*
 
 #### FIFO RAM Optimizations
 - **[FIFO-01]** Snapshot save with `ConcurrentQueue` + `StreamWriter` writing directly to disk. The UI thread enqueues items one by one while the background drains and writes in parallel — the full JSON never exists in RAM. Saving: −50% to −200% RAM peak.
@@ -407,7 +585,7 @@ No PowerShell required, no execution policy changes needed. Simply right-click `
 
 ---
 
-### v2.3.0 *(public stable release)*
+### v2.3.0
 
 #### RAM Optimizations
 - **[RAM-01]** `DiskItem_v211` without `INotifyPropertyChanged`. Toggle extracted to `DiskItemToggle_v230` (lightweight INPC wrapper that doesn't retain event listeners across thousands of items).

@@ -1,0 +1,98 @@
+# SysOpt Theme — office.theme
+# Tema inspirado en Microsoft Office 365 — v1.0
+
+[meta]
+Name        = Microsoft Office
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #1B1A19
+BgCard                = #252423
+BgInput               = #323130
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #3B3A39
+BorderActive          = #D83B01
+BorderHover           = #484644
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #2B7CD3
+AccentCyan            = #00B4D8
+AccentAmber           = #FFD700
+AccentRed             = #D83B01
+AccentGreen           = #107C10
+AccentPurple          = #7719AA
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #F3F2F1
+TextSecondary         = #A19F9D
+TextMuted             = #605E5C
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #D83B01
+ProgressEnd           = #FFD700
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #6E2110
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #D83B01
+BtnPrimaryHover       = #D83B01
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #323130
+BtnSecondaryFg        = #A19F9D
+BtnSecondaryBorder    = #3B3A39
+BtnSecondaryHover     = #3B3A39
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #003040
+BtnCyanFg             = #00B4D8
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #2A2400
+BtnAmberFg            = #FFD700
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #3A1000
+BtnDangerFg           = #D83B01
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #252423
+BtnGhostBorder        = #3B3A39
+BtnGhostFg            = #605E5C
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #323130
+HdrBtnBorder          = #3B3A39
+HdrBtnHover           = #484644
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #002830
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #2B1A10
+ComboSelected         = #6E2110
+ComboSelectedFg       = #D83B01
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #2B1A10
+CtxSepFill            = #3B3A39
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #323130
+DetailBorder          = #3B3A39
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #252423
+TabHoverBg            = #323130
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #1B1A19
+PurpleBlobBg          = #200A30
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #0F0F0F
+ConsoleFg             = #107C10
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #252423
+ScrollBarThumb        = #484644
+ScrollBarThumbHover   = #D83B01
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #107C10
+StatusWarning         = #FFD700
+StatusError           = #D83B01
+StatusInfo            = #2B7CD3
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #0A2A0A
+BgStatusWarn          = #2A2400
+BgStatusErr           = #3A1000
+BgStatusInfo          = #0A1A3A
+FgStatusOk            = #107C10
+FgStatusWarn          = #FFD700
+FgStatusErr           = #D83B01
+FgStatusInfo          = #2B7CD3

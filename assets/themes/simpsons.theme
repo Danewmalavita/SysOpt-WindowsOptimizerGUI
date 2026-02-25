@@ -1,0 +1,100 @@
+# SysOpt Theme — simpsons.theme
+# The Simpsons — Springfield palette
+# Amarillo Bart #FED90F — Azul cielo Springfield #70D0E8 — Naranja Homer #F5A623
+# v1.0
+
+[meta]
+Name        = Simpsons
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0A2A3A
+BgCard                = #0E3A50
+BgInput               = #154860
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #1A5870
+BorderActive          = #FED90F
+BorderHover           = #2A6A80
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #FED90F
+AccentCyan            = #70D0E8
+AccentAmber           = #F5A623
+AccentRed             = #E83030
+AccentGreen           = #68C840
+AccentPurple          = #D07030
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #FFF8DC
+TextSecondary         = #C8E8F5
+TextMuted             = #7AAABB
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #FED90F
+ProgressEnd           = #F5A623
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #C8A000
+BtnPrimaryFg          = #0A1A20
+BtnPrimaryBorder      = #FED90F
+BtnPrimaryHover       = #FED90F
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #154860
+BtnSecondaryFg        = #C8E8F5
+BtnSecondaryBorder    = #1A5870
+BtnSecondaryHover     = #1A5870
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #0A3848
+BtnCyanFg             = #70D0E8
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #3A2000
+BtnAmberFg            = #F5A623
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #2A0808
+BtnDangerFg           = #E83030
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #154860
+BtnGhostBorder        = #1A5870
+BtnGhostFg            = #7AAABB
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #154860
+HdrBtnBorder          = #1A5870
+HdrBtnHover           = #1A5870
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #0A3040
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #1A5068
+ComboSelected         = #206080
+ComboSelectedFg       = #FED90F
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #1A5068
+CtxSepFill            = #1A5870
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #154860
+DetailBorder          = #1A5870
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #0E3A50
+TabHoverBg            = #154860
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0A2A3A
+PurpleBlobBg          = #2A1808
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #050F18
+ConsoleFg             = #FED90F
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #0E3A50
+ScrollBarThumb        = #1A5870
+ScrollBarThumbHover   = #FED90F
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #68C840
+StatusWarning         = #F5A623
+StatusError           = #E83030
+StatusInfo            = #70D0E8
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #0A2808
+BgStatusWarn          = #2A1800
+BgStatusErr           = #200808
+BgStatusInfo          = #082030
+FgStatusOk            = #68C840
+FgStatusWarn          = #F5A623
+FgStatusErr           = #E83030
+FgStatusInfo          = #70D0E8

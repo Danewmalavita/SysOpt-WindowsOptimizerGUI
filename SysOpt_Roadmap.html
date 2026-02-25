@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SysOpt — Hoja de Ruta</title>
+<title>SysOpt v3.1.0 — Hoja de Ruta</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -704,33 +704,38 @@
 
   <!-- ── Header ── -->
   <header>
-    <div class="version-badge">SysOpt v2.3.0 · Estable · v2.4.0 completado — próximamente estable</div>
+    <div class="version-badge">SysOpt v3.1.0 (Dev) · Estable base v2.5.0 · Hoja de Ruta hacia v3.x</div>
     <h1><span class="accent">SYS</span><span class="accent2">OPT</span><br>Plan de Estabilidad y Mejora</h1>
-    <p class="subtitle">Análisis de bugs corregidos, mejoras implementadas y vías de evolución para una aplicación de optimización Windows robusta y escalable.</p>
+    <p class="subtitle">Análisis de bugs corregidos, mejoras implementadas y vías de evolución hacia v3.x — plataforma modular con temas visuales, multiidioma y arquitectura limpia.</p>
   </header>
 
   <!-- ── Banner estado actual ── -->
   <div class="dev-banner">
-    <div class="dev-banner-icon">🧪</div>
+    <div class="dev-banner-icon">🚀</div>
     <div>
-      <div class="dev-banner-title">Estado actual — v2.3.0 pública estable / v2.4.0 completada, pendiente release</div>
+      <div class="dev-banner-title">Estado actual — v3.1.0 (Dev) en desarrollo / Base estable v2.5.0</div>
       <div class="dev-banner-desc">
-        <code>SysOpt v2.3.0</code> completamente operativo como versión pública estable. La rama developer
-        <code>v2.4.0</code> está completa: optimizaciones FIFO de RAM implementadas y verificadas,
-        pre-cálculo de top-files activo durante el escaneo, y todos los bugs críticos corregidos.
-        Pendiente de publicar como release estable oficial.
+        <code>SysOpt v3.1.0 (Dev)</code> añade un sistema completo de temas visuales (11 temas), soporte multiidioma (ES/EN/PT-BR),
+        ventana de opciones y nuevas DLLs modulares (<code>SysOpt.Core.dll</code>, <code>SysOpt.ThemeEngine.dll</code>).
+        La estrategia dual de tematización cubre 293 bindings DynamicResource + 298 llamadas Get-TC en UI dinámica.
+        Próximos objetivos: CancellationToken unificado, abstracción de capa de datos y notificaciones Toast.
       </div>
       <div class="dev-banner-chips">
-        <span class="dchip done">✓ v2.3.0 estable publicada</span>
-        <span class="dchip done">✓ RAM-01…06 implementados</span>
-        <span class="dchip done">✓ FIFO-01 save streaming</span>
-        <span class="dchip done">✓ FIFO-02 load streaming</span>
-        <span class="dchip done">✓ FIFO-03 terminación limpia</span>
-        <span class="dchip done">✓ Fix toggle colapsar/expandir</span>
-        <span class="dchip done">✓ Fix Set-Content → WriteAllText</span>
-        <span class="dchip done">✓ A2 Top-files pre-cálculo implementado</span>
-        <span class="dchip">B5 Deduplicación SHA256 → v2.5.0</span>
-        <span class="dchip">Error boundary global → v2.5.0</span>
+        <span class="dchip done">✓ v2.5.0 estable base</span>
+        <span class="dchip done">✓ DLL externos .\libs\ [DLL]</span>
+        <span class="dchip done">✓ Logging estructurado [LOG]</span>
+        <span class="dchip done">✓ Error boundary global [ERR]</span>
+        <span class="dchip done">✓ CimSession timeout 5s [WMI]</span>
+        <span class="dchip done">✓ Deduplicación SHA256 [B5]</span>
+        <span class="dchip done">✓ Panel TaskPool [⚡]</span>
+        <span class="dchip done">✓ 11 Temas visuales [THEME]</span>
+        <span class="dchip done">✓ Multiidioma ES/EN/PT [I18N]</span>
+        <span class="dchip done">✓ Ventana de Opciones [UI]</span>
+        <span class="dchip done">✓ SysOpt.Core.dll + ThemeEngine.dll</span>
+        <span class="dchip done">✓ Persistencia tema/idioma [SETTINGS]</span>
+        <span class="dchip done">✓ ComboBox theming completo</span>
+        <span class="dchip wip">CTK CancellationToken → v3.x</span>
+        <span class="dchip wip">C2 Toast notifications → v3.x</span>
       </div>
     </div>
   </div>
@@ -910,355 +915,139 @@
 
   </div>
 
-  <!-- ── SECCIÓN: Roadmap v2.3 — todo completado ── -->
-  <div class="section-label">Objetivos v2.3 — Completados</div>
-  <div class="section-title">🗺️ Hoja de Ruta v2.3 — Implementada</div>
+  <!-- ── SECCIÓN: Bugs v2.5.0 ── -->
+  <div class="section-label">Bugs corregidos en v2.5.0</div>
+  <div class="section-title">🔵 Fixes de estabilidad y UX — v2.5.0 estable</div>
+  <div class="bugs-grid">
 
-  <div class="roadmap">
-
-    <div class="priority-block p-high">
-      <div class="priority-header">
-        <div class="priority-dot"></div>
-        <div>
-          <div class="priority-label">Prioridad Alta · Explorador de Disco</div>
-          <div class="priority-title">Funcionalidad core — todo completado</div>
-        </div>
-      </div>
-      <div class="items-grid">
-        <div class="item-card done">
-          <div class="item-id-box">A1</div>
-          <div class="item-content">
-            <div class="item-name">Paralelismo y escaneo estable</div>
-            <div class="item-desc">ParallelScanner en C# con inyección de assemblies, parentKey correcta y cola ConcurrentQueue. BATCH y timer adaptativos según RAM libre.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Completado</span><span class="tag">C#</span><span class="tag">ParallelScanner</span></div>
-          </div>
-        </div>
-        <div class="item-card done">
-          <div class="item-id-box">A3</div>
-          <div class="item-content">
-            <div class="item-name">Auto-refresco configurable en Rendimiento</div>
-            <div class="item-desc"><code>chkAutoRefresh</code> con <code>$script:AutoRefreshTimer</code> e intervalo configurable. Se detiene correctamente en <code>Add_Closed</code> y se guarda en <code>settings.json</code>.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">DispatcherTimer</span></div>
-          </div>
-        </div>
-        <div class="item-card done">
-          <div class="item-id-box">FIX</div>
-          <div class="item-content">
-            <div class="item-name">Guardia del timer de rendimiento</div>
-            <div class="item-desc">Guardia contra ticks durante el cierre. Timer de rendimiento detenido y recreado correctamente en cada operación.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Completado</span><span class="tag">Estabilidad</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · BOTONES HISTORIAL</div>
+      <div class="bug-name">Botones del panel de snapshots aparecían en blanco</div>
+      <div class="bug-desc">Los botones Guardar, Comparar y Eliminar en la pestaña Historial tenían colores hardcodeados directamente en el XAML (<code>Background</code>, <code>Foreground</code>, <code>BorderBrush</code>). WPF ignoraba esos atributos en estados hover y disabled porque el <code>ControlTemplate</code> nativo pintaba encima, resultando en botones blancos.</div>
+      <div class="bug-fix">FIX: Reemplazados los atributos hardcodeados por <code>Style="{StaticResource BtnSecondary}"</code>, <code>BtnPrimary</code> y <code>BtnDanger</code> respectivamente — el template temático se aplica en todos los estados.</div>
     </div>
 
-    <div class="priority-block p-medium">
-      <div class="priority-header">
-        <div class="priority-dot"></div>
-        <div>
-          <div class="priority-label">Prioridad Media · Funcionalidad</div>
-          <div class="priority-title">Nuevas características — todas completadas</div>
-        </div>
-      </div>
-      <div class="items-grid">
-        <div class="item-card done">
-          <div class="item-id-box">B1</div>
-          <div class="item-content">
-            <div class="item-name">Filtro en tiempo real en el Explorador</div>
-            <div class="item-desc">TextBox <code>txtDiskFilter</code> con <code>Apply-DiskFilter</code> en tiempo real, botón limpiar y estado guardado en <code>settings.json</code>.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">WPF</span><span class="tag">Filter</span></div>
-          </div>
-        </div>
-        <div class="item-card done">
-          <div class="item-id-box">B2</div>
-          <div class="item-content">
-            <div class="item-name">Menú contextual en el árbol de carpetas</div>
-            <div class="item-desc">ContextMenu oscuro temático: Abrir, Copiar ruta, Escanear subcarpeta, Eliminar. Habilitación dinámica por selección.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">ContextMenu</span><span class="tag">WPF</span></div>
-          </div>
-        </div>
-        <div class="item-card done">
-          <div class="item-id-box">B3</div>
-          <div class="item-content">
-            <div class="item-name">Exportar a CSV y HTML</div>
-            <div class="item-desc">Exportación CSV con StreamWriter directo y exportación HTML con informe visual completo. Ambas con barra de progreso y botón "Segundo plano".</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">CSV</span><span class="tag">HTML</span><span class="tag">Export</span></div>
-          </div>
-        </div>
-        <div class="item-card done">
-          <div class="item-id-box">B4</div>
-          <div class="item-content">
-            <div class="item-name">Historial de escaneos (Snapshots)</div>
-            <div class="item-desc">Guardar snapshots en JSON. Lista cargada en background con streaming de metadatos. Comparación snapshot vs actual y snapshot A vs B. Selección con checkboxes y eliminación en lote.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Completado</span><span class="tag">JSON</span><span class="tag">Historial</span><span class="tag">Comparador</span></div>
-          </div>
-        </div>
-        <div class="item-card done">
-          <div class="item-id-box">C3</div>
-          <div class="item-content">
-            <div class="item-name">Persistencia de configuración</div>
-            <div class="item-desc"><code>Save-Settings</code> guarda checkboxes, ruta del explorador y filtro en <code>%APPDATA%\SysOpt\settings.json</code>. Se restaura al arrancar.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Implementado</span><span class="tag">JSON</span><span class="tag">%APPDATA%</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · RACE CONDITION</div>
+      <div class="bug-name">NullReference en Split-Path cuando Result llega antes que Done</div>
+      <div class="bug-desc">En operaciones async de escaneo, el resultado podía llegar a la hashtable sincronizada antes de que se señalizara <code>Done = $true</code>. El consumer leía <code>Result</code> y llamaba <code>Split-Path</code> sobre un valor aún nulo, causando <code>NullReferenceException</code> silenciosa.</div>
+      <div class="bug-fix">FIX: Null-guard añadido antes de <code>Split-Path</code>: se verifica que el valor exista y no sea nulo antes de procesarlo. El consumer espera correctamente ambas señales.</div>
     </div>
 
-    <div class="priority-block p-low">
-      <div class="priority-header">
-        <div class="priority-dot"></div>
-        <div>
-          <div class="priority-label">Prioridad Baja · UX &amp; Polish</div>
-          <div class="priority-title">Pendiente para versiones futuras</div>
-        </div>
-      </div>
-      <div class="items-grid">
-        <div class="item-card done">
-          <div class="item-id-box">A2</div>
-          <div class="item-content">
-            <div class="item-name">Top 10 archivos — pre-cálculo en escaneo</div>
-            <div class="item-desc">Calcular los archivos más grandes durante el escaneo principal mediante acumulador en background, eliminando el delay al hacer clic en una carpeta. Implementado en v2.4.0 como [NEW-02].</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Implementado en v2.4.0</span><span class="tag">UX</span><span class="tag">Pre-cálculo</span></div>
-          </div>
-        </div>
-        <div class="item-card">
-          <div class="item-id-box">B5</div>
-          <div class="item-content">
-            <div class="item-name">Detección de archivos duplicados</div>
-            <div class="item-desc">Hash SHA256 de archivos grandes (&gt;10 MB) durante el escaneo. Panel que agrupe duplicados por hash y calcule el espacio recuperable.</div>
-            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">SHA256</span><span class="tag">Deduplication</span></div>
-          </div>
-        </div>
-        <div class="item-card">
-          <div class="item-id-box">C1</div>
-          <div class="item-content">
-            <div class="item-name">Tema claro / oscuro</div>
-            <div class="item-desc">Toggle en la toolbar. Mover colores del XAML a un <code>ResourceDictionary</code> intercambiable en runtime.</div>
-            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">Theming</span><span class="tag">XAML</span></div>
-          </div>
-        </div>
-        <div class="item-card">
-          <div class="item-id-box">C2</div>
-          <div class="item-content">
-            <div class="item-name">Notificación Windows Toast</div>
-            <div class="item-desc">Usar <code>[Windows.UI.Notifications.ToastNotificationManager]</code> para emitir notificación nativa al finalizar operaciones en segundo plano.</div>
-            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">Toast</span><span class="tag">WinRT</span></div>
-          </div>
-        </div>
-        <div class="item-card">
-          <div class="item-id-box">C4</div>
-          <div class="item-content">
-            <div class="item-name">Programador de tareas integrado</div>
-            <div class="item-desc">Interfaz para crear/eliminar tareas en el Programador de Windows (<code>Register-ScheduledTask</code>) para optimizaciones automáticas semanales.</div>
-            <div class="item-tags"><span class="tag">Pendiente</span><span class="tag">TaskScheduler</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · TIMERS ASYNC</div>
+      <div class="bug-name">6 timers async no se detenían al cerrar la ventana</div>
+      <div class="bug-desc">Los timers de las operaciones csv, html, dedup, load, ent y save seguían activos tras cerrar la ventana del explorador, intentando acceder a controles ya destruidos y dejando runspaces huérfanos.</div>
+      <div class="bug-fix">FIX: Los 6 timers ahora se detienen explícitamente en el handler <code>Add_Closed</code> antes de hacer dispose de los runspaces. Cleanup completo garantizado.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · FRAMEWORK FACTORY</div>
+      <div class="bug-name">FrameworkElementFactory obsoleto en Show-TasksWindow</div>
+      <div class="bug-desc">La ventana de tareas en segundo plano usaba <code>FrameworkElementFactory</code> para construir el DataTemplate programáticamente — API obsoleta en WPF moderno que requería 254 líneas de código repetitivo y propenso a errores.</div>
+      <div class="bug-fix">FIX: Reemplazado por XAML string con <code>XamlReader.Parse()</code>, reduciendo el código a ~40 líneas declarativas, más legibles y mantenibles.</div>
     </div>
 
   </div>
 
-  <!-- ── SECCIÓN: Optimización RAM (diagnóstico + implementado) ── -->
-  <div class="section-label">Optimización de RAM — completada en v2.3 + v2.4.0</div>
-  <div class="section-title">🧠 Optimización de Consumo de RAM</div>
+  <!-- ── SECCIÓN: Cambios v3.0.0 Dev ── -->
+  <div class="section-label">Cambios implementados en v3.0.0 (Dev)</div>
+  <div class="section-title">🟣 Arquitectura modular — DLL externos en .\libs\</div>
+  <div class="bugs-grid">
 
-  <div class="ram-section">
-
-    <div class="ram-intro">
-      <div class="ram-intro-icon">📊</div>
-      <div style="flex:1">
-        <div class="ram-intro-title">Diagnóstico resuelto — todas las causas raíz corregidas</div>
-        <div class="ram-intro-desc">
-          RAM-01 a RAM-06 implementados en v2.3. FIFO-01 y FIFO-02 implementados en v2.4.0 dev.
-          Los picos de RAM transitorios durante exportaciones y carga de snapshots están eliminados.
-          <code>DiskItem_v211</code> es ahora un modelo de datos puro sin INotifyPropertyChanged.
-        </div>
-        <div class="ram-intro-stats">
-          <div class="ram-stat">
-            <div class="ram-stat-label">Snapshot save</div>
-            <div class="ram-stat-value" style="color:var(--green)">−200%</div>
-            <div class="ram-stat-sub">FIFO streaming</div>
-          </div>
-          <div class="ram-stat">
-            <div class="ram-stat-label">Snapshot load</div>
-            <div class="ram-stat-value" style="color:var(--green)">−70%</div>
-            <div class="ram-stat-sub">ConvertFrom-Json + queue</div>
-          </div>
-          <div class="ram-stat">
-            <div class="ram-stat-label">Lista snapshots</div>
-            <div class="ram-stat-value" style="color:var(--green)">−90%</div>
-            <div class="ram-stat-sub">solo metadatos</div>
-          </div>
-          <div class="ram-stat">
-            <div class="ram-stat-label">DiskItem_v211</div>
-            <div class="ram-stat-value" style="color:var(--green)">−30%</div>
-            <div class="ram-stat-sub">sin INPC overhead</div>
-          </div>
-        </div>
-      </div>
+    <div class="bug-card" style="border-top-color:var(--purple)">
+      <div class="bug-id" style="color:var(--purple);background:rgba(155,126,255,.1)">[DLL] MEMORYHELPER</div>
+      <div class="bug-name">SysOpt.MemoryHelper.dll — ensamblado externo</div>
+      <div class="bug-desc"><code>MemoryHelper.EmptyWorkingSet</code> compilado como DLL externo en <code>.\libs\SysOpt.MemoryHelper.dll</code>. Cargado con <code>Add-Type -Path</code> al inicio. Elimina el bloque <code>Add-Type -TypeDefinition</code> inline y la recompilación por sesión.</div>
+      <div class="bug-fix">IMPL: Guard <code>if (-not ([PSTypeName]'MemoryHelper').Type)</code> + <code>Add-Type -Path $PSScriptRoot\libs\SysOpt.MemoryHelper.dll</code>. Error descriptivo si no existe la carpeta <code>.\libs\</code>.</div>
     </div>
 
-    <div class="ram-fixes-title">Fixes implementados — RAM-01 a RAM-06</div>
-    <div class="ram-fixes-grid">
+    <div class="bug-card" style="border-top-color:var(--purple)">
+      <div class="bug-id" style="color:var(--purple);background:rgba(155,126,255,.1)">[DLL] DISKENGINE</div>
+      <div class="bug-name">SysOpt.DiskEngine.dll — ensamblado externo</div>
+      <div class="bug-desc">Tipos <code>DiskItem_v211</code>, <code>DiskItemToggle_v230</code>, <code>ScanCtl211</code> y <code>PScanner211</code> compilados como DLL externo en <code>.\libs\SysOpt.DiskEngine.dll</code>. Elimina la recompilación C# inline en cada sesión de PowerShell.</div>
+      <div class="bug-fix">IMPL: Guard <code>if (-not ([PSTypeName]'DiskItem_v211').Type)</code> + <code>Add-Type -Path</code> con try/catch para el caso de tipo ya cargado. Los runspaces heredan el ensamblado automáticamente.</div>
+    </div>
 
-      <div class="ram-fix">
-        <div class="ram-fix-header">
-          <div class="ram-fix-icon">🎯</div>
-          <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-01 · IMPLEMENTADO ✓</div>
-            <div class="ram-fix-name">DiskItem sin INotifyPropertyChanged</div>
-          </div>
-        </div>
-        <div class="ram-fix-desc"><code>DiskItem_v211</code> es ahora un modelo de datos puro. El toggle (ToggleIcon/ToggleVisibility) extraído a <code>DiskItemToggle_v230</code>, wrapper INPC ligero que no retiene event listeners en los miles de items.</div>
-        <div class="ram-fix-saving">Ahorro: −30 a −80 MB en escaneos grandes</div>
-      </div>
-
-      <div class="ram-fix">
-        <div class="ram-fix-header">
-          <div class="ram-fix-icon">📝</div>
-          <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-02 · IMPLEMENTADO ✓</div>
-            <div class="ram-fix-name">Exportación CSV/HTML via StreamWriter</div>
-          </div>
-        </div>
-        <div class="ram-fix-desc">CSV exportado con <code>StreamWriter</code> y batch flush cada 500 items (sin StringBuilder). HTML con StreamWriter a archivo temporal para las filas. Nunca existe el contenido completo como string en RAM.</div>
-        <div class="ram-fix-saving">Ahorro: −50 a −150 MB pico por exportación</div>
-      </div>
-
-      <div class="ram-fix">
-        <div class="ram-fix-header">
-          <div class="ram-fix-icon">🔗</div>
-          <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-03 · IMPLEMENTADO ✓</div>
-            <div class="ram-fix-name">AllScannedItems por referencia al runspace</div>
-          </div>
-        </div>
-        <div class="ram-fix-desc"><code>AllScannedItems</code> pasado a los runspaces de exportación via hashtable sincronizada compartida. El runspace lee directamente desde la referencia — sin clonar la colección.</div>
-        <div class="ram-fix-saving">Ahorro: −80 a −250 MB en escaneos de 50K+ carpetas</div>
-      </div>
-
-      <div class="ram-fix">
-        <div class="ram-fix-header">
-          <div class="ram-fix-icon">📖</div>
-          <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-04 · IMPLEMENTADO ✓</div>
-            <div class="ram-fix-name">JsonTextReader para metadatos de snapshot</div>
-          </div>
-        </div>
-        <div class="ram-fix-desc">Load-SnapshotList usa <code>JsonTextReader</code> línea a línea para leer solo Label, Date, RootPath y contar Entries con depth-tracking. Los arrays de Entries nunca se deserializan al listar.</div>
-        <div class="ram-fix-saving">Ahorro: −200 a −400 MB pico al cargar lista con snapshots grandes</div>
-      </div>
-
-      <div class="ram-fix">
-        <div class="ram-fix-header">
-          <div class="ram-fix-icon">🏊</div>
-          <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-05 · IMPLEMENTADO ✓</div>
-            <div class="ram-fix-name">RunspacePool centralizado</div>
-          </div>
-        </div>
-        <div class="ram-fix-desc">Único <code>RunspacePool</code> de mín 1 / máx 3 runspaces con <code>InitialSessionState.CreateDefault2()</code>. Reutilización entre operaciones, eliminando el overhead de arranque y carga de módulos por operación.</div>
-        <div class="ram-fix-saving">Ahorro: −10 a −30 MB en uso sostenido</div>
-      </div>
-
-      <div class="ram-fix">
-        <div class="ram-fix-header">
-          <div class="ram-fix-icon">🗑️</div>
-          <div class="ram-fix-meta">
-            <div class="ram-fix-id">FIX RAM-06 · IMPLEMENTADO ✓</div>
-            <div class="ram-fix-name">GC agresivo + EmptyWorkingSet</div>
-          </div>
-        </div>
-        <div class="ram-fix-desc">Tras cada exportación o carga: <code>GCSettings.LargeObjectHeapCompactionMode = CompactOnce</code> + <code>GC.Collect(2, Forced, true, true)</code> + <code>EmptyWorkingSet</code>. Devuelve páginas al SO inmediatamente.</div>
-        <div class="ram-fix-saving">RAM devuelta al SO más rápido, reduce RSS visible</div>
-      </div>
-
+    <div class="bug-card" style="border-top-color:var(--purple)">
+      <div class="bug-id" style="color:var(--purple);background:rgba(155,126,255,.1)">[ARCH] RUTAS</div>
+      <div class="bug-name">Ruta .\libs\ relativa a PSScriptRoot</div>
+      <div class="bug-desc">La carga de DLLs usa <code>Join-Path $PSScriptRoot "libs\SysOpt.*.dll"</code>. Si la carpeta o el archivo no existe, el script lanza un <code>throw</code> con mensaje descriptivo indicando exactamente qué archivo falta y cómo resolverlo.</div>
+      <div class="bug-fix">IMPL: <code>Test-Path $script:_dll</code> antes de <code>Add-Type</code>. Mensaje: <em>"SysOpt: libs\SysOpt.*.dll no encontrado. Copia la carpeta libs\ junto a SysOpt.ps1."</em></div>
     </div>
 
   </div>
 
-  <!-- ── SECCIÓN: FIFO Streaming v2.4.0 ── -->
-  <div class="section-label">FIFO Streaming — v2.4.0 developer</div>
-  <div class="section-title">⚡ Optimización FIFO — Snapshots sin RAM pico</div>
 
-  <div class="fifo-section">
-    <div class="fifo-grid">
 
-      <div class="fifo-card">
-        <div class="fifo-card-id">FIFO-01 · IMPLEMENTADO ✓ · bgSave</div>
-        <div class="fifo-card-name">Guardado de snapshot via ConcurrentQueue + StreamWriter</div>
-        <div class="fifo-card-desc">El hilo UI encola items uno a uno en <code>ConcurrentQueue</code> mientras el background (que ya está corriendo) drena la queue y escribe directamente al disco con <code>StreamWriter</code>. El JSON completo nunca existe en RAM. Flush cada 500 items para evitar buffers grandes. Sin dependencia de Newtonsoft.</div>
-        <div class="fifo-card-result">Antes: 3× tamaño del dataset en RAM
-Ahora: ≈ items en tránsito en queue (decenas)
-Ahorro: −50% a −200% RAM pico en guardado</div>
-      </div>
+  <!-- ── SECCIÓN: Cambios v3.1.0 Dev ── -->
+  <div class="section-label">Implementado en v3.1.0 (Dev)</div>
+  <div class="section-title">🎨 Sistema de Temas + Multiidioma + Opciones</div>
+  <div class="bugs-grid">
 
-      <div class="fifo-card">
-        <div class="fifo-card-id">FIFO-02 · IMPLEMENTADO ✓ · bgEnt</div>
-        <div class="fifo-card-name">Carga de entries via ConvertFrom-Json nativo + ConcurrentQueue</div>
-        <div class="fifo-card-desc">Eliminada dependencia de <code>Newtonsoft.Json.JsonTextReader</code> — los runspaces background no heredan assemblies externos en PS 5.1. Reemplazado por <code>ConvertFrom-Json</code> nativo de PowerShell (cmdlet interno, disponible en cualquier runspace). Los entries se encolan uno a uno en ConcurrentQueue conforme se procesan. DispatcherTimer drena en lotes de 500/tick.</div>
-        <div class="fifo-card-result">Sin error "unable to find type [Newtonsoft...]"
-Compatibilidad con snapshots v2.3 (ConvertTo-Json)
-y v2.4.0 (StreamWriter compacto)
-Ahorro: −30% RAM pico (elimina ConcurrentBag intermedio)</div>
-      </div>
-
-      <div class="fifo-card">
-        <div class="fifo-card-id">FIFO-03 · IMPLEMENTADO ✓ · Terminación</div>
-        <div class="fifo-card-name">Terminación limpia garantizada en ambos flujos</div>
-        <div class="fifo-card-desc">Ambos flujos (save y load) liberan recursos en bloque <code>finally</code> independientemente de si hubo error: StreamWriter.Close(), FileStream.Dispose(), y señal <code>FeedDone = $true</code> al consumer. GC agresivo con LOH compaction post-operación.</div>
-        <div class="fifo-card-result">Sin file handles abiertos tras error
-FeedDone siempre señalizado — consumer no queda bloqueado
-LOH compaction + EmptyWorkingSet post-op</div>
-      </div>
-
+    <div class="bug-card" style="border-top-color:var(--cyan)">
+      <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[THEME] MOTOR DE TEMAS</div>
+      <div class="bug-name">Sistema de temas dual completo</div>
+      <div class="bug-desc">Motor de temas con estrategia dual: <code>{DynamicResource}</code> para 293 bindings en XAML principal + <code>Get-TC</code> para 298 llamadas en UI dinámica. Cobertura de 111 de 115 colores XAML con mapeo por clave de tema + offset RGB.</div>
+      <div class="bug-fix">IMPL: <code>Initialize-ThemeColors</code> construye <code>$script:ThemeColorMap</code> (71 entradas). <code>Apply-ThemeToVisualTree</code> recorre el visual tree completo. <code>Update-DynamicThemeValues</code> calcula colores derivados.</div>
     </div>
-  </div>
 
-  <!-- ── SECCIÓN: Estabilidad ── -->
-  <div class="section-label">Vías de estabilidad técnica — pendientes</div>
-  <div class="section-title">🛡️ Estabilidad — Objetivos futuros</div>
-
-  <div class="stability-section">
-    <div class="stability-grid">
-
-      <div class="stability-card">
-        <div class="stability-icon">📋</div>
-        <div class="stability-name">Logging estructurado</div>
-        <div class="stability-desc">Función centralizada que escriba a la UI, a un archivo de log rotante en <code>%TEMP%\SysOpt.log</code> y a un buffer en memoria para diagnóstico.</div>
-      </div>
-
-      <div class="stability-card">
-        <div class="stability-icon">🧪</div>
-        <div class="stability-name">DLL externo para tipos C#</div>
-        <div class="stability-desc">Compilar los tipos C# (<code>DiskItem_v211</code>, <code>ScanCtl211</code>, <code>PScanner211</code>) a un DLL externo cargado con <code>Add-Type -Path</code>, eliminando la recompilación por completo.</div>
-      </div>
-
-      <div class="stability-card">
-        <div class="stability-icon">🔍</div>
-        <div class="stability-name">WMI con timeout configurable</div>
-        <div class="stability-desc">Envolver todas las llamadas CIM en un <code>CimSession</code> con <code>OperationTimeout</code> de 5 s para garantizar respuesta en sistemas con WMI dañado.</div>
-      </div>
-
-      <div class="stability-card">
-        <div class="stability-icon">🪝</div>
-        <div class="stability-name">Error boundary global</div>
-        <div class="stability-desc">Handler <code>[System.AppDomain]::CurrentDomain.UnhandledException</code> que capture excepciones no controladas de runspaces, las logee y muestre un mensaje amigable.</div>
-      </div>
-
-      <div class="stability-card">
-        <div class="stability-icon">📦</div>
-        <div class="stability-name">Abstracción de la capa de datos</div>
-        <div class="stability-desc">Extraer toda la lógica WMI/CIM a funciones <code>Get-*Data</code> puras separadas del código de rendering. Facilita testing y mantenimiento futuro.</div>
-      </div>
-
-      <div class="stability-card">
-        <div class="stability-icon">🔄</div>
-        <div class="stability-name">CancellationToken unificado</div>
-        <div class="stability-desc">Usar un único <code>CancellationTokenSource</code> global vinculado a <code>ScanControl.Stop</code>. Parada limpia sin sleep polling de 150 ms.</div>
-      </div>
-
+    <div class="bug-card" style="border-top-color:var(--cyan)">
+      <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[THEME] 11 TEMAS</div>
+      <div class="bug-name">11 temas preinstalados en .\assets\themes\</div>
+      <div class="bug-desc">Archivos <code>.theme</code> con formato clave=valor. Incluyen: Default, Default Light, Ice Blue, Ice Cream, Manga Japan, Matrix, PipBoy, Simpsons, Votorantim, Windows, Windows Light. Cada tema define ~27 claves de color base.</div>
+      <div class="bug-fix">IMPL: <code>SysOpt.ThemeEngine.dll</code> — parser C# que carga y valida archivos .theme. Barra de progreso con hilo en segundo plano al aplicar tema.</div>
     </div>
+
+    <div class="bug-card" style="border-top-color:var(--cyan)">
+      <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[I18N] MULTIIDIOMA</div>
+      <div class="bug-name">3 idiomas con cambio en caliente</div>
+      <div class="bug-desc">Sistema de internacionalización con archivos <code>.lang</code> externos (ES, EN, PT-BR). <code>LangEngine</code> en <code>SysOpt.Core.dll</code> parsea el archivo y devuelve un <code>Dictionary&lt;string,string&gt;</code>. Función <code>T(key)</code> busca la traducción en el diccionario actual.</div>
+      <div class="bug-fix">IMPL: <code>Load-Language</code> carga el .lang y aplica textos. <code>Apply-LanguageToUI</code> actualiza todos los controles. <code>Save-Settings</code> persiste el idioma en settings.json.</div>
+    </div>
+
+    <div class="bug-card" style="border-top-color:var(--cyan)">
+      <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[DLL] CORE + THEMEENGINE</div>
+      <div class="bug-name">2 nuevos ensamblados C# externos</div>
+      <div class="bug-desc"><code>SysOpt.Core.dll</code> contiene <code>LangEngine</code> y <code>SettingsHelper</code>. <code>SysOpt.ThemeEngine.dll</code> contiene <code>ThemeParser</code>. Compilados con <code>compile-dlls.ps1</code>, cargados con <code>Add-Type -Path</code> al arranque.</div>
+      <div class="bug-fix">IMPL: <code>SysOpt.Core.cs</code> + <code>SysOpt.ThemeEngine.cs</code> en <code>.\libs\</code>. Script de compilación genera ambos DLLs con .NET Framework 4.x.</div>
+    </div>
+
+    <div class="bug-card" style="border-top-color:var(--cyan)">
+      <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[UI] VENTANA OPCIONES</div>
+      <div class="bug-name">Panel de opciones con selectores de tema e idioma</div>
+      <div class="bug-desc">Nuevo botón Opciones/Settings entre Tareas y Acerca de. Ventana modal con ComboBox para seleccionar tema e idioma. Aplicación inmediata al cambiar — sin necesidad de confirmar o reiniciar.</div>
+      <div class="bug-fix">IMPL: <code>Show-OptionsWindow</code> genera XAML dinámico con <code>Get-TC</code> para colores del tema. <code>Apply-ComboBoxDarkTheme</code> aplicado a todos los selectores.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · COMBOBOX POPUP</div>
+      <div class="bug-name">Dropdown popup blanco independiente del tema</div>
+      <div class="bug-desc">El popup del ComboBox usaba el <code>ControlTemplate</code> del sistema y no heredaba los colores del tema. Al abrir el desplegable aparecía blanco sobre cualquier tema oscuro.</div>
+      <div class="bug-fix">FIX: <code>Apply-ComboBoxDarkTheme</code> reescrita con hook <code>DropDownOpened</code> que busca <code>PART_Popup</code> y tematiza Border, Chrome, ScrollViewer y cada ComboBoxItem.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · BARRAS TASKS</div>
+      <div class="bug-name">Barras de progreso no cambiaban con el tema</div>
+      <div class="bug-desc"><code>Refresh-TasksPanel</code> pasaba strings hex como <code>BarColor</code> pero WPF binding con PSCustomObject no auto-convertía string a Brush, dejando las barras con colores default.</div>
+      <div class="bug-fix">FIX: Conversión explícita con <code>[System.Windows.Media.BrushConverter]</code> para BarColor, PctColor, IconBg, StatusBg y StatusFg antes de pasar al DataTemplate.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · INVOKE-CIMQUERY RUNSPACE</div>
+      <div class="bug-name">Función no accesible en runspace de RAM</div>
+      <div class="bug-desc">La función <code>Invoke-CimQuery</code> definida en el scope principal no era accesible desde el runspace separado de liberación de RAM, causando error al ejecutar la optimización.</div>
+      <div class="bug-fix">FIX: Copia de la definición de <code>Invoke-CimQuery</code> dentro del <code>$OptimizationScript</code> del runspace.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · STARTUP FLOW</div>
+      <div class="bug-name">Tema/idioma no se restauraban al abrir la app</div>
+      <div class="bug-desc"><code>Load-Settings</code> se ejecutaba dentro de <code>Add_Loaded</code> pero <code>Apply-ThemeWithProgress</code> y <code>Apply-LanguageToUI</code> se llamaban antes de <code>ShowDialog</code> con los defaults.</div>
+      <div class="bug-fix">FIX: Toda la secuencia movida dentro de <code>Add_Loaded</code>: <code>Load-Settings</code> → <code>Load-Language</code> → <code>Apply-ThemeWithProgress</code>.</div>
+    </div>
+
   </div>
 
   <!-- ── SECCIÓN: Timeline ── -->
@@ -1296,7 +1085,7 @@ LOH compaction + EmptyWorkingSet post-op</div>
       </div>
 
       <div class="tl-item done">
-        <div class="tl-ver">v2.3 · COMPLETADO ✓ — VERSIÓN PÚBLICA ESTABLE</div>
+        <div class="tl-ver">v2.3 · COMPLETADO ✓</div>
         <div class="tl-title">Funcionalidad completa del Explorador + Optimización RAM</div>
         <ul class="tl-list">
           <li class="done-li">B1: Filtro por nombre en árbol de carpetas</li>
@@ -1311,53 +1100,205 @@ LOH compaction + EmptyWorkingSet post-op</div>
       </div>
 
       <div class="tl-item done">
-        <div class="tl-ver">v2.4.0 · COMPLETADO ✓ — RAMA DEVELOPER</div>
+        <div class="tl-ver">v2.4.0 · COMPLETADO ✓ — integrado en v2.5.0</div>
         <div class="tl-title">FIFO Streaming + Pre-cálculo + Estabilidad</div>
         <ul class="tl-list">
-          <li class="done-li">✓ FIFO-01: Save streaming sin RAM pico (ConcurrentQueue + StreamWriter)</li>
-          <li class="done-li">✓ FIFO-02: Load entries con ConvertFrom-Json nativo (sin Newtonsoft)</li>
-          <li class="done-li">✓ FIFO-03: Terminación limpia garantizada en finally</li>
-          <li class="done-li">✓ Fix: Set-Content → File::WriteAllText en Save-Settings</li>
-          <li class="done-li">✓ Fix: Toggle colapsar/expandir + Items.Refresh()</li>
-          <li class="done-li">✓ A2: Pre-cálculo de top 10 archivos durante escaneo (acumulador en background)</li>
+          <li class="done-li">FIFO-01: Save streaming sin RAM pico (ConcurrentQueue + StreamWriter)</li>
+          <li class="done-li">FIFO-02: Load entries con ConvertFrom-Json nativo (sin Newtonsoft)</li>
+          <li class="done-li">FIFO-03: Terminación limpia garantizada en finally</li>
+          <li class="done-li">Fix: Set-Content → File::WriteAllText en Save-Settings</li>
+          <li class="done-li">Fix: Toggle colapsar/expandir + Items.Refresh()</li>
+          <li class="done-li">A2: Pre-cálculo de top 10 archivos durante escaneo</li>
         </ul>
       </div>
 
-      <div class="tl-item next">
-        <div class="tl-ver">v2.5.0 · PLANIFICADO</div>
-        <div class="tl-title">Deduplicación, estabilidad avanzada y funcionalidades extra</div>
+      <div class="tl-item done">
+        <div class="tl-ver">v2.5.0 · COMPLETADO ✓ — VERSIÓN PÚBLICA ESTABLE</div>
+        <div class="tl-title">Estabilidad avanzada + Deduplicación + TaskPool</div>
         <ul class="tl-list">
-          <li>B5: Deduplicación por SHA256 en archivos grandes (&gt;10 MB)</li>
-          <li>Error boundary global con UnhandledException en AppDomain</li>
-          <li>Logging estructurado a archivo rotante en %TEMP%\SysOpt.log</li>
-          <li>WMI con timeout configurable via CimSession (5 s)</li>
+          <li class="done-li">[LOG] Logging estructurado rotante diario con Mutex thread-safe</li>
+          <li class="done-li">[ERR] Error boundary global: AppDomain + Dispatcher</li>
+          <li class="done-li">[WMI] CimSession compartida con OperationTimeoutSec=5</li>
+          <li class="done-li">[B5] Deduplicación SHA256 archivos &gt;10 MB en background</li>
+          <li class="done-li">[TASKPOOL] Panel de tareas async estilo torrent</li>
+          <li class="done-li">Fix botones historial: hardcoded → estilos temáticos</li>
+          <li class="done-li">Fix race condition Split-Path: null-guard en consumer</li>
+          <li class="done-li">Fix 6 timers async: cleanup en Add_Closed</li>
+          <li class="done-li">Fix FrameworkElementFactory → XamlReader (−254 líneas)</li>
         </ul>
       </div>
 
-      <div class="tl-item future">
-        <div class="tl-ver">v3.0.0 · VISIÓN</div>
-        <div class="tl-title">Plataforma modular y extensible</div>
+      <div class="tl-item done">
+        <div class="tl-ver">v3.0.0 (Dev) · COMPLETADO ✓</div>
+        <div class="tl-title">Arquitectura modular — DLL externos implementados</div>
         <ul class="tl-list">
-          <li>Tipos C# compilados a DLL externo (sin Add-Type inline)</li>
-          <li>C1: Tema claro/oscuro con ResourceDictionary</li>
-          <li>C2: Notificaciones Toast nativas de Windows</li>
-          <li>C4: Integración con el Programador de tareas</li>
-          <li>Plugin system para módulos de limpieza externos</li>
+          <li class="done-li">[DLL] SysOpt.MemoryHelper.dll + SysOpt.DiskEngine.dll en .\libs\</li>
+          <li class="done-li">[DLL] Tipos C# cargados con Add-Type -Path — sin recompilación inline</li>
+          <li class="done-li">[ARCH] Ruta .\libs\ relativa a PSScriptRoot, error descriptivo si falta</li>
+        </ul>
+      </div>
+
+      <div class="tl-item current">
+        <div class="tl-ver">v3.1.0 (Dev) · EN DESARROLLO ◉</div>
+        <div class="tl-title">Temas visuales, multiidioma y ventana de opciones</div>
+        <ul class="tl-list">
+          <li class="done-li">[THEME] Motor de temas dual: DynamicResource (293) + Get-TC (298)</li>
+          <li class="done-li">[THEME] 11 temas preinstalados en .\assets\themes\</li>
+          <li class="done-li">[THEME] SysOpt.ThemeEngine.dll — parser C# para .theme</li>
+          <li class="done-li">[THEME] ComboBox theming completo con DropDownOpened hook</li>
+          <li class="done-li">[THEME] Barras, badges, iconos y 8 ventanas dinámicas tematizadas</li>
+          <li class="done-li">[I18N] 3 idiomas: Español, English, Português en .\assets\lang\</li>
+          <li class="done-li">[I18N] LangEngine en SysOpt.Core.dll — cambio en caliente</li>
+          <li class="done-li">[DLL] SysOpt.Core.dll (LangEngine + SettingsHelper)</li>
+          <li class="done-li">[UI] Ventana de Opciones con selectores de tema e idioma</li>
+          <li class="done-li">[UI] Símbolo © en About, metadatos v.actual + 3 anteriores</li>
+          <li class="done-li">[SETTINGS] Persistencia en %APPDATA%\SysOpt\settings.json</li>
+          <li class="done-li">[FIX] Invoke-CimQuery en runspace, barras Brush, ComboBox text</li>
+          <li>CTK: CancellationToken unificado (sin sleep polling 150ms)</li>
+          <li>DAL: Abstracción capa de datos — funciones Get-*Data puras</li>
+          <li>C2: Notificaciones Toast nativas de Windows (WinRT)</li>
+          <li>C4: Programador de tareas integrado (Register-ScheduledTask)</li>
+          <li>PLG: Plugin system para módulos externos en .\plugins\</li>
         </ul>
       </div>
 
     </div>
   </div>
 
+  <!-- ── SECCIÓN: Roadmap v3.0 ── -->
+  <div class="section-label">Objetivos v3.x — En desarrollo activo</div>
+  <div class="section-title">🔮 Hoja de Ruta v3.x — Plataforma Modular</div>
+
+  <div class="roadmap">
+
+    <div class="priority-block p-high">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Alta · Arquitectura</div>
+          <div class="priority-title">Refactorización estructural — base para v3.x</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card done">
+          <div class="item-id-box">DLL</div>
+          <div class="item-content">
+            <div class="item-name">Tipos C# compilados a DLL externo</div>
+            <div class="item-desc">Compilar <code>DiskItem_v211</code>, <code>ScanCtl211</code> y <code>PScanner211</code> a un DLL externo cargado con <code>Add-Type -Path</code>. Elimina la recompilación por sesión y permite compartir los tipos entre versiones sin recompilar.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.0.0 Dev</span><span class="tag">C#</span><span class="tag">DLL</span><span class="tag">Add-Type</span><span class="tag">Arquitectura</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">CTK</div>
+          <div class="item-content">
+            <div class="item-name">CancellationToken unificado</div>
+            <div class="item-desc">Único <code>CancellationTokenSource</code> global vinculado a <code>ScanControl.Stop</code>. Elimina el sleep polling de 150 ms en todos los runspaces y permite cancelación limpia e inmediata. Requiere refactorización de todos los loops async.</div>
+            <div class="item-tags"><span class="tag">CancellationToken</span><span class="tag">Runspace</span><span class="tag">Performance</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">DAL</div>
+          <div class="item-content">
+            <div class="item-name">Abstracción de la capa de datos</div>
+            <div class="item-desc">Extraer toda la lógica WMI/CIM a funciones <code>Get-CpuData</code>, <code>Get-RamData</code>, <code>Get-DiskData</code> puras, separadas del rendering. Paso necesario para tests unitarios y mantenimiento escalable.</div>
+            <div class="item-tags"><span class="tag">WMI</span><span class="tag">CIM</span><span class="tag">Separación UI/Datos</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="priority-block p-medium">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Media · Funcionalidad</div>
+          <div class="priority-title">Nuevas características de usuario</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card done">
+          <div class="item-id-box">C1</div>
+          <div class="item-content">
+            <div class="item-name">Sistema de temas completo — 11 temas visuales</div>
+            <div class="item-desc">Motor de temas con estrategia dual: <code>{DynamicResource}</code> para XAML (293 bindings) + <code>Get-TC</code> para UI dinámica (298 llamadas). 11 temas en <code>.\assets\themes\</code>, <code>SysOpt.ThemeEngine.dll</code> como parser C#. Cobertura completa: barras, badges, iconos, ComboBox, gradientes y 8 ventanas dinámicas.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.1.0 Dev</span><span class="tag">Theming</span><span class="tag">DynamicResource</span><span class="tag">DLL</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">C2</div>
+          <div class="item-content">
+            <div class="item-name">Notificaciones Toast nativas</div>
+            <div class="item-desc">Usar <code>[Windows.UI.Notifications.ToastNotificationManager]</code> para notificaciones nativas al finalizar operaciones largas en background (exportación, escaneo, deduplicación).</div>
+            <div class="item-tags"><span class="tag">Toast</span><span class="tag">WinRT</span><span class="tag">UX</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">C4</div>
+          <div class="item-content">
+            <div class="item-name">Programador de tareas integrado</div>
+            <div class="item-desc">Interfaz para crear, editar y eliminar tareas en el Programador de Windows (<code>Register-ScheduledTask</code>) para optimizaciones automáticas en horario configurable.</div>
+            <div class="item-tags"><span class="tag">TaskScheduler</span><span class="tag">Automatización</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">PLG</div>
+          <div class="item-content">
+            <div class="item-name">Plugin system para módulos externos</div>
+            <div class="item-desc">Arquitectura de plugins que cargue módulos externos desde <code>.\plugins\</code>. Cada plugin declara nombre, descripción, icono y punto de entrada — la UI los integra automáticamente en la interfaz.</div>
+            <div class="item-tags"><span class="tag">Plugin</span><span class="tag">Extensibilidad</span><span class="tag">Modular</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="priority-block p-low">
+      <div class="priority-header">
+        <div class="priority-dot"></div>
+        <div>
+          <div class="priority-label">Prioridad Baja · UX &amp; Polish</div>
+          <div class="priority-title">Mejoras de experiencia de usuario</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card done">
+          <div class="item-id-box">I18N</div>
+          <div class="item-content">
+            <div class="item-name">Multiidioma completo — ES / EN / PT-BR</div>
+            <div class="item-desc">Sistema de internacionalización con archivos <code>.lang</code> externos en <code>.\assets\lang\</code>. 3 idiomas: Español, English, Português. <code>LangEngine</code> en <code>SysOpt.Core.dll</code> como parser C#. Cambio en caliente sin reinicio, persistencia en settings.json.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.1.0 Dev</span><span class="tag">i18n</span><span class="tag">LangEngine</span><span class="tag">DLL</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">UPD</div>
+          <div class="item-content">
+            <div class="item-name">Auto-actualización integrada</div>
+            <div class="item-desc">Check de versión contra repositorio al arrancar. Si hay versión nueva, badge en UI con opción de descarga. Sin actualización silenciosa — siempre con confirmación explícita del usuario.</div>
+            <div class="item-tags"><span class="tag">Update</span><span class="tag">GitHub Releases</span><span class="tag">UX</span></div>
+          </div>
+        </div>
+        <div class="item-card">
+          <div class="item-id-box">RPT</div>
+          <div class="item-content">
+            <div class="item-name">Informe de sesión en PDF/HTML</div>
+            <div class="item-desc">Generar informe completo de sesión: acciones realizadas, espacio liberado, tiempo, puntuación antes/después. Exportable como HTML con plantilla visual o PDF.</div>
+            <div class="item-tags"><span class="tag">Reporting</span><span class="tag">PDF</span><span class="tag">HTML Export</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <!-- ── Footer ── -->
   <footer>
-    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v2.3.0 estable · v2.4.0 completada, pendiente release estable</p>
+    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v3.1.0 (Dev) · Base estable v2.5.0 · Desarrollando hacia v3.x</p>
     <div>
-      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>v2.3.0 estable</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>v2.4.0 completada</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>FIFO streaming activo</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>C# inline types</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>Multi-runspace</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>v3.1.0 Dev</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>11 Temas visuales</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>Multiidioma ES/EN/PT</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>DLL Core + ThemeEngine</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>Ventana de Opciones</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--red)"></span>ComboBox theming</span>
       <span class="chip"><span class="chip-dot" style="background:var(--muted)"></span>PowerShell + WPF</span>
     </div>
   </footer>

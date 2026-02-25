@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Compilar como net462 para compatibilidad con PowerShell 5.1 (WPF/WinForms) -->
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>SysOpt.MemoryHelper</AssemblyName>
+    <RootNamespace>SysOpt</RootNamespace>
+    <Version>2.5.0</Version>
+    <Description>Win32 API helpers for RAM release — extracted from SysOpt v2.5.0 inline Add-Type</Description>
+    <Nullable>disable</Nullable>
+    <Optimize>true</Optimize>
+    <!-- Output limpio: solo la DLL, sin deps extras -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+</Project>

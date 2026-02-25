@@ -1,0 +1,31 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Width="480" Height="160" WindowStartupLocation="CenterScreen" Topmost="True">
+    <Border CornerRadius="12" BorderThickness="1" BorderBrush="#252B40">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#1A2035" Offset="0"/>
+                <GradientStop Color="#131625" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
+        <StackPanel VerticalAlignment="Center" Margin="36,0">
+            <TextBlock FontFamily="Segoe UI" FontSize="20" FontWeight="Bold" Foreground="#E8ECF4" Margin="0,0,0,6">
+                <Run Text="SYS"/><Run Foreground="#5BA3FF" Text="OPT"/>
+                <Run Foreground="#8B96B8" FontSize="11" FontWeight="Normal" Text="   Windows Optimizer GUI"/>
+            </TextBlock>
+            <TextBlock Name="SplashMsg" Text="Cargando ensamblados .NET..." FontFamily="Segoe UI"
+                       FontSize="11" Foreground="#7880A0" Margin="0,0,0,12"/>
+            <Border Height="5" CornerRadius="2.5" Background="#1A1E2F">
+                <Border Name="SplashBar" HorizontalAlignment="Left" Width="0" Height="5" CornerRadius="2.5">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#5BA3FF" Offset="0"/>
+                            <GradientStop Color="#4AE896" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+            </Border>
+        </StackPanel>
+    </Border>
+</Window>

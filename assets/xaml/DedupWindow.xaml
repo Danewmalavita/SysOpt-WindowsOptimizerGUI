@@ -1,0 +1,91 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Archivos Duplicados — SysOpt" Width="860" Height="620"
+        WindowStartupLocation="CenterOwner" Background="#0D0F1A"
+        WindowStyle="SingleBorderWindow">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- Header -->
+    <Border Grid.Row="0" Background="#131625" BorderBrush="#252B40" BorderThickness="0,0,0,1" Padding="16,12">
+      <StackPanel>
+        <TextBlock FontFamily="Segoe UI" FontSize="15" FontWeight="Bold" Foreground="#E8ECF4">
+          <Run Text="🔍  Archivos Duplicados"/><Run Foreground="#FF6B84" Text="  [B5 SHA256]"/>
+        </TextBlock>
+        <TextBlock Name="txtDedupSummary" FontFamily="Segoe UI" FontSize="11" Foreground="#7880A0" Margin="0,4,0,0"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Lista de grupos -->
+    <ListBox Name="lbDedupGroups" Grid.Row="1" Background="#0D0F1A" BorderThickness="0"
+             Foreground="#E8ECF4" Margin="8,8,8,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+      <ListBox.ItemContainerStyle>
+        <Style TargetType="ListBoxItem">
+          <Setter Property="Background" Value="Transparent"/>
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="Margin" Value="0,0,0,6"/>
+          <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+      </ListBox.ItemContainerStyle>
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Border Background="#131625" BorderBrush="#252B40" BorderThickness="1"
+                  CornerRadius="6" Padding="12,10">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+              <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                  <TextBlock FontFamily="JetBrains Mono" FontSize="11" Foreground="#5BA3FF"
+                             Text="{Binding Hash}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                  <Border Background="#1A2030" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
+                    <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="#FFB547"
+                               Text="{Binding Count, StringFormat='{}{0} copias'}"/>
+                  </Border>
+                  <Border Background="#1A2030" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
+                    <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="#9BA4C0"
+                               Text="{Binding SizeStr, StringFormat='Tamaño: {0}'}"/>
+                  </Border>
+                  <Border Background="#2A1018" CornerRadius="4" Padding="6,2">
+                    <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="#FF6B84"
+                               Text="{Binding WasteStr, StringFormat='Recuperable: {0}'}"/>
+                  </Border>
+                </StackPanel>
+                <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="#7880A0"
+                           Text="{Binding Files}" TextWrapping="Wrap"/>
+              </StackPanel>
+              <Button Grid.Column="1" Content="🗑" Tag="{Binding FullHash}"
+                      Name="btnDedupDelete"
+                      Width="28" Height="28" Margin="8,0,0,0" VerticalAlignment="Top"
+                      Background="#2A1018" Foreground="#FF6B84"
+                      BorderBrush="#4A2A2A" BorderThickness="1" Cursor="Hand"
+                      FontSize="13" ToolTip="Eliminar copias (conserva la primera)"/>
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <!-- Statusbar -->
+    <TextBlock Name="txtDedupStatus" Grid.Row="2" FontFamily="Segoe UI" FontSize="10"
+               Foreground="#7880A0" Margin="16,6,16,0"/>
+
+    <!-- Footer -->
+    <Border Grid.Row="3" Background="#131625" BorderBrush="#252B40" BorderThickness="0,1,0,0"
+            Padding="16,10" Margin="0,8,0,0">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <Button Name="btnDedupClose" Content="Cerrar" Width="100" Height="30"
+                Background="#1A2040" BorderBrush="#3D8EFF" BorderThickness="1"
+                Foreground="#5BA3FF" FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold"
+                Cursor="Hand"/>
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>
