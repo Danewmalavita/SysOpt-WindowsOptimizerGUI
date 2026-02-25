@@ -1,0 +1,101 @@
+# SysOpt Theme — votorantim.theme
+# Identidad corporativa Votorantim Cimentos
+# Azul cobalto #0000BC — Verde lima #96E637 — Verde medio #65BC7B
+# v4.0: Colores reales extraídos de votorantimcimentos.es
+# (el naranja #F26522 era identidad anterior, eliminado)
+
+[meta]
+Name        = Votorantim 2.0
+Author      = Danew Malavita
+Version     = 4.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #00001A
+BgCard                = #000030
+BgInput               = #000050
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #000080
+BorderActive          = #96E637
+BorderHover           = #0000A0
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #0000BC
+AccentCyan            = #65BC7B
+AccentAmber           = #96E637
+AccentRed             = #FF4444
+AccentGreen           = #96E637
+AccentPurple          = #3366FF
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #F0F8FF
+TextSecondary         = #B0D0F0
+TextMuted             = #FFFFFF
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #0000BC
+ProgressEnd           = #96E637
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #96E637
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #70C010
+BtnPrimaryHover       = #70C010
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #001A80
+BtnSecondaryFg        = #C0E0FF
+BtnSecondaryBorder    = #0028B0
+BtnSecondaryHover     = #002298
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #003820
+BtnCyanFg             = #96E637
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #001A60
+BtnAmberFg            = #6688FF
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #300000
+BtnDangerFg           = #FF8080
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #000030
+BtnGhostBorder        = #000070
+BtnGhostFg            = #D0E4FF
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #004A78
+HdrBtnBorder          = #005A90
+HdrBtnHover           = #005080
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #000028
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #000060
+ComboSelected         = #003010
+ComboSelectedFg       = #96E637
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #000060
+CtxSepFill            = #000070
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #000040
+DetailBorder          = #000080
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #001A80
+TabHoverBg            = #002298
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #00001A
+PurpleBlobBg          = #000020
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #00000A
+ConsoleFg             = #96E637
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #000020
+ScrollBarThumb        = #000070
+ScrollBarThumbHover   = #0000BC
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #65BC7B
+StatusWarning         = #96E637
+StatusError           = #FF4444
+StatusInfo            = #0000BC
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #002818
+BgStatusWarn          = #182800
+BgStatusErr           = #280000
+BgStatusInfo          = #000038
+FgStatusOk            = #65BC7B
+FgStatusWarn          = #96E637
+FgStatusErr           = #FF4444
+FgStatusInfo          = #4466FF
