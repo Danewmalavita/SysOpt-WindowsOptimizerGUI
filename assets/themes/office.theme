@@ -1,98 +1,98 @@
-# SysOpt Theme — matrix.theme
-# Tema inspirado en The Matrix — "There is no spoon" — v1.0
+# SysOpt Theme — office.theme
+# Tema inspirado en Microsoft Office 365 — v1.0
 
 [meta]
-Name        = The Matrix
+Name        = Microsoft Office
 Author      = Danew Malavita
 Version     = 1.0
 
 [colors]
 # ── Fondos ────────────────────────────────────────────────────────────────────
-BgDeep                = #000300
-BgCard                = #000800
-BgInput               = #000F00
+BgDeep                = #1B1A19
+BgCard                = #252423
+BgInput               = #323130
 # ── Bordes ────────────────────────────────────────────────────────────────────
-BorderSubtle          = #003300
-BorderActive          = #00FF41
-BorderHover           = #004400
+BorderSubtle          = #3B3A39
+BorderActive          = #D83B01
+BorderHover           = #484644
 # ── Acentos ───────────────────────────────────────────────────────────────────
-AccentBlue            = #00FF41
-AccentCyan            = #00D232
-AccentAmber           = #39FF14
-AccentRed             = #FF0000
-AccentGreen           = #00FF41
-AccentPurple          = #008F11
+AccentBlue            = #2B7CD3
+AccentCyan            = #00B4D8
+AccentAmber           = #FFD700
+AccentRed             = #D83B01
+AccentGreen           = #107C10
+AccentPurple          = #7719AA
 # ── Texto ─────────────────────────────────────────────────────────────────────
-TextPrimary           = #00FF41
-TextSecondary         = #008F11
-TextMuted             = #003B00
+TextPrimary           = #F3F2F1
+TextSecondary         = #A19F9D
+TextMuted             = #605E5C
 # ── Progreso ──────────────────────────────────────────────────────────────────
-ProgressStart         = #003B00
-ProgressEnd           = #00FF41
+ProgressStart         = #D83B01
+ProgressEnd           = #FFD700
 # ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
-BtnPrimaryBg          = #002200
-BtnPrimaryFg          = #00FF41
-BtnPrimaryBorder      = #00FF41
-BtnPrimaryHover       = #00FF41
+BtnPrimaryBg          = #6E2110
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #D83B01
+BtnPrimaryHover       = #D83B01
 # ── Botón Secundario ─────────────────────────────────────────────────────────
-BtnSecondaryBg        = #000F00
-BtnSecondaryFg        = #008F11
-BtnSecondaryBorder    = #003300
-BtnSecondaryHover     = #003300
+BtnSecondaryBg        = #323130
+BtnSecondaryFg        = #A19F9D
+BtnSecondaryBorder    = #3B3A39
+BtnSecondaryHover     = #3B3A39
 # ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
-BtnCyanBg             = #001A00
-BtnCyanFg             = #00D232
+BtnCyanBg             = #003040
+BtnCyanFg             = #00B4D8
 # ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
-BtnAmberBg            = #001800
-BtnAmberFg            = #39FF14
+BtnAmberBg            = #2A2400
+BtnAmberFg            = #FFD700
 # ── Botón Danger (Salir) ─────────────────────────────────────────────────────
-BtnDangerBg           = #1A0000
-BtnDangerFg           = #FF0000
+BtnDangerBg           = #3A1000
+BtnDangerFg           = #D83B01
 # ── Botón Ghost ──────────────────────────────────────────────────────────────
-BtnGhostBg            = #000800
-BtnGhostBorder        = #003300
-BtnGhostFg            = #003B00
+BtnGhostBg            = #252423
+BtnGhostBorder        = #3B3A39
+BtnGhostFg            = #605E5C
 # ── Botones mini cabecera ────────────────────────────────────────────────────
-HdrBtnBg              = #000F00
-HdrBtnBorder          = #003300
-HdrBtnHover           = #004400
+HdrBtnBg              = #323130
+HdrBtnBorder          = #3B3A39
+HdrBtnHover           = #484644
 # ── Elementos especiales ─────────────────────────────────────────────────────
-DryRunBg              = #001200
+DryRunBg              = #002830
 # ── ComboBox ─────────────────────────────────────────────────────────────────
-ComboHover            = #002800
-ComboSelected         = #002200
-ComboSelectedFg       = #00FF41
+ComboHover            = #2B1A10
+ComboSelected         = #6E2110
+ComboSelectedFg       = #D83B01
 # ── ContextMenu ──────────────────────────────────────────────────────────────
-CtxHover              = #002800
-CtxSepFill            = #003300
+CtxHover              = #2B1A10
+CtxSepFill            = #3B3A39
 # ── Listas y paneles ─────────────────────────────────────────────────────────
-LbItemHover           = #000F00
-DetailBorder          = #003300
+LbItemHover           = #323130
+DetailBorder          = #3B3A39
 # ── TabControl ───────────────────────────────────────────────────────────────
-TabSelectedBg         = #000800
-TabHoverBg            = #000F00
+TabSelectedBg         = #252423
+TabHoverBg            = #323130
 # ── Fondos secundarios ───────────────────────────────────────────────────────
-BgCardDark            = #000300
-PurpleBlobBg          = #001200
+BgCardDark            = #1B1A19
+PurpleBlobBg          = #200A30
 # ── Consola / Output ─────────────────────────────────────────────────────────
-ConsoleBg             = #000000
-ConsoleFg             = #00FF41
+ConsoleBg             = #0F0F0F
+ConsoleFg             = #107C10
 # ── Scrollbar ─────────────────────────────────────────────────────────────────
-ScrollBarTrack        = #000800
-ScrollBarThumb        = #003300
-ScrollBarThumbHover   = #00FF41
+ScrollBarTrack        = #252423
+ScrollBarThumb        = #484644
+ScrollBarThumbHover   = #D83B01
 # ── Estados ───────────────────────────────────────────────────────────────────
-StatusSuccess         = #00FF41
-StatusWarning         = #39FF14
-StatusError           = #FF0000
-StatusInfo            = #00D232
+StatusSuccess         = #107C10
+StatusWarning         = #FFD700
+StatusError           = #D83B01
+StatusInfo            = #2B7CD3
 
 # ── Fondos y texto para badges de estado de tareas ───────────────────────────
-BgStatusOk            = #002200
-BgStatusWarn          = #001800
-BgStatusErr           = #1A0000
-BgStatusInfo          = #001200
-FgStatusOk            = #00FF41
-FgStatusWarn          = #39FF14
-FgStatusErr           = #FF0000
-FgStatusInfo          = #00D232
+BgStatusOk            = #0A2A0A
+BgStatusWarn          = #2A2400
+BgStatusErr           = #3A1000
+BgStatusInfo          = #0A1A3A
+FgStatusOk            = #107C10
+FgStatusWarn          = #FFD700
+FgStatusErr           = #D83B01
+FgStatusInfo          = #2B7CD3
