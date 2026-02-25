@@ -1,0 +1,99 @@
+# SysOpt Theme — matrix.theme
+# The Matrix — lluvia digital, verde neón sobre negro profundo
+# "There is no spoon" — v1.0
+
+[meta]
+Name        = Matrix
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #000000
+BgCard                = #040D04
+BgInput               = #071407
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #0D2A0D
+BorderActive          = #00FF41
+BorderHover           = #186018
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #00FF41
+AccentCyan            = #00CC33
+AccentAmber           = #39FF14
+AccentRed             = #FF2020
+AccentGreen           = #00FF41
+AccentPurple          = #00E836
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #CCFFCC
+TextSecondary         = #66CC66
+TextMuted             = #338833
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #00FF41
+ProgressEnd           = #39FF14
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #003A10
+BtnPrimaryFg          = #00FF41
+BtnPrimaryBorder      = #00FF41
+BtnPrimaryHover       = #00FF41
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #040D04
+BtnSecondaryFg        = #66CC66
+BtnSecondaryBorder    = #0D2A0D
+BtnSecondaryHover     = #0D2A0D
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #002010
+BtnCyanFg             = #00CC33
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #102400
+BtnAmberFg            = #39FF14
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #200000
+BtnDangerFg           = #FF2020
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #040D04
+BtnGhostBorder        = #0D2A0D
+BtnGhostFg            = #338833
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #071407
+HdrBtnBorder          = #0D2A0D
+HdrBtnHover           = #186018
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #031003
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #0A2A0A
+ComboSelected         = #103510
+ComboSelectedFg       = #00FF41
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #0A2A0A
+CtxSepFill            = #0D2A0D
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #071407
+DetailBorder          = #0D2A0D
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #040D04
+TabHoverBg            = #071407
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #020802
+PurpleBlobBg          = #040D04
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #000000
+ConsoleFg             = #00FF41
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #040D04
+ScrollBarThumb        = #0D2A0D
+ScrollBarThumbHover   = #00FF41
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #00FF41
+StatusWarning         = #39FF14
+StatusError           = #FF2020
+StatusInfo            = #00CC33
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #041804
+BgStatusWarn          = #0C1800
+BgStatusErr           = #180000
+BgStatusInfo          = #041404
+FgStatusOk            = #00FF41
+FgStatusWarn          = #39FF14
+FgStatusErr           = #FF2020
+FgStatusInfo          = #00CC33

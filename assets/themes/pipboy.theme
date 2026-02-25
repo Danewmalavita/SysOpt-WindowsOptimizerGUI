@@ -1,0 +1,100 @@
+# SysOpt Theme — pipboy.theme
+# Pip-Boy 3000 — Fallout retro-terminal aesthetic
+# Verde fósforo sobre negro con scanlines feel
+# v1.0
+
+[meta]
+Name        = Pip-Boy 3000
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #050D05
+BgCard                = #0A1A0A
+BgInput               = #0D220D
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #1A3A1A
+BorderActive          = #6BFF6B
+BorderHover           = #2A5A2A
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #6BFF6B
+AccentCyan            = #A8FF80
+AccentAmber           = #C8FF40
+AccentRed             = #FF6B40
+AccentGreen           = #6BFF6B
+AccentPurple          = #80FF80
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #B8FFB8
+TextSecondary         = #78C878
+TextMuted             = #4A884A
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #3AD83A
+ProgressEnd           = #A8FF80
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #0D4A0D
+BtnPrimaryFg          = #B8FFB8
+BtnPrimaryBorder      = #6BFF6B
+BtnPrimaryHover       = #6BFF6B
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #0A1A0A
+BtnSecondaryFg        = #78C878
+BtnSecondaryBorder    = #1A3A1A
+BtnSecondaryHover     = #1A3A1A
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #102A08
+BtnCyanFg             = #A8FF80
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #1E2800
+BtnAmberFg            = #C8FF40
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #2A1005
+BtnDangerFg           = #FF6B40
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #0A1A0A
+BtnGhostBorder        = #1A3A1A
+BtnGhostFg            = #4A884A
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #0D220D
+HdrBtnBorder          = #1A3A1A
+HdrBtnHover           = #2A5A2A
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #081808
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #103010
+ComboSelected         = #184818
+ComboSelectedFg       = #6BFF6B
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #103010
+CtxSepFill            = #1A3A1A
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #0D220D
+DetailBorder          = #1A3A1A
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #0A1A0A
+TabHoverBg            = #0D220D
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #050D05
+PurpleBlobBg          = #081808
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #020802
+ConsoleFg             = #6BFF6B
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #0A1A0A
+ScrollBarThumb        = #1A3A1A
+ScrollBarThumbHover   = #6BFF6B
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #6BFF6B
+StatusWarning         = #C8FF40
+StatusError           = #FF6B40
+StatusInfo            = #A8FF80
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #082008
+BgStatusWarn          = #182000
+BgStatusErr           = #200800
+BgStatusInfo          = #082808
+FgStatusOk            = #6BFF6B
+FgStatusWarn          = #C8FF40
+FgStatusErr           = #FF6B40
+FgStatusInfo          = #A8FF80
