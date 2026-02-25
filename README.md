@@ -1,7 +1,7 @@
-# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v3.0.0 (Dev) — Windows System Optimizer (Español)
+# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v3.1.0 (Dev) — Windows System Optimizer (Español)
 **Script PowerShell con interfaz gráfica — `SysOpt.ps1`**
 
-> **Nota de versión:** La versión en desarrollo activa es **v3.0.0 (Dev)**, que introduce ensamblados C# compilados como DLL externos en `.\libs\` — eliminando la recompilación inline por sesión. La última versión pública estable es **v2.5.0**.
+> **Nota de versión:** La versión en desarrollo activa es **v3.1.0 (Dev)**, que añade un sistema completo de temas visuales (11 temas), soporte multiidioma (ES/EN/PT-BR), ventana de opciones y nuevas DLLs modulares (`SysOpt.Core.dll`, `SysOpt.ThemeEngine.dll`). La última versión pública estable es **v2.5.0**.
 
 Este proyecto implementa un **optimizador avanzado para Windows**, desarrollado íntegramente en **PowerShell** y utilizando una interfaz gráfica basada en **WPF/XAML**. Permite ejecutar tareas de mantenimiento, limpieza, verificación y optimización del sistema desde una única ventana, con monitorización de recursos en tiempo real, barra de progreso, consola integrada y modo de análisis sin cambios.
 
@@ -120,10 +120,45 @@ Construida en XAML, incluye:
 - Consola estilo terminal con colores tipo PowerShell
 - Barra de progreso con gradiente y porcentaje exacto
 - **Diálogo de progreso con botón "Segundo plano"** para exportaciones y cargas largas
+- **Sistema de temas completo** — 11 temas intercambiables en runtime con cobertura total de la UI
+- **Soporte multiidioma** — ES, EN, PT-BR con cambio en caliente sin reiniciar
+- **Ventana de opciones** para personalizar tema e idioma
 - Opción de reinicio automático al finalizar
 - Protección contra doble ejecución simultánea (Mutex global)
 
 ---
+
+
+### 🎨 Sistema de Temas
+
+Motor de temas completo que permite cambiar la apariencia visual de toda la aplicación en tiempo real. Incluye 11 temas preinstalados con paletas de colores distintas.
+
+- **11 temas incluidos**: Default, Default Light, Ice Blue, Ice Cream, Manga Japan, Matrix, PipBoy, Simpsons, Votorantim, Windows, Windows Light
+- **Tematización dual**: XAML principal via `{DynamicResource}` + UI dinámica via `Get-TC` (298 llamadas)
+- **Cobertura total**: barras de progreso, badges de estado, iconos, ComboBox dropdowns, gradientes, diálogos y 8 ventanas dinámicas
+- **Archivos `.theme`** externos en `.\assets\themes\` — formato clave=valor fácil de editar
+- **SysOpt.ThemeEngine.dll** — parser de temas compilado en C# para carga rápida
+- **Barra de progreso** al cargar un tema (hilo en segundo plano)
+- **Persistencia automática** — el tema seleccionado se guarda en `%APPDATA%\SysOpt\settings.json`
+
+### 🌐 Sistema Multiidioma (i18n)
+
+Soporte completo de internacionalización con archivos de idioma externos y aplicación inmediata sin reiniciar.
+
+- **3 idiomas incluidos**: Español (es-es), English (en-us), Português (pt-br)
+- **Archivos `.lang`** externos en `.\assets\lang\` — formato clave=valor editable
+- **LangEngine** en `SysOpt.Core.dll` — parser de idiomas compilado en C#
+- **Actualización inmediata** de todos los textos de la UI al cambiar idioma
+- **Persistencia automática** — el idioma seleccionado se guarda en settings.json
+- **Detección de idiomas disponibles** al abrir la ventana de opciones
+
+### ⚙️ Ventana de Opciones
+
+Nuevo botón Settings/Opciones entre Tareas y Acerca de, con panel dedicado para personalización.
+
+- **Selector de tema** — ComboBox con todos los temas disponibles, aplicación inmediata
+- **Selector de idioma** — ComboBox con todos los idiomas disponibles, aplicación inmediata
+- **ComboBox tematizados** — los dropdowns del selector también cambian con el tema activo (popup, items, texto)
 
 ## 🔐 Requisitos
 
@@ -156,6 +191,31 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 ---
 
 ## 📝 Historial de cambios
+
+### v3.1.0 (Dev) *(versión en desarrollo)*
+
+#### Sistema de Temas, Multiidioma y Ventana de Opciones
+
+- **[THEME]** Motor de temas completo con estrategia dual: `{DynamicResource}` para XAML principal (293 bindings) + `Get-TC` para UI dinámica (298 llamadas). Cobertura de 111 de 115 colores XAML.
+- **[THEME]** 11 temas preinstalados en `.\assets\themes\`: Default, Default Light, Ice Blue, Ice Cream, Manga Japan, Matrix, PipBoy, Simpsons, Votorantim, Windows, Windows Light.
+- **[THEME]** Tematización completa de ComboBox: `Apply-ComboBoxDarkTheme` con hook `DropDownOpened` para popup, items y texto del selector.
+- **[THEME]** Barras de progreso, badges de estado, iconos y 8 ventanas dinámicas tematizadas con `Get-TC` + `Update-DynamicThemeValues`.
+- **[THEME]** `SysOpt.ThemeEngine.dll` — parser C# para archivos `.theme` (clave=valor).
+- **[I18N]** Sistema multiidioma con 3 idiomas: Español (es-es), English (en-us), Português (pt-br).
+- **[I18N]** Archivos `.lang` externos en `.\assets\lang\` con `LangEngine` (C# en `SysOpt.Core.dll`).
+- **[I18N]** Actualización inmediata de todos los textos UI al cambiar idioma (sin reinicio).
+- **[DLL]** `SysOpt.Core.dll` — LangEngine + SettingsHelper compilados como ensamblado externo.
+- **[DLL]** `SysOpt.ThemeEngine.dll` — ThemeParser compilado como ensamblado externo.
+- **[UI]** Ventana de Opciones con selectores de tema e idioma entre botones Tareas y Acerca de.
+- **[UI]** Símbolo `©` en la ventana Acerca de (reemplaza `(c)`).
+- **[UI]** Metadatos de versión actualizados: muestra solo versión actual + 3 anteriores.
+- **[SETTINGS]** Persistencia de tema e idioma en `%APPDATA%\SysOpt\settings.json`.
+- **[SETTINGS]** Flujo de inicio corregido: `Load-Settings` → `Load-Language` → `Apply-Theme` dentro de `Add_Loaded`.
+- **[FIX]** `Invoke-CimQuery` copiada al runspace de liberación de RAM para evitar error de función no encontrada.
+- **[FIX]** Barras de progreso en Tasks: conversión explícita de string hex a `SolidColorBrush` objects.
+- **[FIX]** Texto de ComboBox: `Foreground` establecido con color `TextPrimary` del tema activo.
+
+---
 
 ### v3.0.0 (Dev) *(versión en desarrollo)*
 
@@ -265,10 +325,10 @@ No requiere PowerShell ni cambiar políticas de ejecución. Simplemente haz clic
 
 ---
 
-# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v2.3.0 — Windows System Optimizer (English)
+# <img src="./resources/SysOpt.png" width="28" alt="SysOpt"> SysOpt v3.1.0 (Dev) — Windows System Optimizer (English)
 **PowerShell Script with Graphical Interface — `SysOpt.ps1`**
 
-> **Version note:** The public stable release is **v2.3.0**. The active internal developer branch is **v2.4.0**, which includes FIFO RAM optimizations and additional stability fixes, not yet published as a stable release.
+> **Version note:** The active development version is **v3.1.0 (Dev)**, which adds a complete visual theme system (11 themes), multi-language support (ES/EN/PT-BR), options window and new modular DLLs (`SysOpt.Core.dll`, `SysOpt.ThemeEngine.dll`). The latest public stable release is **v2.5.0**.
 
 This project provides an **advanced Windows optimization tool**, fully developed in **PowerShell** with a graphical interface built on **WPF/XAML**. It allows you to run maintenance, cleanup, verification, and system optimization tasks from a single window, with real-time resource monitoring, a progress bar, an integrated console, and an analysis mode that makes no changes.
 
@@ -385,10 +445,45 @@ Built using XAML, featuring:
 - Terminal-style console with PowerShell-like colors
 - Gradient progress bar with exact percentage
 - **Progress dialog with "Background" button** for long exports and snapshot loads
+- **Complete theme system** — 11 swappable themes at runtime with full UI coverage
+- **Multi-language support** — ES, EN, PT-BR with hot-swap without restart
+- **Options window** to customize theme and language
 - Optional automatic restart when finished
 - Protection against simultaneous double execution (global Mutex)
 
 ---
+
+
+### 🎨 Theme System
+
+Complete theme engine that allows changing the entire application's visual appearance in real time. Includes 11 pre-installed themes with distinct color palettes.
+
+- **11 included themes**: Default, Default Light, Ice Blue, Ice Cream, Manga Japan, Matrix, PipBoy, Simpsons, Votorantim, Windows, Windows Light
+- **Dual theming strategy**: main XAML via `{DynamicResource}` + dynamic UI via `Get-TC` (298 calls)
+- **Full coverage**: progress bars, status badges, icons, ComboBox dropdowns, gradients, dialogs and 8 dynamic windows
+- **External `.theme` files** in `.\assets\themes\` — easy-to-edit key=value format
+- **SysOpt.ThemeEngine.dll** — compiled C# theme parser for fast loading
+- **Progress bar** shown when loading a theme (background thread)
+- **Automatic persistence** — selected theme saved to `%APPDATA%\SysOpt\settings.json`
+
+### 🌐 Multi-Language System (i18n)
+
+Complete internationalization support with external language files and instant application without restart.
+
+- **3 included languages**: Español (es-es), English (en-us), Português (pt-br)
+- **External `.lang` files** in `.\assets\lang\` — editable key=value format
+- **LangEngine** in `SysOpt.Core.dll` — compiled C# language parser
+- **Instant update** of all UI text when changing language
+- **Automatic persistence** — selected language saved to settings.json
+- **Automatic detection** of available languages when opening options window
+
+### ⚙️ Options Window
+
+New Settings/Options button between Tasks and About, with a dedicated panel for customization.
+
+- **Theme selector** — ComboBox listing all available themes, instant application
+- **Language selector** — ComboBox listing all available languages, instant application
+- **Themed ComboBoxes** — selector dropdowns also change with the active theme (popup, items, text)
 
 ## 🔐 Requirements
 
@@ -421,6 +516,31 @@ No PowerShell required, no execution policy changes needed. Simply right-click `
 ---
 
 ## 📝 Changelog
+
+### v3.1.0 (Dev) *(active development build)*
+
+#### Theme System, Multi-Language and Options Window
+
+- **[THEME]** Complete theme engine with dual strategy: `{DynamicResource}` for main XAML (293 bindings) + `Get-TC` for dynamic UI (298 calls). Coverage of 111 out of 115 XAML colors.
+- **[THEME]** 11 pre-installed themes in `.\assets\themes\`: Default, Default Light, Ice Blue, Ice Cream, Manga Japan, Matrix, PipBoy, Simpsons, Votorantim, Windows, Windows Light.
+- **[THEME]** Complete ComboBox theming: `Apply-ComboBoxDarkTheme` with `DropDownOpened` hook for popup, items and selector text.
+- **[THEME]** Progress bars, status badges, icons and 8 dynamic windows themed via `Get-TC` + `Update-DynamicThemeValues`.
+- **[THEME]** `SysOpt.ThemeEngine.dll` — C# parser for `.theme` files (key=value format).
+- **[I18N]** Multi-language system with 3 languages: Español (es-es), English (en-us), Português (pt-br).
+- **[I18N]** External `.lang` files in `.\assets\lang\` with `LangEngine` (C# in `SysOpt.Core.dll`).
+- **[I18N]** Instant UI text update when switching language (no restart needed).
+- **[DLL]** `SysOpt.Core.dll` — LangEngine + SettingsHelper compiled as external assembly.
+- **[DLL]** `SysOpt.ThemeEngine.dll` — ThemeParser compiled as external assembly.
+- **[UI]** Options Window with theme and language selectors between Tasks and About buttons.
+- **[UI]** `©` symbol in About window (replaces `(c)`).
+- **[UI]** Version metadata updated: shows only current version + 3 previous versions.
+- **[SETTINGS]** Theme and language persistence in `%APPDATA%\SysOpt\settings.json`.
+- **[SETTINGS]** Startup flow fixed: `Load-Settings` → `Load-Language` → `Apply-Theme` inside `Add_Loaded`.
+- **[FIX]** `Invoke-CimQuery` copied into RAM liberation runspace to prevent missing function error.
+- **[FIX]** Task progress bars: explicit conversion from hex string to `SolidColorBrush` objects.
+- **[FIX]** ComboBox text: `Foreground` set with `TextPrimary` color from active theme.
+
+---
 
 ### v3.0.0 (Dev) *(active development build)*
 

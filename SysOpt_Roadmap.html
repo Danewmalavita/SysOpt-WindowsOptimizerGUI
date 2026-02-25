@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SysOpt — Hoja de Ruta</title>
+<title>SysOpt v3.1.0 — Hoja de Ruta</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -704,21 +704,21 @@
 
   <!-- ── Header ── -->
   <header>
-    <div class="version-badge">SysOpt v3.0.0 (Dev) · Estable base v2.5.0 · Hoja de Ruta hacia v3.x</div>
+    <div class="version-badge">SysOpt v3.1.0 (Dev) · Estable base v2.5.0 · Hoja de Ruta hacia v3.x</div>
     <h1><span class="accent">SYS</span><span class="accent2">OPT</span><br>Plan de Estabilidad y Mejora</h1>
-    <p class="subtitle">Análisis de bugs corregidos, mejoras implementadas y vías de evolución hacia v3.0 — plataforma modular, extensible y con arquitectura limpia.</p>
+    <p class="subtitle">Análisis de bugs corregidos, mejoras implementadas y vías de evolución hacia v3.x — plataforma modular con temas visuales, multiidioma y arquitectura limpia.</p>
   </header>
 
   <!-- ── Banner estado actual ── -->
   <div class="dev-banner">
     <div class="dev-banner-icon">🚀</div>
     <div>
-      <div class="dev-banner-title">Estado actual — v3.0.0 (Dev) en desarrollo / Base estable v2.5.0</div>
+      <div class="dev-banner-title">Estado actual — v3.1.0 (Dev) en desarrollo / Base estable v2.5.0</div>
       <div class="dev-banner-desc">
-        <code>SysOpt v3.0.0 (Dev)</code> introduce ensamblados C# compilados como DLL externos en <code>.\libs\</code> —
-        eliminando la recompilación inline por sesión. Los tipos <code>DiskItem_v211</code>, <code>DiskItemToggle_v230</code>,
-        <code>ScanCtl211</code>, <code>PScanner211</code> y <code>MemoryHelper</code> se cargan con <code>Add-Type -Path</code>
-        una sola vez al arranque. La arquitectura modular está en marcha — próximos objetivos: CancellationToken unificado y abstracción de capa de datos.
+        <code>SysOpt v3.1.0 (Dev)</code> añade un sistema completo de temas visuales (11 temas), soporte multiidioma (ES/EN/PT-BR),
+        ventana de opciones y nuevas DLLs modulares (<code>SysOpt.Core.dll</code>, <code>SysOpt.ThemeEngine.dll</code>).
+        La estrategia dual de tematización cubre 293 bindings DynamicResource + 298 llamadas Get-TC en UI dinámica.
+        Próximos objetivos: CancellationToken unificado, abstracción de capa de datos y notificaciones Toast.
       </div>
       <div class="dev-banner-chips">
         <span class="dchip done">✓ v2.5.0 estable base</span>
@@ -728,11 +728,13 @@
         <span class="dchip done">✓ CimSession timeout 5s [WMI]</span>
         <span class="dchip done">✓ Deduplicación SHA256 [B5]</span>
         <span class="dchip done">✓ Panel TaskPool [⚡]</span>
-        <span class="dchip done">✓ Fix botones historial blanco</span>
-        <span class="dchip done">✓ Fix timers async cleanup</span>
-        <span class="dchip done">✓ Fix race condition Split-Path</span>
+        <span class="dchip done">✓ 11 Temas visuales [THEME]</span>
+        <span class="dchip done">✓ Multiidioma ES/EN/PT [I18N]</span>
+        <span class="dchip done">✓ Ventana de Opciones [UI]</span>
+        <span class="dchip done">✓ SysOpt.Core.dll + ThemeEngine.dll</span>
+        <span class="dchip done">✓ Persistencia tema/idioma [SETTINGS]</span>
+        <span class="dchip done">✓ ComboBox theming completo</span>
         <span class="dchip wip">CTK CancellationToken → v3.x</span>
-        <span class="dchip wip">C1 Tema claro/oscuro → v3.x</span>
         <span class="dchip wip">C2 Toast notifications → v3.x</span>
       </div>
     </div>
@@ -977,6 +979,77 @@
   </div>
 
 
+
+  <!-- ── SECCIÓN: Cambios v3.1.0 Dev ── -->
+  <div class="section-label">Implementado en v3.1.0 (Dev)</div>
+  <div class="section-title">🎨 Sistema de Temas + Multiidioma + Opciones</div>
+  <div class="bugs-grid">
+
+    <div class="bug-card" style="border-top-color:var(--cyan)">
+      <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[THEME] MOTOR DE TEMAS</div>
+      <div class="bug-name">Sistema de temas dual completo</div>
+      <div class="bug-desc">Motor de temas con estrategia dual: <code>{DynamicResource}</code> para 293 bindings en XAML principal + <code>Get-TC</code> para 298 llamadas en UI dinámica. Cobertura de 111 de 115 colores XAML con mapeo por clave de tema + offset RGB.</div>
+      <div class="bug-fix">IMPL: <code>Initialize-ThemeColors</code> construye <code>$script:ThemeColorMap</code> (71 entradas). <code>Apply-ThemeToVisualTree</code> recorre el visual tree completo. <code>Update-DynamicThemeValues</code> calcula colores derivados.</div>
+    </div>
+
+    <div class="bug-card" style="border-top-color:var(--cyan)">
+      <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[THEME] 11 TEMAS</div>
+      <div class="bug-name">11 temas preinstalados en .\assets\themes\</div>
+      <div class="bug-desc">Archivos <code>.theme</code> con formato clave=valor. Incluyen: Default, Default Light, Ice Blue, Ice Cream, Manga Japan, Matrix, PipBoy, Simpsons, Votorantim, Windows, Windows Light. Cada tema define ~27 claves de color base.</div>
+      <div class="bug-fix">IMPL: <code>SysOpt.ThemeEngine.dll</code> — parser C# que carga y valida archivos .theme. Barra de progreso con hilo en segundo plano al aplicar tema.</div>
+    </div>
+
+    <div class="bug-card" style="border-top-color:var(--cyan)">
+      <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[I18N] MULTIIDIOMA</div>
+      <div class="bug-name">3 idiomas con cambio en caliente</div>
+      <div class="bug-desc">Sistema de internacionalización con archivos <code>.lang</code> externos (ES, EN, PT-BR). <code>LangEngine</code> en <code>SysOpt.Core.dll</code> parsea el archivo y devuelve un <code>Dictionary&lt;string,string&gt;</code>. Función <code>T(key)</code> busca la traducción en el diccionario actual.</div>
+      <div class="bug-fix">IMPL: <code>Load-Language</code> carga el .lang y aplica textos. <code>Apply-LanguageToUI</code> actualiza todos los controles. <code>Save-Settings</code> persiste el idioma en settings.json.</div>
+    </div>
+
+    <div class="bug-card" style="border-top-color:var(--cyan)">
+      <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[DLL] CORE + THEMEENGINE</div>
+      <div class="bug-name">2 nuevos ensamblados C# externos</div>
+      <div class="bug-desc"><code>SysOpt.Core.dll</code> contiene <code>LangEngine</code> y <code>SettingsHelper</code>. <code>SysOpt.ThemeEngine.dll</code> contiene <code>ThemeParser</code>. Compilados con <code>compile-dlls.ps1</code>, cargados con <code>Add-Type -Path</code> al arranque.</div>
+      <div class="bug-fix">IMPL: <code>SysOpt.Core.cs</code> + <code>SysOpt.ThemeEngine.cs</code> en <code>.\libs\</code>. Script de compilación genera ambos DLLs con .NET Framework 4.x.</div>
+    </div>
+
+    <div class="bug-card" style="border-top-color:var(--cyan)">
+      <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[UI] VENTANA OPCIONES</div>
+      <div class="bug-name">Panel de opciones con selectores de tema e idioma</div>
+      <div class="bug-desc">Nuevo botón Opciones/Settings entre Tareas y Acerca de. Ventana modal con ComboBox para seleccionar tema e idioma. Aplicación inmediata al cambiar — sin necesidad de confirmar o reiniciar.</div>
+      <div class="bug-fix">IMPL: <code>Show-OptionsWindow</code> genera XAML dinámico con <code>Get-TC</code> para colores del tema. <code>Apply-ComboBoxDarkTheme</code> aplicado a todos los selectores.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · COMBOBOX POPUP</div>
+      <div class="bug-name">Dropdown popup blanco independiente del tema</div>
+      <div class="bug-desc">El popup del ComboBox usaba el <code>ControlTemplate</code> del sistema y no heredaba los colores del tema. Al abrir el desplegable aparecía blanco sobre cualquier tema oscuro.</div>
+      <div class="bug-fix">FIX: <code>Apply-ComboBoxDarkTheme</code> reescrita con hook <code>DropDownOpened</code> que busca <code>PART_Popup</code> y tematiza Border, Chrome, ScrollViewer y cada ComboBoxItem.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · BARRAS TASKS</div>
+      <div class="bug-name">Barras de progreso no cambiaban con el tema</div>
+      <div class="bug-desc"><code>Refresh-TasksPanel</code> pasaba strings hex como <code>BarColor</code> pero WPF binding con PSCustomObject no auto-convertía string a Brush, dejando las barras con colores default.</div>
+      <div class="bug-fix">FIX: Conversión explícita con <code>[System.Windows.Media.BrushConverter]</code> para BarColor, PctColor, IconBg, StatusBg y StatusFg antes de pasar al DataTemplate.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · INVOKE-CIMQUERY RUNSPACE</div>
+      <div class="bug-name">Función no accesible en runspace de RAM</div>
+      <div class="bug-desc">La función <code>Invoke-CimQuery</code> definida en el scope principal no era accesible desde el runspace separado de liberación de RAM, causando error al ejecutar la optimización.</div>
+      <div class="bug-fix">FIX: Copia de la definición de <code>Invoke-CimQuery</code> dentro del <code>$OptimizationScript</code> del runspace.</div>
+    </div>
+
+    <div class="bug-card fixed">
+      <div class="bug-id fixed">FIX · STARTUP FLOW</div>
+      <div class="bug-name">Tema/idioma no se restauraban al abrir la app</div>
+      <div class="bug-desc"><code>Load-Settings</code> se ejecutaba dentro de <code>Add_Loaded</code> pero <code>Apply-ThemeWithProgress</code> y <code>Apply-LanguageToUI</code> se llamaban antes de <code>ShowDialog</code> con los defaults.</div>
+      <div class="bug-fix">FIX: Toda la secuencia movida dentro de <code>Add_Loaded</code>: <code>Load-Settings</code> → <code>Load-Language</code> → <code>Apply-ThemeWithProgress</code>.</div>
+    </div>
+
+  </div>
+
   <!-- ── SECCIÓN: Timeline ── -->
   <div class="section-label">Roadmap de versiones</div>
   <div class="section-title">📅 Versiones — Historial y Próximas</div>
@@ -1055,16 +1128,34 @@
         </ul>
       </div>
 
-      <div class="tl-item current">
-        <div class="tl-ver">v3.0.0 (Dev) · EN DESARROLLO ◉</div>
+      <div class="tl-item done">
+        <div class="tl-ver">v3.0.0 (Dev) · COMPLETADO ✓</div>
         <div class="tl-title">Arquitectura modular — DLL externos implementados</div>
         <ul class="tl-list">
           <li class="done-li">[DLL] SysOpt.MemoryHelper.dll + SysOpt.DiskEngine.dll en .\libs\</li>
           <li class="done-li">[DLL] Tipos C# cargados con Add-Type -Path — sin recompilación inline</li>
           <li class="done-li">[ARCH] Ruta .\libs\ relativa a PSScriptRoot, error descriptivo si falta</li>
+        </ul>
+      </div>
+
+      <div class="tl-item current">
+        <div class="tl-ver">v3.1.0 (Dev) · EN DESARROLLO ◉</div>
+        <div class="tl-title">Temas visuales, multiidioma y ventana de opciones</div>
+        <ul class="tl-list">
+          <li class="done-li">[THEME] Motor de temas dual: DynamicResource (293) + Get-TC (298)</li>
+          <li class="done-li">[THEME] 11 temas preinstalados en .\assets\themes\</li>
+          <li class="done-li">[THEME] SysOpt.ThemeEngine.dll — parser C# para .theme</li>
+          <li class="done-li">[THEME] ComboBox theming completo con DropDownOpened hook</li>
+          <li class="done-li">[THEME] Barras, badges, iconos y 8 ventanas dinámicas tematizadas</li>
+          <li class="done-li">[I18N] 3 idiomas: Español, English, Português en .\assets\lang\</li>
+          <li class="done-li">[I18N] LangEngine en SysOpt.Core.dll — cambio en caliente</li>
+          <li class="done-li">[DLL] SysOpt.Core.dll (LangEngine + SettingsHelper)</li>
+          <li class="done-li">[UI] Ventana de Opciones con selectores de tema e idioma</li>
+          <li class="done-li">[UI] Símbolo © en About, metadatos v.actual + 3 anteriores</li>
+          <li class="done-li">[SETTINGS] Persistencia en %APPDATA%\SysOpt\settings.json</li>
+          <li class="done-li">[FIX] Invoke-CimQuery en runspace, barras Brush, ComboBox text</li>
           <li>CTK: CancellationToken unificado (sin sleep polling 150ms)</li>
           <li>DAL: Abstracción capa de datos — funciones Get-*Data puras</li>
-          <li>C1: Tema claro/oscuro con ResourceDictionary intercambiable</li>
           <li>C2: Notificaciones Toast nativas de Windows (WinRT)</li>
           <li>C4: Programador de tareas integrado (Register-ScheduledTask)</li>
           <li>PLG: Plugin system para módulos externos en .\plugins\</li>
@@ -1125,12 +1216,12 @@
         </div>
       </div>
       <div class="items-grid">
-        <div class="item-card">
+        <div class="item-card done">
           <div class="item-id-box">C1</div>
           <div class="item-content">
-            <div class="item-name">Tema claro / oscuro</div>
-            <div class="item-desc">Toggle en la toolbar. Mover colores del XAML a un <code>ResourceDictionary</code> intercambiable en runtime. Requiere auditar y refactorizar todos los colores hardcodeados restantes en el script.</div>
-            <div class="item-tags"><span class="tag">Theming</span><span class="tag">ResourceDictionary</span><span class="tag">XAML</span></div>
+            <div class="item-name">Sistema de temas completo — 11 temas visuales</div>
+            <div class="item-desc">Motor de temas con estrategia dual: <code>{DynamicResource}</code> para XAML (293 bindings) + <code>Get-TC</code> para UI dinámica (298 llamadas). 11 temas en <code>.\assets\themes\</code>, <code>SysOpt.ThemeEngine.dll</code> como parser C#. Cobertura completa: barras, badges, iconos, ComboBox, gradientes y 8 ventanas dinámicas.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.1.0 Dev</span><span class="tag">Theming</span><span class="tag">DynamicResource</span><span class="tag">DLL</span></div>
           </div>
         </div>
         <div class="item-card">
@@ -1169,12 +1260,12 @@
         </div>
       </div>
       <div class="items-grid">
-        <div class="item-card">
+        <div class="item-card done">
           <div class="item-id-box">I18N</div>
           <div class="item-content">
-            <div class="item-name">Internacionalización (i18n)</div>
-            <div class="item-desc">Externalizar cadenas de texto a ficheros de recursos por idioma. Soporte inicial: Español + Inglés. Detección automática del idioma del sistema Windows.</div>
-            <div class="item-tags"><span class="tag">i18n</span><span class="tag">Localización</span><span class="tag">ResourceDictionary</span></div>
+            <div class="item-name">Multiidioma completo — ES / EN / PT-BR</div>
+            <div class="item-desc">Sistema de internacionalización con archivos <code>.lang</code> externos en <code>.\assets\lang\</code>. 3 idiomas: Español, English, Português. <code>LangEngine</code> en <code>SysOpt.Core.dll</code> como parser C#. Cambio en caliente sin reinicio, persistencia en settings.json.</div>
+            <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.1.0 Dev</span><span class="tag">i18n</span><span class="tag">LangEngine</span><span class="tag">DLL</span></div>
           </div>
         </div>
         <div class="item-card">
@@ -1200,14 +1291,14 @@
 
   <!-- ── Footer ── -->
   <footer>
-    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v3.0.0 (Dev) · Base estable v2.5.0 · Desarrollando hacia v3.x</p>
+    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v3.1.0 (Dev) · Base estable v2.5.0 · Desarrollando hacia v3.x</p>
     <div>
-      <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>v3.0.0 Dev</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>DLL externos .\libs\</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>Logging + Error boundary</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>FIFO streaming activo</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>TaskPool async</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--red)"></span>SHA256 dedup</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>v3.1.0 Dev</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>11 Temas visuales</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>Multiidioma ES/EN/PT</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>DLL Core + ThemeEngine</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>Ventana de Opciones</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--red)"></span>ComboBox theming</span>
       <span class="chip"><span class="chip-dot" style="background:var(--muted)"></span>PowerShell + WPF</span>
     </div>
   </footer>
