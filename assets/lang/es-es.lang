@@ -1,0 +1,360 @@
+# SysOpt Language File — es-es.lang
+# Formato: clave = valor
+# No elimines claves. Si falta una clave el T() usa el fallback del XAML.
+
+[meta]
+Name        = Español (España)
+Code        = es-es
+Author      = Danew Malavita
+Version     = 3.0
+
+[ui]
+# ── Barra superior ────────────────────────────────────────────────────────────
+AppSubtitle               = Windows Optimizer GUI
+StatusReady               = Listo para optimizar
+TooltipTasks              = Tareas en segundo plano
+TooltipOptions            = Opciones
+TooltipAbout              = Acerca de SysOpt — Novedades de la versión
+TooltipRefreshInfo        = Actualizar información del sistema
+DryRunLabel               = MODO ANÁLISIS  (sin cambios)
+
+# ── Pestañas principales ──────────────────────────────────────────────────────
+TabOptimization           = ⚙  Optimización
+TabPerformance            = 📊  Rendimiento
+TabDisk                   = 💾  Explorador de Disco
+TabHistory                = 🕒  Historial
+
+# ── Cabeceras de tarjetas (pestaña Optimización) ────────────────────────────
+CardDisksFiles            = DISCOS Y ARCHIVOS
+CardMemoryProc            = MEMORIA Y PROCESOS
+CardNetwork               = RED Y NAVEGADORES
+CardRegistry              = REGISTRO DE WINDOWS
+CardSysVerify             = VERIFICACIÓN DEL SISTEMA
+CardEventLogs             = REGISTROS DE EVENTOS
+CardStartup               = PROGRAMAS DE INICIO
+CardEventLogHint          = El log Security no se toca
+CardStartupHint           = Abre ventana de gestión al iniciar
+
+# ── Pestaña Rendimiento ───────────────────────────────────────────────────────
+PerfCardCpu               = CORES DEL PROCESADOR
+PerfCardRam               = MEMORIA RAM
+PerfCardSmart             = ESTADO S.M.A.R.T. DEL DISCO
+PerfCardNet               = TARJETAS DE RED
+PerfDiskLabel             = DISCO C:
+PerfClickRefresh          =   Haz clic en Actualizar para cargar datos
+RamTotal                  = TOTAL
+RamUsed                   = USADA
+RamFree                   = LIBRE
+RamPct                    = USO%
+CpuCoresDetail            = núcleos / lógicos
+
+# ── Checkboxes de optimización ────────────────────────────────────────────────
+ChkOptimizeDisks          = Optimizar discos (Defrag HDD / TRIM SSD·NVMe)
+ChkRecycleBin             = Vaciar papelera de reciclaje
+ChkTempFiles              = Temp de Windows (System\Temp, Prefetch)
+ChkUserTemp               = Temp de usuario (%TEMP%, AppData\Local\Temp)
+ChkWUCache                = Caché de Windows Update
+ChkChkdsk                 = Check Disk (CHKDSK)  —  requiere reinicio
+ChkClearMemory            = Liberar RAM (vaciar Working Set de procesos)
+ChkCloseProcesses         = Cerrar procesos no críticos
+ChkDNSCache               = Limpiar caché DNS
+ChkBrowserCache           = Caché de navegadores (Chrome, Edge, Firefox, Opera, Brave)
+ChkBackupRegistry         = Backup del registro (recomendado)
+ChkCleanRegistry          = Limpiar claves huérfanas
+ChkSFC                    = SFC /SCANNOW  —  verificador de archivos
+ChkDISM                   = DISM  —  reparar imagen del sistema
+ChkEventLogs              = Event Viewer (System, Application, Setup)
+ChkShowStartup            = Gestionar entradas de autoarranque
+ChkAutoRestart            = Reiniciar al finalizar
+ChkAutoRefresh            = Auto-refresco
+ChkSnapshotSelectAll      = Todo
+
+# ── Botones principales ──────────────────────────────────────────────────────
+BtnStart                  = ▶  Iniciar optimización
+BtnDryRun                 = Analizar
+BtnSelectAll              = Seleccionar todo
+BtnCancel                 = Cancelar
+BtnSaveLog                = Guardar log
+BtnExit                   = Salir
+BtnShowOutput             = 🖥 Output
+BtnRefreshPerf            = ↻  Actualizar
+
+# ── Explorador de disco ─────────────────────────────────────────────────────
+DiskPathLabel             = Ruta:
+DiskFilterLabel           = 🔎  Filtrar:
+DiskFilterClearTip        = Limpiar filtro
+DiskFilterPlaceholder     =   🔎  Filtrar por nombre…
+DiskColName               =   Nombre
+DiskColSize               = Tamaño
+DiskColPct                = %
+DiskColFiles              = Archivos
+DiskDetailHeader          = DETALLE
+DiskDetailSizeLabel       = Tamaño:
+DiskDetailFiles           = Archivos:
+DiskDetailFolders         = Carpetas:
+DiskDetailParent          = % del padre:
+DiskTopFilesHeader        = TOP 10 ARCHIVOS MÁS GRANDES
+DiskScanReady             = Listo
+DiskScanCancelling        = ⏹ Cancelando — espera a que termine la carpeta actual…
+BtnScan                   = 🔍  Escanear
+BtnStop                   = ⏹  Detener
+BtnDedup                  = 🔍  Duplicados
+BtnExportCsv              = 📄  Exportar CSV
+BtnDiskReport             = 🌐  Informe HTML
+
+# ── Explorador de archivos (File Scanner) ─────────────────────────────────────
+FsSortSize                = Tamaño ↓
+FsSortExt                 = Extensión
+FsColSize                 = Tamaño
+FsCtxLocation             = 📂  Ir a la ubicación
+
+# ── Menú contextual ─────────────────────────────────────────────────────────
+CtxOpen                   = 📂  Abrir en Explorador
+CtxCopy                   = 📋  Copiar ruta
+CtxScanFolder             = 🔍  Escanear carpeta
+CtxDelete                 = 🗑  Eliminar carpeta...
+CtxShowOutput             = 🖥  Mostrar Output
+
+# ── Historial / Snapshots ───────────────────────────────────────────────────
+SnapshotNameLabel         = Nombre:
+SnapshotSaved             = Snapshots guardados
+SnapshotSelectHint        = Selecciona un snapshot
+SnapshotNoSaved           = Sin snapshots guardados.
+BtnSnapshotSave           = 💾  Guardar
+BtnSnapshotCompare        = 📊  Comparar
+BtnSnapshotDelete         = 🗑  Eliminar
+
+# ── Panel Output ────────────────────────────────────────────────────────────
+OutputPanelLabel          = OUTPUT
+OutputHideTooltip         = Ocultar output
+OutputMinimizeTooltip     = Minimizar output
+OutputExpandTooltip       = Expandir output
+
+# ── Tooltips extendidos ─────────────────────────────────────────────────────
+TooltipDiskFilter         = Filtra carpetas por nombre en tiempo real
+TooltipDedup              = Busca archivos duplicados por SHA256 (>10 MB) en el escaneo actual
+TooltipExportCsv          = Exportar resultados a CSV
+TooltipHtmlReport         = Genera informe HTML visual del escaneo en .\output\
+TooltipCompareSnap        = Compara los snapshots marcados entre sí o contra el escaneo actual
+TooltipDeleteSnap         = Elimina todos los snapshots marcados
+TooltipShowOutput         = Mostrar panel de output
+TooltipDryRun             = Dry Run — reportar sin ejecutar cambios
+
+# ── Consola de bienvenida ───────────────────────────────────────────────────
+WelcomeLine1              = Sistema iniciado correctamente
+WelcomeLine2              = Selecciona opciones y pulsa '▶ Iniciar' para optimizar,
+WelcomeLine3              =   o 'Analizar' para ver qué se liberaría sin hacer cambios.
+WelcomeHint               = 💡 Ver novedades: clic en el botón  ℹ  de la barra superior.
+
+# ── Ventana Opciones ────────────────────────────────────────────────────────
+OptionsTitle              = Opciones — SysOpt
+OptionsThemeLabel         = Tema visual
+OptionsLangLabel          = Idioma
+OptionsBtnApply           = Aplicar
+OptionsBtnClose           = Cerrar
+OptionsRestartHint        = Algunos cambios de idioma requieren reiniciar SysOpt.
+
+# ── Diálogos comunes ────────────────────────────────────────────────────────
+DlgOk                     = Aceptar
+DlgCancel                 = Cancelar
+DlgYes                    = Sí
+DlgNo                     = No
+DlgClose                  = Cerrar
+DlgError                  = Error
+DlgWarning                = Advertencia
+DlgInfo                   = Información
+DlgSuccess                = Completado
+DlgAccept                 = Aceptar
+
+# ── Diálogos de confirmación (hardcoded → internacionalizado) ────────────────
+DlgAlreadyRunningMsg      = Ya hay una instancia del Optimizador en ejecución.\n\nCierra la ventana existente antes de abrir una nueva.
+DlgAlreadyRunningTitle    = Ya en ejecución
+DlgConfirmDeleteTitle     = Confirmar eliminación
+DlgConfirmDeleteFolder    = ¿Eliminar permanentemente esta carpeta?\n\nEsta acción no se puede deshacer.
+DlgConfirmDeleteFile      = ¿Eliminar permanentemente este archivo?\n\nEsta acción no se puede deshacer.
+DlgConfirmDeleteSnap      = ¿Eliminar los snapshots seleccionados?
+DlgConfirmDeleteCopies    = Se eliminarán {0} copia(s) del grupo (se conserva el original). ¿Continuar?
+DlgConfirmCancelOpt       = ¿Cancelar la optimización en curso?\n\nLa tarea actual terminará antes de detenerse.
+DlgConfirmOptTitle        = Confirmar optimización
+DlgConfirmOptMsg          = Modo: {0}\n\n¿Iniciar con {1} tareas?
+DlgWarnNoSelectionMsg     = Por favor, selecciona al menos una opción.
+DlgWarnRegistryNoBackup   = Has activado 'Limpiar registro' sin 'Crear backup'.\n\nLimpiar el registro SIN backup puede ser peligroso.\n\n¿Deseas continuar igualmente?
+DlgClearConsoleMsg        = La consola tiene contenido de una ejecución anterior.\n\n¿Deseas limpiarla y comenzar una nueva sesión?
+DlgOptCancelledMsg        = La optimización fue cancelada por el usuario.
+DlgAnalysisDoneTitle      = Análisis completado
+DlgAnalysisDoneMsg        = Análisis completado.\n\nRevisa la consola para ver los detalles.
+DlgOptDoneTitle           = Optimización completada
+DlgOptDoneMsg             = ¡Proceso completado correctamente!\n\nTodas las tareas seleccionadas han finalizado.
+DlgLogEmptyTitle          = Log vacío
+DlgLogEmptyMsg            = La consola está vacía. No hay nada que guardar.
+DlgExportDoneTitle        = Exportación completada
+DlgHtmlSaveTitle          = Informe HTML guardado
+DlgHtmlOpenMsg            = ¿Abrir en el navegador?
+DlgErrorBgTitle           = Error en tarea en segundo plano
+DlgErrorBgMsg             = SysOpt ha detectado un error inesperado en un proceso en segundo plano.
+DlgErrorUiTitle           = Error inesperado en la interfaz
+DlgErrorUiMsg             = Error inesperado en la interfaz gráfica.\n\nLa aplicación intentará continuar. Revisa el log en .\logs\
+
+# ── Notificaciones toast ────────────────────────────────────────────────────
+ToastScanDone             = Escaneo completado
+ToastCsvDone              = CSV exportado
+ToastHtmlDone             = Informe HTML generado
+ToastDedupDone            = Deduplicación completada
+ToastSnapDone             = Snapshot guardado
+ToastOptDone              = SysOpt — Optimización completada
+ToastOptDoneMsg           = Todas las tareas seleccionadas han finalizado.
+
+# ── Disk Explorer — strings dinámicos en tiempo de ejecución ────────────────
+DiskScanStarting          = Iniciando escaneo de
+DiskScanRunning           = Escaneando
+DiskScanFolders           = carpetas
+DiskScanDone              = elementos
+DiskSnapshotDefault       = Escaneo
+DiskSummaryRoots          = carpetas raíz
+DiskSummaryTotal          = total
+DiskEntriesRead           = entradas leídas
+DiskNoFilesFound          = (ningún archivo encontrado)
+DiskSizeColBinding        = Tamaño: {0}
+CsvHeader                 = "Ruta","Tamaño","Bytes","Archivos","Carpetas","% del total","Tipo"
+
+# ── Deduplicación ────────────────────────────────────────────────────────────
+DedupTaskName             = Deduplicación SHA256:
+DedupError                = Error en deduplicación.
+DedupErrorTitle           = Error de deduplicación
+DedupDoneTitle            = Deduplicación completada
+
+# ── Red ──────────────────────────────────────────────────────────────────────
+NetNoAdapters             = ℹ Sin adaptadores activos
+NetNoAdaptersDetail       = No se detectaron tarjetas de red activas
+
+# ── Pestaña rendimiento ──────────────────────────────────────────────────────
+AutoRefreshOff            =   Auto-refresco desactivado
+SmartDiskSize             = Tamaño
+
+# ── Panel de tareas ──────────────────────────────────────────────────────────
+TasksStatus               = Pool:
+TasksActive               = activa(s)
+TasksDone                 = completada(s)/error
+TaskRunning               = En curso
+
+# ── Snapshot ─────────────────────────────────────────────────────────────────
+SnapDetailSelect          = Selecciona un snapshot para ver sus carpetas
+SnapCompDone              = Comparación completada —
+SnapCompFolders           = carpetas analizadas.
+
+# ── Consola de optimización (mensajes internos) ──────────────────────────────
+OptModeAnalysis           = 🔍 ANÁLISIS (Dry Run) — solo reportar
+OptModeReal               = ⚙ EJECUCIÓN real
+OptStartingAnalysis       = INICIANDO OPTIMIZACIÓN  —  MODO ANÁLISIS (DRY RUN)
+OptStartingReal           = INICIANDO OPTIMIZACIÓN DEL SISTEMA WINDOWS
+OptModeLabel              = Modo:
+OptCancelledByUser        = ⚠ OPTIMIZACIÓN CANCELADA POR EL USUARIO
+OptAllDone                = ¡Todas las tareas completadas!
+OptStatusDone             = completada
+OptAnalysisDone           = Análisis
+OptOptimizationDone       = Optimización
+OptCompletedSuccess       = COMPLETADO EXITOSAMENTE
+OptAnalysisCompleted      = ANÁLISIS COMPLETADO EXITOSAMENTE
+OptOptimizationCompleted  = OPTIMIZACIÓN COMPLETADA EXITOSAMENTE
+
+# ── Informe de Diagnóstico ────────────────────────────────────────────────────
+DiagTitle                 = Informe de Diagnóstico del Sistema
+DiagHeader                = Informe de Diagnóstico
+DiagSubHeader             = Análisis completado — resultados por categoría
+DiagScoreLabel            = PUNTUACIÓN
+DiagActionHint            = ▶  Pulsa 'Iniciar Optimización' en la ventana principal para reparar los puntos marcados.
+DiagUrgentAttention       = Atención urgente
+DiagExportTitle           = Exportar Informe de Diagnóstico
+DiagReportTitle           = INFORME DE DIAGNÓSTICO DEL SISTEMA — SysOpt
+DiagSaveLogTitle          = Guardar Log de Optimización
+DiagBuildingUI            = Construyendo interfaz gráfica...
+
+# ── Diálogos ─────────────────────────────────────────────────────────────────
+PathNotFound              = Ruta no encontrada
+
+# ── Claves adicionales ────────────────────────────────────────────────────────
+DlgConfirmCancelTitle     = Confirmar cancelación
+DlgConfirmUndone          = Esta acción no se puede deshacer.
+DiagCriticals             = crítico(s)
+DiagWarnings              = aviso(s)
+
+# ── Splash / inicio ──────────────────────────────────────────────────────────
+SplashLoadingAssemblies   = Cargando ensamblados .NET...
+SplashLoadingTheme        = Cargando tema...
+SplashAnalyzingPerms      = Analizando permisos...
+SplashApplyingTheme       = Aplicando tema...
+SplashReady               = Listo.
+
+# ── Barra de estado — mensajes en tiempo de ejecución ────────────────────────
+StatusPathCopied          = Ruta copiada:
+StatusDeleted             = Eliminado:
+StatusExportingCsv        = Exportando CSV en segundo plano...
+StatusGeneratingHtml      = Generando informe HTML en segundo plano...
+StatusCalcHashes          = Calculando hashes SHA256 (archivos >10 MB)...
+
+# ── Estado de snapshots ───────────────────────────────────────────────────────
+SnapLoadingHistory        = Cargando historial de snapshots
+SnapLoadingHistoryStatus  = Cargando historial...
+SnapSavingTask            = Guardando snapshot:
+SnapSavingProgress        = Guardando snapshot
+SnapSavingStatus          = Guardando snapshot...
+SnapLoadingA              = Cargando snapshot A...
+SnapLoadingB              = Cargando snapshot B...
+SnapLoadingCompare        = Cargando snapshot para comparar...
+SnapSaved                 = Snapshot guardado:
+SnapErrLoad               = Error al cargar:
+SnapErrSave               = Error al guardar:
+SnapErrLoadMsg            = Error al cargar snapshot:
+SnapErrCompare            = Error al comparar:
+
+# ── Nombres de tareas en segundo plano ───────────────────────────────────────
+DiskScanTaskName          = Escaneo:
+CsvTaskName               = Exportar CSV:
+HtmlTaskName              = Informe HTML:
+
+# ── Etiquetas de estado del panel de tareas ───────────────────────────────────
+TaskStatusRunning         = En curso
+TaskStatusDone            = Completada
+TaskStatusError           = Error
+TaskStatusCancelled       = Cancelada
+
+# ── Títulos y mensajes de error ───────────────────────────────────────────────
+ErrDeleteTitle            = Error al eliminar
+ErrDeleteMsg              = Error al eliminar:
+ErrExportTitle            = Error al exportar
+ErrHtmlReportTitle        = Error al generar informe
+ErrSaveTitle              = Error al guardar
+ErrSaveMsg                = Error al guardar:
+ErrOpenOptions            = Error al abrir opciones:
+ErrOpenDuplicates         = Error al abrir la ventana de duplicados:
+ErrOpenFile               = Error al abrir archivo
+ErrOpenFileTitle          = Error al abrir archivo
+ErrOpenFileMsg            = No se puede abrir el archivo.
+ErrOpenChangelog          = Error al abrir la ventana de novedades:
+ErrDedupHashes            = Error al calcular hashes:
+
+# ── Diálogos — sin datos / template ──────────────────────────────────────────
+DlgNoScanDataTitle        = Sin datos
+DlgNoScanDataMsg          = No hay datos de escaneo. Realiza un escaneo primero.
+DlgExportResultsTitle     = Exportar resultados del explorador
+DlgAllFiles               = Todos los archivos
+DlgTemplateNotFoundTitle  = Template no encontrado
+DlgTemplateNotFoundMsg    = No se encontró el archivo de plantilla:
+DlgCsvSaved               = CSV guardado en:
+DlgElements               = elementos
+
+# ── Deduplicación — sin duplicados ───────────────────────────────────────────
+DedupNoDuplicatesTitle    = Sin duplicados
+DedupNoDuplicatesMsg      = No se encontraron archivos duplicados mayores de 10 MB en la ruta escaneada.
+DedupNoDuplicatesDetail   = Sin duplicados
+
+# ── SMART ─────────────────────────────────────────────────────────────────────
+SmartReadError            = Error al leer SMART
+
+# ── Botones / consola ─────────────────────────────────────────────────────────
+BtnCancelling             = Cancelando...
+MsgCancelRequested        = Cancelación solicitada — esperando fin de tarea actual...
+
+# ── Ventana de escáner de archivos ────────────────────────────────────────────
+FsScanDone                = Completado
+FsScanFiles               = archivos

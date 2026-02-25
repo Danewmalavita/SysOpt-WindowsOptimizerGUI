@@ -1,0 +1,98 @@
+# SysOpt Theme — ps5.theme
+# Tema inspirado en PlayStation 5 / Sony PlayStation — v1.0
+
+[meta]
+Name        = PlayStation 5
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #00050F
+BgCard                = #050D1E
+BgInput               = #0A142E
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #0E1E3E
+BorderActive          = #00439C
+BorderHover           = #142A50
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #00439C
+AccentCyan            = #00B7EE
+AccentAmber           = #F0C040
+AccentRed             = #E01A4F
+AccentGreen           = #00C08B
+AccentPurple          = #5F50E0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #E8F0FF
+TextSecondary         = #7090C0
+TextMuted             = #2A4060
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #00439C
+ProgressEnd           = #00B7EE
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #002060
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #00439C
+BtnPrimaryHover       = #00439C
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #0A142E
+BtnSecondaryFg        = #7090C0
+BtnSecondaryBorder    = #0E1E3E
+BtnSecondaryHover     = #0E1E3E
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #003040
+BtnCyanFg             = #00B7EE
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #282000
+BtnAmberFg            = #F0C040
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #280010
+BtnDangerFg           = #E01A4F
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #050D1E
+BtnGhostBorder        = #0E1E3E
+BtnGhostFg            = #2A4060
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #0A142E
+HdrBtnBorder          = #0E1E3E
+HdrBtnHover           = #142A50
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #002838
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #0A2050
+ComboSelected         = #002060
+ComboSelectedFg       = #00439C
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #0A2050
+CtxSepFill            = #0E1E3E
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #0A142E
+DetailBorder          = #0E1E3E
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #050D1E
+TabHoverBg            = #0A142E
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #00050F
+PurpleBlobBg          = #12082E
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #000208
+ConsoleFg             = #00B7EE
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #050D1E
+ScrollBarThumb        = #0E1E3E
+ScrollBarThumbHover   = #00439C
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #00C08B
+StatusWarning         = #F0C040
+StatusError           = #E01A4F
+StatusInfo            = #00439C
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #002A20
+BgStatusWarn          = #282000
+BgStatusErr           = #280010
+BgStatusInfo          = #002060
+FgStatusOk            = #00C08B
+FgStatusWarn          = #F0C040
+FgStatusErr           = #E01A4F
+FgStatusInfo          = #00439C

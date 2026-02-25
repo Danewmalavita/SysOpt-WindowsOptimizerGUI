@@ -1,0 +1,101 @@
+# SysOpt Theme — default-light.theme
+# Tema claro — v4.0
+# TODOS los colores adaptan al fondo claro, incluyendo textos hardcodeados vía AccentBlue/TextPrimary
+
+[meta]
+Name        = Default Light
+Author      = Danew Malavita
+Version     = 4.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #C8D0E8
+BgCard                = #F4F6FF
+BgInput               = #B0BCE0
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #9AA8CC
+BorderActive          = #1040B8
+BorderHover           = #6070A8
+# ── Acentos — usados también para textos hardcodeados que usan AccentBlue ────
+# AccentBlue sustituye #5BA3FF (hardcoded) — debe ser oscuro en light
+AccentBlue            = #1040B8
+AccentCyan            = #005A50
+AccentAmber           = #7A3C00
+AccentRed             = #A00828
+AccentGreen           = #0A5C30
+AccentPurple          = #4A2CB0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+# TextPrimary sustituye #E8ECF4/#F0F3FA/#E0E8F4 (hardcoded) — DEBE ser oscuro
+TextPrimary           = #050810
+TextSecondary         = #141C38
+TextMuted             = #404870
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #1040B8
+ProgressEnd           = #005A50
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #1040B8
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #0830A0
+BtnPrimaryHover       = #0830A0
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #D0D8F0
+BtnSecondaryFg        = #141C38
+BtnSecondaryBorder    = #8898C8
+BtnSecondaryHover     = #B8C4E4
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #9ACFCA
+BtnCyanFg             = #002820
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #E8CC98
+BtnAmberFg            = #502800
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #E8A8B4
+BtnDangerFg           = #600010
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #C8D4EE
+BtnGhostBorder        = #8090C0
+BtnGhostFg            = #323860
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #CDD8F0
+HdrBtnBorder          = #8898C8
+HdrBtnHover           = #B8C4E4
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #9ACECA
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #A8C4FF
+ComboSelected         = #8CB0F8
+ComboSelectedFg       = #0828A0
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #ACC4FF
+CtxSepFill            = #9AAAD0
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #D0D8F0
+DetailBorder          = #8898C8
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #F4F6FF
+TabHoverBg            = #D0D8F0
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #E0E8F8
+PurpleBlobBg          = #D4CCFF
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #D8DCF0
+ConsoleFg             = #084020
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #B8C4E0
+ScrollBarThumb        = #7888B8
+ScrollBarThumbHover   = #4858A0
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #0A5C30
+StatusWarning         = #7A3C00
+StatusError           = #A00828
+StatusInfo            = #1040B8
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #C8F0D8
+BgStatusWarn          = #F0E0B0
+BgStatusErr           = #F0C0C8
+BgStatusInfo          = #C0D8F8
+FgStatusOk            = #0A5C30
+FgStatusWarn          = #7A3C00
+FgStatusErr           = #A00828
+FgStatusInfo          = #1040B8

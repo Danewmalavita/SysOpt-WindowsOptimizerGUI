@@ -1,0 +1,100 @@
+# SysOpt Theme — manga-japan.theme
+# Manga Japan — tinta negra, rojo torii, blanco papel, dorado sello hanko
+# Estética shōnen/seinen de alto contraste
+# v1.0
+
+[meta]
+Name        = Manga Japan
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0A0A0C
+BgCard                = #111118
+BgInput               = #1A1A22
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #2A2A38
+BorderActive          = #D41A1A
+BorderHover           = #3A3A50
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #D41A1A
+AccentCyan            = #E8C840
+AccentAmber           = #E8A820
+AccentRed             = #FF2828
+AccentGreen           = #68C878
+AccentPurple          = #A050D0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #F0EEE8
+TextSecondary         = #B8B8C8
+TextMuted             = #707088
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #D41A1A
+ProgressEnd           = #E8C840
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #8A0808
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #D41A1A
+BtnPrimaryHover       = #D41A1A
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #1A1A22
+BtnSecondaryFg        = #B8B8C8
+BtnSecondaryBorder    = #2A2A38
+BtnSecondaryHover     = #2A2A38
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #281E00
+BtnCyanFg             = #E8C840
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #281800
+BtnAmberFg            = #E8A820
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #280000
+BtnDangerFg           = #FF2828
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #1A1A22
+BtnGhostBorder        = #2A2A38
+BtnGhostFg            = #707088
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #1A1A22
+HdrBtnBorder          = #2A2A38
+HdrBtnHover           = #2A2A38
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #0A0810
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #280A0A
+ComboSelected         = #3A0808
+ComboSelectedFg       = #D41A1A
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #280A0A
+CtxSepFill            = #2A2A38
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #1A1A22
+DetailBorder          = #2A2A38
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #111118
+TabHoverBg            = #1A1A22
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0A0A0C
+PurpleBlobBg          = #180A28
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #050506
+ConsoleFg             = #D41A1A
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #111118
+ScrollBarThumb        = #2A2A38
+ScrollBarThumbHover   = #D41A1A
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #68C878
+StatusWarning         = #E8A820
+StatusError           = #FF2828
+StatusInfo            = #E8C840
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #0A1E0A
+BgStatusWarn          = #1E1400
+BgStatusErr           = #1E0000
+BgStatusInfo          = #201800
+FgStatusOk            = #68C878
+FgStatusWarn          = #E8A820
+FgStatusErr           = #FF2828
+FgStatusInfo          = #E8C840

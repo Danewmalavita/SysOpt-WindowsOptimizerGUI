@@ -1,0 +1,98 @@
+# SysOpt Theme — starwars.theme
+# Tema inspirado en Star Wars — "May the Force be with you" — v1.0
+
+[meta]
+Name        = Star Wars
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #00000A
+BgCard                = #06060F
+BgInput               = #0E0E1A
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #1A1A30
+BorderActive          = #FFE81C
+BorderHover           = #282840
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #4DA6FF
+AccentCyan            = #00BFFF
+AccentAmber           = #FFE81C
+AccentRed             = #FF2200
+AccentGreen           = #4DFF91
+AccentPurple          = #9B59B6
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #F0F0FF
+TextSecondary         = #9090C0
+TextMuted             = #404060
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #FFE81C
+ProgressEnd           = #4DA6FF
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #2A2200
+BtnPrimaryFg          = #FFE81C
+BtnPrimaryBorder      = #FFE81C
+BtnPrimaryHover       = #FFE81C
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #0E0E1A
+BtnSecondaryFg        = #9090C0
+BtnSecondaryBorder    = #1A1A30
+BtnSecondaryHover     = #1A1A30
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #001828
+BtnCyanFg             = #00BFFF
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #1E1A00
+BtnAmberFg            = #FFE81C
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #1E0500
+BtnDangerFg           = #FF2200
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #06060F
+BtnGhostBorder        = #1A1A30
+BtnGhostFg            = #404060
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #0E0E1A
+HdrBtnBorder          = #1A1A30
+HdrBtnHover           = #282840
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #001828
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #18183A
+ComboSelected         = #2A2200
+ComboSelectedFg       = #FFE81C
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #18183A
+CtxSepFill            = #1A1A30
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #0E0E1A
+DetailBorder          = #1A1A30
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #06060F
+TabHoverBg            = #0E0E1A
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #00000A
+PurpleBlobBg          = #120A20
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #000005
+ConsoleFg             = #FFE81C
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #06060F
+ScrollBarThumb        = #1A1A30
+ScrollBarThumbHover   = #FFE81C
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #4DFF91
+StatusWarning         = #FFE81C
+StatusError           = #FF2200
+StatusInfo            = #4DA6FF
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #002210
+BgStatusWarn          = #1E1A00
+BgStatusErr           = #1E0500
+BgStatusInfo          = #001828
+FgStatusOk            = #4DFF91
+FgStatusWarn          = #FFE81C
+FgStatusErr           = #FF2200
+FgStatusInfo          = #4DA6FF

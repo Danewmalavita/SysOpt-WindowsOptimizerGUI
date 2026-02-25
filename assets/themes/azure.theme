@@ -1,0 +1,98 @@
+# SysOpt Theme — azure.theme
+# Tema inspirado en Microsoft Azure Cloud — v1.0
+
+[meta]
+Name        = Microsoft Azure
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #020F1F
+BgCard                = #0A1A2E
+BgInput               = #0F2540
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #1A3A5C
+BorderActive          = #0078D4
+BorderHover           = #1E4A72
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #0078D4
+AccentCyan            = #00BCF2
+AccentAmber           = #FFB900
+AccentRed             = #D13438
+AccentGreen           = #107C10
+AccentPurple          = #8764B8
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #E8F4FD
+TextSecondary         = #7FB3D3
+TextMuted             = #3D6B8A
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #0078D4
+ProgressEnd           = #00BCF2
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #003F73
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #0078D4
+BtnPrimaryHover       = #0078D4
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #0F2540
+BtnSecondaryFg        = #7FB3D3
+BtnSecondaryBorder    = #1A3A5C
+BtnSecondaryHover     = #1A3A5C
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #003040
+BtnCyanFg             = #00BCF2
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #2A2000
+BtnAmberFg            = #FFB900
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #2A0A0B
+BtnDangerFg           = #D13438
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #0A1A2E
+BtnGhostBorder        = #1A3A5C
+BtnGhostFg            = #3D6B8A
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #0F2540
+HdrBtnBorder          = #1A3A5C
+HdrBtnHover           = #1E4A72
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #003040
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #0F2E50
+ComboSelected         = #003F73
+ComboSelectedFg       = #0078D4
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #0F2E50
+CtxSepFill            = #1A3A5C
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #0F2540
+DetailBorder          = #1A3A5C
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #0A1A2E
+TabHoverBg            = #0F2540
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #020F1F
+PurpleBlobBg          = #1A0F2E
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #000D1A
+ConsoleFg             = #00BCF2
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #0A1A2E
+ScrollBarThumb        = #1A3A5C
+ScrollBarThumbHover   = #0078D4
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #107C10
+StatusWarning         = #FFB900
+StatusError           = #D13438
+StatusInfo            = #0078D4
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #0A2A0A
+BgStatusWarn          = #2A2000
+BgStatusErr           = #2A0A0B
+BgStatusInfo          = #003F73
+FgStatusOk            = #107C10
+FgStatusWarn          = #FFB900
+FgStatusErr           = #D13438
+FgStatusInfo          = #0078D4

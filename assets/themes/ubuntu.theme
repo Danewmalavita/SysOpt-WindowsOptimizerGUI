@@ -1,0 +1,98 @@
+# SysOpt Theme — ubuntu.theme
+# Tema inspirado en Ubuntu Linux / GNOME — v1.0
+
+[meta]
+Name        = Ubuntu Linux
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #1A0A00
+BgCard                = #2B1500
+BgInput               = #3A1E00
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #4A2800
+BorderActive          = #E95420
+BorderHover           = #6A3800
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #77216F
+AccentCyan            = #5E2750
+AccentAmber           = #F9A825
+AccentRed             = #E95420
+AccentGreen           = #38A03C
+AccentPurple          = #77216F
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #F5E6D0
+TextSecondary         = #C4956A
+TextMuted             = #7A5230
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #E95420
+ProgressEnd           = #F9A825
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #7A2800
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #E95420
+BtnPrimaryHover       = #E95420
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #3A1E00
+BtnSecondaryFg        = #C4956A
+BtnSecondaryBorder    = #4A2800
+BtnSecondaryHover     = #4A2800
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #2A0A2A
+BtnCyanFg             = #77216F
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #2E2400
+BtnAmberFg            = #F9A825
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #3A0C00
+BtnDangerFg           = #E95420
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #2B1500
+BtnGhostBorder        = #4A2800
+BtnGhostFg            = #7A5230
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #3A1E00
+HdrBtnBorder          = #4A2800
+HdrBtnHover           = #6A3800
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #2A0A2A
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #4A2800
+ComboSelected         = #7A2800
+ComboSelectedFg       = #E95420
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #4A2800
+CtxSepFill            = #4A2800
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #3A1E00
+DetailBorder          = #4A2800
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #2B1500
+TabHoverBg            = #3A1E00
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #1A0A00
+PurpleBlobBg          = #2A0A2A
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #0F0500
+ConsoleFg             = #E95420
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #2B1500
+ScrollBarThumb        = #4A2800
+ScrollBarThumbHover   = #E95420
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #38A03C
+StatusWarning         = #F9A825
+StatusError           = #E95420
+StatusInfo            = #77216F
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #0A2A0A
+BgStatusWarn          = #2E2400
+BgStatusErr           = #3A0C00
+BgStatusInfo          = #2A0A2A
+FgStatusOk            = #38A03C
+FgStatusWarn          = #F9A825
+FgStatusErr           = #E95420
+FgStatusInfo          = #77216F
