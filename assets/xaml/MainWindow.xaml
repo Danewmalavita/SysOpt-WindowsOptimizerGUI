@@ -1,0 +1,1734 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SysOpt - Windows Optimizer GUI v3.1.0" Height="980" Width="1220"
+        WindowStartupLocation="CenterScreen" ResizeMode="CanResize"
+        Background="{DynamicResource TB_0D0F1A}">
+    <Window.Resources>
+        <!-- Theme DynamicResource Brushes -->
+        <SolidColorBrush x:Key="TB_00D4B4" Color="#00D4B4"/>
+        <SolidColorBrush x:Key="TB_080A14" Color="#080A14"/>
+        <SolidColorBrush x:Key="TB_0D0F1A" Color="#0D0F1A"/>
+        <SolidColorBrush x:Key="TB_0E2E2A" Color="#0E2E2A"/>
+        <SolidColorBrush x:Key="TB_131625" Color="#131625"/>
+        <SolidColorBrush x:Key="TB_132040" Color="#132040"/>
+        <SolidColorBrush x:Key="TB_161925" Color="#161925"/>
+        <SolidColorBrush x:Key="TB_163530" Color="#163530"/>
+        <SolidColorBrush x:Key="TB_181D2E" Color="#181D2E"/>
+        <SolidColorBrush x:Key="TB_182A1E" Color="#182A1E"/>
+        <SolidColorBrush x:Key="TB_1A1E2A" Color="#1A1E2A"/>
+        <SolidColorBrush x:Key="TB_1A1E2F" Color="#1A1E2F"/>
+        <SolidColorBrush x:Key="TB_1A2035" Color="#1A2035"/>
+        <SolidColorBrush x:Key="TB_1A2040" Color="#1A2040"/>
+        <SolidColorBrush x:Key="TB_1A2540" Color="#1A2540"/>
+        <SolidColorBrush x:Key="TB_1A2F4A" Color="#1A2F4A"/>
+        <SolidColorBrush x:Key="TB_1A3A5C" Color="#1A3A5C"/>
+        <SolidColorBrush x:Key="TB_1A4A35" Color="#1A4A35"/>
+        <SolidColorBrush x:Key="TB_1A6B3E" Color="#1A6B3E"/>
+        <SolidColorBrush x:Key="TB_1E2235" Color="#1E2235"/>
+        <SolidColorBrush x:Key="TB_1E3058" Color="#1E3058"/>
+        <SolidColorBrush x:Key="TB_1E3A5C" Color="#1E3A5C"/>
+        <SolidColorBrush x:Key="TB_252A38" Color="#252A38"/>
+        <SolidColorBrush x:Key="TB_252B3B" Color="#252B3B"/>
+        <SolidColorBrush x:Key="TB_252B40" Color="#252B40"/>
+        <SolidColorBrush x:Key="TB_253060" Color="#253060"/>
+        <SolidColorBrush x:Key="TB_28C874" Color="#28C874"/>
+        <SolidColorBrush x:Key="TB_2A1018" Color="#2A1018"/>
+        <SolidColorBrush x:Key="TB_2A1A4A" Color="#2A1A4A"/>
+        <SolidColorBrush x:Key="TB_2A2010" Color="#2A2010"/>
+        <SolidColorBrush x:Key="TB_2A2F48" Color="#2A2F48"/>
+        <SolidColorBrush x:Key="TB_2A3048" Color="#2A3048"/>
+        <SolidColorBrush x:Key="TB_2A3448" Color="#2A3448"/>
+        <SolidColorBrush x:Key="TB_2A3A5A" Color="#2A3A5A"/>
+        <SolidColorBrush x:Key="TB_2E0E14" Color="#2E0E14"/>
+        <SolidColorBrush x:Key="TB_2E1E08" Color="#2E1E08"/>
+        <SolidColorBrush x:Key="TB_2E3650" Color="#2E3650"/>
+        <SolidColorBrush x:Key="TB_2EDFBF" Color="#2EDFBF"/>
+        <SolidColorBrush x:Key="TB_2FD980" Color="#2FD980"/>
+        <SolidColorBrush x:Key="TB_3A2010" Color="#3A2010"/>
+        <SolidColorBrush x:Key="TB_3A4060" Color="#3A4060"/>
+        <SolidColorBrush x:Key="TB_3A4468" Color="#3A4468"/>
+        <SolidColorBrush x:Key="TB_3D5080" Color="#3D5080"/>
+        <SolidColorBrush x:Key="TB_3D8EFF" Color="#3D8EFF"/>
+        <SolidColorBrush x:Key="TB_4A3010" Color="#4A3010"/>
+        <SolidColorBrush x:Key="TB_4AE896" Color="#4AE896"/>
+        <SolidColorBrush x:Key="TB_5AE88A" Color="#5AE88A"/>
+        <SolidColorBrush x:Key="TB_5BA3FF" Color="#5BA3FF"/>
+        <SolidColorBrush x:Key="TB_6ABDA0" Color="#6ABDA0"/>
+        <SolidColorBrush x:Key="TB_6B7A9E" Color="#6B7A9E"/>
+        <SolidColorBrush x:Key="TB_7880A0" Color="#7880A0"/>
+        <SolidColorBrush x:Key="TB_7BA8E0" Color="#7BA8E0"/>
+        <SolidColorBrush x:Key="TB_8B96B8" Color="#8B96B8"/>
+        <SolidColorBrush x:Key="TB_9B7EFF" Color="#9B7EFF"/>
+        <SolidColorBrush x:Key="TB_9BA4C0" Color="#9BA4C0"/>
+        <SolidColorBrush x:Key="TB_A47CFF" Color="#A47CFF"/>
+        <SolidColorBrush x:Key="TB_B0BACC" Color="#B0BACC"/>
+        <SolidColorBrush x:Key="TB_C07AFF" Color="#C07AFF"/>
+        <SolidColorBrush x:Key="TB_C0933A" Color="#C0933A"/>
+        <SolidColorBrush x:Key="TB_CC2244" Color="#CC2244"/>
+        <SolidColorBrush x:Key="TB_D0D8F0" Color="#D0D8F0"/>
+        <SolidColorBrush x:Key="TB_D4850A" Color="#D4850A"/>
+        <SolidColorBrush x:Key="TB_D4D9E8" Color="#D4D9E8"/>
+        <SolidColorBrush x:Key="TB_E0E8F4" Color="#E0E8F4"/>
+        <SolidColorBrush x:Key="TB_E8ECF4" Color="#E8ECF4"/>
+        <SolidColorBrush x:Key="TB_F0F3FA" Color="#F0F3FA"/>
+        <SolidColorBrush x:Key="TB_F5A623" Color="#F5A623"/>
+        <SolidColorBrush x:Key="TB_FF4D6A" Color="#FF4D6A"/>
+        <SolidColorBrush x:Key="TB_FF6B84" Color="#FF6B84"/>
+        <SolidColorBrush x:Key="TB_FFB547" Color="#FFB547"/>
+        <SolidColorBrush x:Key="TB_FFFFFF" Color="#FFFFFF"/>
+
+
+        <!-- ── Colores base ── -->
+        <SolidColorBrush x:Key="BgDeep"       Color="#0D0F1A"/>
+        <SolidColorBrush x:Key="BgCard"        Color="#131625"/>
+        <SolidColorBrush x:Key="BgCardHover"   Color="#1A1E2F"/>
+        <SolidColorBrush x:Key="BorderSubtle"  Color="#252B40"/>
+        <SolidColorBrush x:Key="BorderActive"  Color="#5BA3FF"/>
+        <SolidColorBrush x:Key="AccentBlue"    Color="#5BA3FF"/>
+        <SolidColorBrush x:Key="AccentCyan"    Color="#2EDFBF"/>
+        <SolidColorBrush x:Key="AccentAmber"   Color="#FFB547"/>
+        <SolidColorBrush x:Key="AccentRed"     Color="#FF6B84"/>
+        <SolidColorBrush x:Key="AccentGreen"   Color="#4AE896"/>
+        <SolidColorBrush x:Key="TextPrimary"   Color="#E8ECF4"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#B0BACC"/>
+        <SolidColorBrush x:Key="TextMuted"     Color="#7880A0"/>
+        <!-- ── Recursos adicionales para theming dinámico ── -->
+        <SolidColorBrush x:Key="AccentPurple"       Color="#A47CFF"/>
+        <SolidColorBrush x:Key="BgInput"             Color="#1E2235"/>
+        <SolidColorBrush x:Key="BorderHover"         Color="#3A4060"/>
+        <SolidColorBrush x:Key="ProgressStart"       Color="#5BA3FF"/>
+        <SolidColorBrush x:Key="ProgressEnd"         Color="#4AE896"/>
+        <SolidColorBrush x:Key="BtnPrimaryBg"        Color="#1A6B3E"/>
+        <SolidColorBrush x:Key="BtnPrimaryFg"        Color="#2FD980"/>
+        <SolidColorBrush x:Key="BtnPrimaryBorder"    Color="#2FD980"/>
+        <SolidColorBrush x:Key="BtnPrimaryHover"     Color="#2FD980"/>
+        <SolidColorBrush x:Key="BtnSecondaryBg"      Color="#132040"/>
+        <SolidColorBrush x:Key="BtnSecondaryFg"      Color="#3D8EFF"/>
+        <SolidColorBrush x:Key="BtnSecondaryBorder"  Color="#3D8EFF"/>
+        <SolidColorBrush x:Key="BtnSecondaryHover"   Color="#3D8EFF"/>
+        <SolidColorBrush x:Key="BtnCyanBg"           Color="#0E2E2A"/>
+        <SolidColorBrush x:Key="BtnCyanFg"           Color="#00D4B4"/>
+        <SolidColorBrush x:Key="BtnAmberBg"          Color="#2E1E08"/>
+        <SolidColorBrush x:Key="BtnAmberFg"          Color="#F5A623"/>
+        <SolidColorBrush x:Key="BtnDangerBg"         Color="#2E0E14"/>
+        <SolidColorBrush x:Key="BtnDangerFg"         Color="#FF4D6A"/>
+        <SolidColorBrush x:Key="BtnGhostBg"          Color="#1A1E2A"/>
+        <SolidColorBrush x:Key="BtnGhostBorder"      Color="#252A38"/>
+        <SolidColorBrush x:Key="BtnGhostFg"          Color="#9BA4C0"/>
+        <SolidColorBrush x:Key="HdrBtnBg"            Color="#1A2040"/>
+        <SolidColorBrush x:Key="HdrBtnBorder"        Color="#3D5080"/>
+        <SolidColorBrush x:Key="HdrBtnHover"         Color="#253060"/>
+        <SolidColorBrush x:Key="DryRunBg"            Color="#163530"/>
+        <SolidColorBrush x:Key="ComboHover"          Color="#1E3A5C"/>
+        <SolidColorBrush x:Key="ComboSelected"       Color="#132040"/>
+        <SolidColorBrush x:Key="ComboSelectedFg"     Color="#5BA3FF"/>
+        <SolidColorBrush x:Key="CtxHover"            Color="#1E3058"/>
+        <SolidColorBrush x:Key="CtxSepFill"          Color="#2A3448"/>
+        <SolidColorBrush x:Key="LbItemHover"         Color="#1A1E2F"/>
+        <SolidColorBrush x:Key="DetailBorder"        Color="#252B40"/>
+        <SolidColorBrush x:Key="TabSelectedBg"       Color="#2E3650"/>
+        <SolidColorBrush x:Key="TabHoverBg"          Color="#2A3048"/>
+        <SolidColorBrush x:Key="BgCardDark"          Color="#131625"/>
+        <SolidColorBrush x:Key="ConsoleBg"           Color="#080A14"/>
+        <SolidColorBrush x:Key="ConsoleFg"           Color="#4AE896"/>
+        <SolidColorBrush x:Key="ScrollBarTrack"      Color="#161925"/>
+        <SolidColorBrush x:Key="ScrollBarThumb"      Color="#2A2F48"/>
+        <SolidColorBrush x:Key="ScrollBarThumbHover" Color="#5BA3FF"/>
+        <SolidColorBrush x:Key="StatusSuccess"       Color="#4AE896"/>
+        <SolidColorBrush x:Key="StatusWarning"       Color="#FFB547"/>
+        <SolidColorBrush x:Key="StatusError"         Color="#FF6B84"/>
+        <SolidColorBrush x:Key="StatusInfo"          Color="#5BA3FF"/>
+        <SolidColorBrush x:Key="BgStatusOk"          Color="#182A1E"/>
+        <SolidColorBrush x:Key="BgStatusWarn"        Color="#2A2010"/>
+        <SolidColorBrush x:Key="BgStatusErr"         Color="#2A1018"/>
+        <SolidColorBrush x:Key="BgStatusInfo"        Color="#1A2F4A"/>
+        <SolidColorBrush x:Key="FgStatusOk"          Color="#4AE896"/>
+        <SolidColorBrush x:Key="FgStatusWarn"        Color="#FFB547"/>
+        <SolidColorBrush x:Key="FgStatusErr"         Color="#FF6B84"/>
+        <SolidColorBrush x:Key="FgStatusInfo"        Color="#5BA3FF"/>
+
+        <!-- Gradiente de acento para la barra de progreso -->
+        <LinearGradientBrush x:Key="ProgressGradient" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#5BA3FF" Offset="0"/>
+            <GradientStop Color="#2EDFBF" Offset="1"/>
+        </LinearGradientBrush>
+
+        <!-- ── Background: grid de líneas finas + blobs de color ── -->
+        <VisualBrush x:Key="GridBrush" TileMode="Tile"
+                     Viewport="0,0,40,40" ViewportUnits="Absolute"
+                     Viewbox="0,0,40,40"  ViewboxUnits="Absolute">
+            <VisualBrush.Visual>
+                <Canvas Width="40" Height="40">
+                    <!-- línea horizontal -->
+                    <Line X1="0" Y1="0" X2="40" Y2="0"
+                          Stroke="{DynamicResource TB_5BA3FF}" StrokeThickness="0.6" Opacity="0.22"/>
+                    <!-- línea vertical -->
+                    <Line X1="0" Y1="0" X2="0" Y2="40"
+                          Stroke="{DynamicResource TB_5BA3FF}" StrokeThickness="0.6" Opacity="0.22"/>
+                </Canvas>
+            </VisualBrush.Visual>
+        </VisualBrush>
+
+        <!-- Estilo de botón base -->
+        <Style x:Key="BtnBase" TargetType="Button">
+            <Setter Property="FontFamily"      Value="Segoe UI"/>
+            <Setter Property="FontSize"        Value="12"/>
+            <Setter Property="FontWeight"      Value="SemiBold"/>
+            <Setter Property="Height"          Value="36"/>
+            <Setter Property="Padding"         Value="16,0"/>
+            <Setter Property="Margin"          Value="4,0"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" CornerRadius="8"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.82"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.65"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Botón primario (verde) -->
+        <Style x:Key="BtnPrimary" TargetType="Button" BasedOn="{StaticResource BtnBase}">
+            <Setter Property="Background"    Value="{DynamicResource BtnPrimaryBg}"/>
+            <Setter Property="BorderBrush"   Value="{DynamicResource BtnPrimaryBorder}"/>
+            <Setter Property="Foreground"    Value="{DynamicResource BtnPrimaryFg}"/>
+        </Style>
+
+        <!-- Botón secundario (azul) -->
+        <Style x:Key="BtnSecondary" TargetType="Button" BasedOn="{StaticResource BtnBase}">
+            <Setter Property="Background"    Value="{DynamicResource BtnSecondaryBg}"/>
+            <Setter Property="BorderBrush"   Value="{DynamicResource BtnSecondaryBorder}"/>
+            <Setter Property="Foreground"    Value="{DynamicResource BtnSecondaryFg}"/>
+        </Style>
+
+        <!-- Botón cyan (analizar) -->
+        <Style x:Key="BtnCyan" TargetType="Button" BasedOn="{StaticResource BtnBase}">
+            <Setter Property="Background"    Value="{DynamicResource BtnCyanBg}"/>
+            <Setter Property="BorderBrush"   Value="{DynamicResource BtnCyanFg}"/>
+            <Setter Property="Foreground"    Value="{DynamicResource BtnCyanFg}"/>
+        </Style>
+
+        <!-- Botón amber (cancelar) -->
+        <Style x:Key="BtnAmber" TargetType="Button" BasedOn="{StaticResource BtnBase}">
+            <Setter Property="Background"    Value="{DynamicResource BtnAmberBg}"/>
+            <Setter Property="BorderBrush"   Value="{DynamicResource BtnAmberFg}"/>
+            <Setter Property="Foreground"    Value="{DynamicResource BtnAmberFg}"/>
+        </Style>
+
+        <!-- Botón rojo (salir) -->
+        <Style x:Key="BtnDanger" TargetType="Button" BasedOn="{StaticResource BtnBase}">
+            <Setter Property="Background"    Value="{DynamicResource BtnDangerBg}"/>
+            <Setter Property="BorderBrush"   Value="{DynamicResource BtnDangerFg}"/>
+            <Setter Property="Foreground"    Value="{DynamicResource BtnDangerFg}"/>
+        </Style>
+
+        <!-- Botón fantasma (guardar log) -->
+        <Style x:Key="BtnGhost" TargetType="Button" BasedOn="{StaticResource BtnBase}">
+            <Setter Property="Background"    Value="{DynamicResource BtnGhostBg}"/>
+            <Setter Property="BorderBrush"   Value="{DynamicResource BtnGhostBorder}"/>
+            <Setter Property="Foreground"    Value="{DynamicResource BtnGhostFg}"/>
+        </Style>
+
+        <!-- CheckBox moderno -->
+        <Style TargetType="CheckBox">
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="12"/>
+            <Setter Property="Foreground"  Value="{DynamicResource TB_D4D9E8}"/>
+            <Setter Property="Margin"      Value="0,4"/>
+            <Setter Property="Cursor"      Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border x:Name="box" Width="18" Height="18" CornerRadius="5"
+                                    Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1.5"
+                                    Margin="0,0,9,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="chk" Text="✓" FontSize="11" FontWeight="Bold"
+                                           Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" Visibility="Collapsed"/>
+                            </Border>
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="box" Property="Background"    Value="{DynamicResource TB_132040}"/>
+                                <Setter TargetName="box" Property="BorderBrush"   Value="{DynamicResource TB_3D8EFF}"/>
+                                <Setter TargetName="chk" Property="Visibility"    Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ScrollBar delgado -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="5"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <!-- ── ComboBox temático oscuro (sin ControlTemplate complejo) ── -->
+        <Style TargetType="ComboBox">
+            <Setter Property="FontFamily"      Value="Segoe UI"/>
+            <Setter Property="FontSize"        Value="11"/>
+            <Setter Property="Foreground"      Value="{DynamicResource TB_E8ECF4}"/>
+            <Setter Property="Background"      Value="{DynamicResource TB_1A1E2F}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource TB_3A4468}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="6,3"/>
+        </Style>
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="11"/>
+            <Setter Property="Foreground"  Value="{DynamicResource TB_E8ECF4}"/>
+            <Setter Property="Background"  Value="{DynamicResource TB_1A1E2F}"/>
+            <Setter Property="Padding"     Value="8,5"/>
+            <Setter Property="Cursor"      Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderThickness="0" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_1E3A5C}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_132040}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TB_5BA3FF}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── ContextMenu temático oscuro ── -->
+        <Style TargetType="ContextMenu">
+            <Setter Property="Background"      Value="{DynamicResource TB_1A1E2F}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource TB_3A4468}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_3A4468}" BorderThickness="1"
+                                CornerRadius="8" Padding="4,4">
+                                                        <ItemsPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── MenuItem temático (sin ContentSource="Icon" que requiere role) ── -->
+        <Style TargetType="MenuItem">
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="12"/>
+            <Setter Property="Foreground"  Value="{DynamicResource TB_E8ECF4}"/>
+            <Setter Property="Background"  Value="Transparent"/>
+            <Setter Property="Padding"     Value="10,6"/>
+            <Setter Property="Cursor"      Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="5" Margin="2,1"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_1E3058}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="MenuItemDanger" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Foreground" Value="{DynamicResource TB_FF6B84}"/>
+        </Style>
+
+        <!-- ── Separator temático ── -->
+        <Style TargetType="Separator">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Rectangle Height="1" Fill="{DynamicResource TB_2A3448}" Margin="8,3"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ProgressBar con gradiente -->
+        <Style TargetType="ProgressBar">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border CornerRadius="4" Background="{DynamicResource TB_1A1E2F}"
+                                BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1" Height="6">
+                            <Border x:Name="PART_Track">
+                                <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="4">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#5BA3FF" Offset="0"/>
+                                            <GradientStop Color="#2EDFBF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                            </Border>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Window.Resources>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         FONDO: cuadrícula sutil + blobs de color difuminados
+         Mismo estilo que la hoja de ruta HTML del proyecto.
+         ══════════════════════════════════════════════════════════════════ -->
+    <Grid>
+        <!-- Capa 1: fondo sólido oscuro -->
+        <Rectangle Fill="{DynamicResource TB_0D0F1A}"/>
+
+        <!-- Capa 2: cuadrícula de líneas finas (VisualBrush en tile) -->
+        <Rectangle Fill="{StaticResource GridBrush}" Opacity="1"/>
+
+        <!-- Capa 3: blob azul — esquina superior izquierda -->
+        <Ellipse Width="600" Height="600" Opacity="0.13"
+                 HorizontalAlignment="Left" VerticalAlignment="Top"
+                 Margin="-180,-180,0,0">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#5BA3FF" Offset="0"/>
+                    <GradientStop Color="Transparent" Offset="1"/>
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+
+        <!-- Capa 4: blob cyan — esquina inferior derecha -->
+        <Ellipse Width="500" Height="500" Opacity="0.13"
+                 HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                 Margin="0,0,-160,-160">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#2EDFBF" Offset="0"/>
+                    <GradientStop Color="Transparent" Offset="1"/>
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+
+        <!-- Capa 5: blob púrpura — centro -->
+        <Ellipse Width="380" Height="380" Opacity="0.11"
+                 HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#9B7EFF" Offset="0"/>
+                    <GradientStop Color="Transparent" Offset="1"/>
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+
+        <!-- Capa 6: todo el contenido de la app encima -->
+        <Grid Margin="16,12,16,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>   <!-- Header -->
+                <RowDefinition Height="Auto"/>   <!-- Sysinfo bar + Charts -->
+                <RowDefinition Height="*"/>      <!-- Opciones scroll -->
+                <RowDefinition Name="OutputRow" Height="200"/>    <!-- Consola -->
+                <RowDefinition Height="Auto"/>   <!-- Footer/botones -->
+            </Grid.RowDefinitions>
+
+            <!-- ═══ HEADER ═══════════════════════════════════════════ -->
+            <Grid Grid.Row="0" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Logo SysOpt -->
+                    <Image Name="imgLogo" Width="48" Height="48" Margin="0,0,12,0" VerticalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock FontFamily="Segoe UI" FontSize="22" FontWeight="Bold"
+                                   Foreground="{DynamicResource TB_E8ECF4}">
+                            <Run Text="SYS"/>
+                            <Run Foreground="{DynamicResource TB_5BA3FF}" Text="OPT"/>
+                            <Run Foreground="{DynamicResource TB_B0BACC}" FontSize="13" FontWeight="Normal" Text="  v3.1.0  ·  Windows Optimizer GUI"/>
+                        </TextBlock>
+                        <TextBlock Name="StatusText" FontFamily="Segoe UI" FontSize="11"
+                                   Foreground="{DynamicResource TB_9BA4C0}" Margin="2,3,0,0"
+                                   Text="Listo para optimizar"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Controles derecha del header: Tareas + Acerca de + Modo Análisis -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Botón Tareas en segundo plano -->
+                    <Button Name="btnShowTasks"
+                            Width="32" Height="32" Padding="0" Margin="0,0,8,0"
+                            Background="{DynamicResource TB_1A2040}" BorderBrush="{DynamicResource TB_3D5080}" BorderThickness="1"
+                            Foreground="{DynamicResource TB_9BA4C0}" FontFamily="Segoe UI" FontSize="15" FontWeight="Bold"
+                            Cursor="Hand" ToolTip="Tareas en segundo plano">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" CornerRadius="8"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_253060}"/>
+                                        <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource TB_FFB547}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <TextBlock Text="⚡" FontSize="15" Foreground="{DynamicResource TB_FFB547}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    <!-- Botón Opciones (Temas/Idioma) -->
+                    <Button Name="btnOptions"
+                            Width="32" Height="32" Padding="0" Margin="0,0,8,0"
+                            Background="{DynamicResource TB_1A2040}" BorderBrush="{DynamicResource TB_3D5080}" BorderThickness="1"
+                            Foreground="{DynamicResource TB_9BA4C0}" FontFamily="Segoe UI" FontSize="15" FontWeight="Bold"
+                            Cursor="Hand" ToolTip="Opciones — Tema e Idioma">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" CornerRadius="8"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_253060}"/>
+                                        <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource TB_A47CFF}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <TextBlock Text="⚙" FontSize="15" Foreground="{DynamicResource TB_A47CFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    <!-- Botón Acerca de la versión -->
+                    <Button Name="btnAbout"
+                            Width="32" Height="32" Padding="0" Margin="0,0,8,0"
+                            Background="{DynamicResource TB_1A2040}" BorderBrush="{DynamicResource TB_3D5080}" BorderThickness="1"
+                            Foreground="{DynamicResource TB_9BA4C0}" FontFamily="Segoe UI" FontSize="15" FontWeight="Bold"
+                            Cursor="Hand" ToolTip="Acerca de SysOpt — Novedades de la versión">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" CornerRadius="8"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_253060}"/>
+                                        <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource TB_5BA3FF}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <TextBlock Text="ℹ" FontSize="15" Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    <!-- Modo Dry Run toggle -->
+                    <Border CornerRadius="8" Background="{DynamicResource TB_163530}"
+                            BorderBrush="{DynamicResource TB_2EDFBF}" BorderThickness="1"
+                            Padding="14,8" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox Name="chkDryRun" VerticalAlignment="Center">
+                                <CheckBox.Content>
+                                    <TextBlock FontFamily="Segoe UI" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TB_2EDFBF}" Text="MODO ANÁLISIS  (sin cambios)"/>
+                                </CheckBox.Content>
+                            </CheckBox>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- ═══ SYSINFO BAR + CHARTS ══════════════════════════════════ -->
+            <Border Grid.Row="1" CornerRadius="10" Background="{DynamicResource TB_1A1E2F}"
+                    BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1"
+                    Padding="16,12" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- CPU Panel + Chart -->
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                            <Border Width="22" Height="22" CornerRadius="5" Background="{DynamicResource TB_1A3A5C}" Margin="0,0,7,0" VerticalAlignment="Center">
+                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="CPU" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
+                                      Foreground="{DynamicResource TB_7BA8E0}" VerticalAlignment="Center"/>
+                            <TextBlock Name="CpuPctText" Text="  0%" FontFamily="Segoe UI" FontSize="10"
+                                       FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Name="InfoCPU" Text="—" FontFamily="Segoe UI" FontSize="10"
+                                   FontWeight="SemiBold" Foreground="{DynamicResource TB_5BA3FF}" Margin="0,0,0,5" TextWrapping="Wrap"/>
+                        <Border Background="{DynamicResource TB_1A2540}" CornerRadius="5" Height="52" ClipToBounds="True">
+                            <Canvas Name="CpuChart" Background="Transparent"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Divider -->
+                    <Rectangle Grid.Column="1" Fill="{DynamicResource TB_3A4468}" Width="1" Margin="0,2"/>
+
+                    <!-- RAM Panel + Chart -->
+                    <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                            <Border Width="22" Height="22" CornerRadius="5" Background="{DynamicResource TB_1A4A35}" Margin="0,0,7,0" VerticalAlignment="Center">
+                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="RAM" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
+                                      Foreground="{DynamicResource TB_6ABDA0}" VerticalAlignment="Center"/>
+                            <TextBlock Name="RamPctText" Text="  0%" FontFamily="Segoe UI" FontSize="10"
+                                       FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Name="InfoRAM" Text="—" FontFamily="Segoe UI" FontSize="10"
+                                   FontWeight="SemiBold" Foreground="{DynamicResource TB_4AE896}" Margin="0,0,0,5"/>
+                        <Border Background="{DynamicResource TB_1A2540}" CornerRadius="5" Height="52" ClipToBounds="True">
+                            <Canvas Name="RamChart" Background="Transparent"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Divider -->
+                    <Rectangle Grid.Column="3" Fill="{DynamicResource TB_3A4468}" Width="1" Margin="0,2"/>
+
+                    <!-- Disco Panel + Chart -->
+                    <StackPanel Grid.Column="4" Margin="4,0,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                            <Border Width="22" Height="22" CornerRadius="5" Background="{DynamicResource TB_4A3010}" Margin="0,0,7,0" VerticalAlignment="Center">
+                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="DISCO C:" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
+                                      Foreground="{DynamicResource TB_C0933A}" VerticalAlignment="Center"/>
+                            <TextBlock Name="DiskPctText" Text="  0%" FontFamily="Segoe UI" FontSize="10"
+                                       FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Name="InfoDisk" Text="—" FontFamily="Segoe UI" FontSize="10"
+                                   FontWeight="SemiBold" Foreground="{DynamicResource TB_FFB547}" Margin="0,0,0,5"/>
+                        <Border Background="{DynamicResource TB_1A2540}" CornerRadius="5" Height="52" ClipToBounds="True">
+                            <Canvas Name="DiskChart" Background="Transparent"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Refresh -->
+                    <Button Name="btnRefreshInfo" Grid.Column="5" Style="{StaticResource BtnGhost}"
+                            Content="↻" FontSize="16" Height="32" Width="32" Padding="0"
+                            ToolTip="Actualizar información del sistema" Margin="10,0,0,0" VerticalAlignment="Top"/>
+                </Grid>
+            </Border>
+
+            <!-- ═══ PESTAÑAS PRINCIPALES ══════════════════════════════ -->
+            <TabControl Name="tabMain" Grid.Row="2" Margin="0,0,0,10"
+                        Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1">
+                <TabControl.Resources>
+                    <Style TargetType="TabItem">
+                        <Setter Property="FontFamily" Value="Segoe UI"/>
+                        <Setter Property="FontSize" Value="12"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TB_9BA4C0}"/>
+                        <Setter Property="Background" Value="{DynamicResource TB_252B3B}"/>
+                        <Setter Property="Padding" Value="16,8"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TabItem">
+                                    <Border x:Name="tabBorder" Background="{TemplateBinding Background}"
+                                            BorderThickness="0,0,0,2" BorderBrush="Transparent"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter ContentSource="Header"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="tabBorder" Property="BorderBrush" Value="{DynamicResource TB_5BA3FF}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TB_F0F3FA}"/>
+                                            <Setter TargetName="tabBorder" Property="Background" Value="{DynamicResource TB_2E3650}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="tabBorder" Property="Background" Value="{DynamicResource TB_2A3048}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TabControl.Resources>
+
+                <!-- ══ TAB 1: OPTIMIZACIÓN ══ -->
+                <TabItem Header="⚙  Optimización">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource TB_131625}">
+                <Grid Margin="4,8,4,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Columna izquierda -->
+                    <StackPanel Grid.Column="0">
+
+                        <!-- Card: Discos y Archivos -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
+                                            Margin="0,0,10,0">
+                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="DISCOS Y ARCHIVOS" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
+                                              />
+                                </StackPanel>
+                                <CheckBox Name="chkOptimizeDisks" Content="Optimizar discos (Defrag HDD / TRIM SSD·NVMe)" IsChecked="True"/>
+                                <CheckBox Name="chkRecycleBin"    Content="Vaciar papelera de reciclaje" IsChecked="True"/>
+                                <CheckBox Name="chkTempFiles"     Content="Temp de Windows (System\Temp, Prefetch)" IsChecked="True"/>
+                                <CheckBox Name="chkUserTemp"      Content="Temp de usuario (%TEMP%, AppData\Local\Temp)" IsChecked="True"/>
+                                <CheckBox Name="chkWUCache"       Content="Caché de Windows Update" IsChecked="False"/>
+                                <CheckBox Name="chkChkdsk"        Content="Check Disk (CHKDSK)  —  requiere reinicio" IsChecked="False"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card: Memoria y Procesos -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
+                                            Margin="0,0,10,0">
+                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="MEMORIA Y PROCESOS" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
+                                              />
+                                </StackPanel>
+                                <CheckBox Name="chkClearMemory"    Content="Liberar RAM (vaciar Working Set de procesos)" IsChecked="True"/>
+                                <CheckBox Name="chkCloseProcesses" Content="Cerrar procesos no críticos" IsChecked="False"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card: Red y Navegadores -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
+                                            Margin="0,0,10,0">
+                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="RED Y NAVEGADORES" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
+                                              />
+                                </StackPanel>
+                                <CheckBox Name="chkDNSCache"     Content="Limpiar caché DNS" IsChecked="True"/>
+                                <CheckBox Name="chkBrowserCache" Content="Caché de navegadores (Chrome, Edge, Firefox, Opera, Brave)" IsChecked="True"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+
+                    <!-- Columna derecha -->
+                    <StackPanel Grid.Column="2">
+
+                        <!-- Card: Registro -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
+                                            Margin="0,0,10,0">
+                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="REGISTRO DE WINDOWS" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
+                                              />
+                                </StackPanel>
+                                <CheckBox Name="chkBackupRegistry" Content="Backup del registro (recomendado)" IsChecked="True"/>
+                                <CheckBox Name="chkCleanRegistry"  Content="Limpiar claves huérfanas" IsChecked="False"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card: Verificación del Sistema -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
+                                            Margin="0,0,10,0">
+                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="VERIFICACIÓN DEL SISTEMA" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
+                                              />
+                                </StackPanel>
+                                <CheckBox Name="chkSFC"  Content="SFC /SCANNOW  —  verificador de archivos" IsChecked="False"/>
+                                <CheckBox Name="chkDISM" Content="DISM  —  reparar imagen del sistema" IsChecked="False"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card: Registros de Eventos -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
+                                            Margin="0,0,10,0">
+                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="REGISTROS DE EVENTOS" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
+                                              />
+                                </StackPanel>
+                                <CheckBox Name="chkEventLogs" Content="Event Viewer (System, Application, Setup)" IsChecked="False"/>
+                                <TextBlock Text="El log Security no se toca" FontFamily="Segoe UI" FontSize="10"
+                                           Foreground="{DynamicResource TB_8B96B8}" Margin="27,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card: Programas de inicio -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
+                                            Margin="0,0,10,0">
+                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="PROGRAMAS DE INICIO" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
+                                              />
+                                </StackPanel>
+                                <CheckBox Name="chkShowStartup" Content="Gestionar entradas de autoarranque" IsChecked="False"/>
+                                <TextBlock Text="Abre ventana de gestión al iniciar" FontFamily="Segoe UI" FontSize="10"
+                                           Foreground="{DynamicResource TB_8B96B8}" Margin="27,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </Grid>
+                </ScrollViewer>
+                </TabItem>
+
+                <!-- ══ TAB 2: RENDIMIENTO ══ -->
+                <TabItem Header="📊  Rendimiento">
+                <Grid Background="{DynamicResource TB_131625}" Margin="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <!-- Toolbar rendimiento -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10,8,10,4">
+                        <Button Name="btnRefreshPerf" Style="{StaticResource BtnSecondary}"
+                                Content="↻  Actualizar" MinWidth="110" Height="30"/>
+                        <!-- [A3] Auto-refresco -->
+                        <CheckBox Name="chkAutoRefresh" VerticalAlignment="Center" Margin="14,0,4,0">
+                            <CheckBox.Content>
+                                <TextBlock Text="Auto-refresco" FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_9BA4C0}"/>
+                            </CheckBox.Content>
+                        </CheckBox>
+                        <ComboBox Name="cmbRefreshInterval" Width="72" Height="26" Margin="2,0,0,0"
+                                  VerticalAlignment="Center" FontFamily="Segoe UI" FontSize="11"
+                                  Background="{DynamicResource TB_1A1E2F}" Foreground="{DynamicResource TB_E8ECF4}" BorderBrush="{DynamicResource TB_3A4468}">
+                            <ComboBoxItem Content="5 s"  Tag="5"  IsSelected="True"/>
+                            <ComboBoxItem Content="15 s" Tag="15"/>
+                            <ComboBoxItem Content="30 s" Tag="30"/>
+                            <ComboBoxItem Content="60 s" Tag="60"/>
+                        </ComboBox>
+                        <TextBlock Name="txtPerfStatus" Text="  Haz clic en Actualizar para cargar datos"
+                                   FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_9BA4C0}"
+                                   VerticalAlignment="Center" Margin="10,0,0,0"/>
+                    </StackPanel>
+                    <!-- Contenido en scroll -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10,0,10,10">
+
+                        <!-- ── CPU CORES ── -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Width="26" Height="26" CornerRadius="6" Background="{DynamicResource TB_1A3A5C}" Margin="0,0,10,0">
+                                        <TextBlock Text="&#x1F5A5;" FontFamily="Segoe UI Emoji" FontSize="13"
+                                                   Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="CORES DEL PROCESADOR" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <!-- Nombre CPU -->
+                                <TextBlock Name="txtCpuName" Text="—" FontFamily="Segoe UI" FontSize="11"
+                                           Foreground="{DynamicResource TB_9BA4C0}" Margin="0,0,0,8"/>
+                                <!-- Grid de cores generado dinámicamente -->
+                                <ItemsControl Name="icCpuCores">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="8" Background="{DynamicResource TB_1A2540}" BorderBrush="{DynamicResource TB_3A4468}"
+                                                    BorderThickness="1" Padding="10,8" Margin="4,4"
+                                                    Width="120">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding CoreLabel}" FontFamily="Segoe UI"
+                                                               FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TB_B0BACC}"
+                                                               HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Usage}" FontFamily="Segoe UI"
+                                                               FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}"
+                                                               HorizontalAlignment="Center" Margin="0,2"/>
+                                                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding UsageNum}"
+                                                                 Height="4" Margin="0,4,0,2"/>
+                                                    <TextBlock Text="{Binding Freq}" FontFamily="Segoe UI"
+                                                               FontSize="9" Foreground="{DynamicResource TB_8B96B8}"
+                                                               HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ── RAM DETALLADA ── -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Width="26" Height="26" CornerRadius="6" Background="{DynamicResource TB_1A4A35}" Margin="0,0,10,0">
+                                        <TextBlock Text="&#x1F9EE;" FontFamily="Segoe UI Emoji" FontSize="13"
+                                                   Foreground="{DynamicResource TB_4AE896}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="MEMORIA RAM" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                        <TextBlock Text="TOTAL" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
+                                        <TextBlock Name="txtRamTotal" Text="—" FontFamily="Segoe UI" FontSize="18"
+                                                   FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                        <TextBlock Text="USADA" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
+                                        <TextBlock Name="txtRamUsed" Text="—" FontFamily="Segoe UI" FontSize="18"
+                                                   FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="LIBRE" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
+                                        <TextBlock Name="txtRamFree" Text="—" FontFamily="Segoe UI" FontSize="18"
+                                                   FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+                                        <TextBlock Text="USO%" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
+                                        <TextBlock Name="txtRamPct" Text="—" FontFamily="Segoe UI" FontSize="18"
+                                                   FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                                <ProgressBar Name="pbRam" Minimum="0" Maximum="100" Value="0"
+                                             Height="8" Margin="0,10,0,4"/>
+                                <!-- Módulos de RAM -->
+                                <ItemsControl Name="icRamModules">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="6" Background="{DynamicResource TB_1A2540}" BorderBrush="{DynamicResource TB_2A3A5A}"
+                                                    BorderThickness="1" Padding="10,6" Margin="0,3">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Slot}" FontFamily="Segoe UI"
+                                                               FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}"
+                                                               VerticalAlignment="Center" Width="60"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Info}" FontFamily="Segoe UI"
+                                                               FontSize="10" Foreground="{DynamicResource TB_B0BACC}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Size}" FontFamily="Segoe UI"
+                                                               FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}"
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ── SMART DEL DISCO ── -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Width="26" Height="26" CornerRadius="6" Background="{DynamicResource TB_3A2010}" Margin="0,0,10,0">
+                                        <TextBlock Text="&#x1F4BD;" FontFamily="Segoe UI Emoji" FontSize="13"
+                                                   Foreground="{DynamicResource TB_FFB547}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="ESTADO S.M.A.R.T. DEL DISCO" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <ItemsControl Name="icSmartDisks">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="8" Background="{DynamicResource TB_1A2540}" BorderBrush="{DynamicResource TB_2A3A5A}"
+                                                    BorderThickness="1" Padding="14,10" Margin="0,4">
+                                                <StackPanel>
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding DiskName}" FontFamily="Segoe UI"
+                                                                   FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TB_E0E8F4}"/>
+                                                        <Border Grid.Column="1" CornerRadius="4" Padding="8,2"
+                                                                Background="{Binding StatusBg}">
+                                                            <TextBlock Text="{Binding Status}" FontFamily="Segoe UI"
+                                                                       FontSize="10" FontWeight="Bold" Foreground="{Binding StatusFg}"/>
+                                                        </Border>
+                                                    </Grid>
+                                                    <ItemsControl ItemsSource="{Binding Attributes}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel Orientation="Horizontal"/>
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border CornerRadius="5" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_3A4468}"
+                                                                        BorderThickness="1" Padding="8,4" Margin="3,3" MinWidth="130">
+                                                                    <StackPanel>
+                                                                        <TextBlock Text="{Binding Name}" FontFamily="Segoe UI"
+                                                                                   FontSize="9" Foreground="{DynamicResource TB_8B96B8}"/>
+                                                                        <TextBlock Text="{Binding Value}" FontFamily="Segoe UI"
+                                                                                   FontSize="12" FontWeight="Bold"
+                                                                                   Foreground="{Binding ValueColor}"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ── RED ── -->
+                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
+                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Width="26" Height="26" CornerRadius="6" Background="{DynamicResource TB_2A1A4A}" Margin="0,0,10,0">
+                                        <TextBlock Text="&#x1F310;" FontFamily="Segoe UI Emoji" FontSize="13"
+                                                   Foreground="{DynamicResource TB_C07AFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="TARJETAS DE RED" FontFamily="Segoe UI" FontSize="13"
+                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <ItemsControl Name="icNetAdapters">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="8" Background="{DynamicResource TB_1A2540}" BorderBrush="{DynamicResource TB_2A3A5A}"
+                                                    BorderThickness="1" Padding="14,10" Margin="0,4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Name}" FontFamily="Segoe UI"
+                                                                   FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TB_E0E8F4}"/>
+                                                        <TextBlock Text="{Binding IP}" FontFamily="Segoe UI"
+                                                                   FontSize="10" Foreground="{DynamicResource TB_8B96B8}" Margin="0,2"/>
+                                                        <TextBlock Text="{Binding MAC}" FontFamily="Segoe UI"
+                                                                   FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                                        <TextBlock Text="{Binding Speed}" FontFamily="Segoe UI"
+                                                                   FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TB_C07AFF}"
+                                                                   HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding Status}" FontFamily="Segoe UI"
+                                                                   FontSize="10" Foreground="{Binding StatusColor}"
+                                                                   HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding BytesIO}" FontFamily="Segoe UI"
+                                                                   FontSize="9" Foreground="{DynamicResource TB_8B96B8}"
+                                                                   HorizontalAlignment="Right" Margin="0,2"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+                </TabItem>
+
+                <!-- ══ TAB 3: EXPLORADOR DE DISCO ══ -->
+                <TabItem Header="💾  Explorador de Disco">
+                <Grid Background="{DynamicResource TB_131625}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Toolbar fila 1: ruta + scan -->
+                    <Border Grid.Row="0" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,0,1" Padding="10,8,10,4">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Ruta:" FontFamily="Segoe UI" FontSize="11"
+                                       Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBox Name="txtDiskScanPath" Grid.Column="1" Text="C:\"
+                                     FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_F0F3FA}"
+                                     Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1"
+                                     Padding="6,4" VerticalAlignment="Center"/>
+                            <Button Name="btnDiskBrowse" Grid.Column="2" Style="{StaticResource BtnGhost}"
+                                    Content="📁" Height="28" Width="32" Padding="0" Margin="4,0"/>
+                            <Button Name="btnDiskScan" Grid.Column="3" Style="{StaticResource BtnSecondary}"
+                                    Content="🔍  Escanear" Height="28" MinWidth="100" Margin="0,0,4,0"/>
+                            <Button Name="btnDiskStop" Grid.Column="4" Style="{StaticResource BtnAmber}"
+                                    Content="⏹  Detener" Height="28" MinWidth="90" IsEnabled="False"/>
+                        </Grid>
+                    </Border>
+                    <!-- [B1] Toolbar fila 2: filtro de búsqueda -->
+                    <Border Grid.Row="1" Background="{DynamicResource TB_0D0F1A}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,0,1" Padding="10,5">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🔎  Filtrar:" FontFamily="Segoe UI" FontSize="11"
+                                       Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBox Name="txtDiskFilter" Grid.Column="1"
+                                     FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_F0F3FA}"
+                                     Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_3A4468}" BorderThickness="1"
+                                     Padding="6,3" VerticalAlignment="Center"
+                                     ToolTip="Filtra carpetas por nombre en tiempo real"/>
+                            <Button Name="btnDiskFilterClear" Grid.Column="2" Content="✕"
+                                    Style="{StaticResource BtnGhost}" Height="24" Width="28"
+                                    Padding="0" Margin="4,0,0,0" ToolTip="Limpiar filtro"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- TreeView de resultados -->
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="4"/>
+                            <ColumnDefinition Width="260"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- ListView principal -->
+                        <Border Grid.Column="0" Background="{DynamicResource TB_1A2035}" BorderBrush="{DynamicResource TB_3A4468}" BorderThickness="0,0,1,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <!-- Header de columnas -->
+                                <Grid Grid.Row="0" Background="{DynamicResource TB_131625}" Margin="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="90"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="  Nombre" FontFamily="Segoe UI" FontSize="10"
+                                               FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5"/>
+                                    <TextBlock Grid.Column="1" Text="Tamaño" FontFamily="Segoe UI" FontSize="10"
+                                               FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5" TextAlignment="Right"/>
+                                    <TextBlock Grid.Column="2" Text="%" FontFamily="Segoe UI" FontSize="10"
+                                               FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5" TextAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Text="Archivos" FontFamily="Segoe UI" FontSize="10"
+                                               FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5" TextAlignment="Right"/>
+                                </Grid>
+                                <ListBox Name="lbDiskTree" Grid.Row="1"
+                                         Background="Transparent" BorderThickness="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         VirtualizingStackPanel.IsVirtualizing="True">
+                                    <!-- [B2] Menú contextual -->
+                                    <ListBox.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Name="ctxOpen"         Header="📂  Abrir en Explorador"/>
+                                            <MenuItem Name="ctxCopy"         Header="📋  Copiar ruta"/>
+                                            <Separator/>
+                                            <MenuItem Name="ctxScanFolder"   Header="🔍  Escanear carpeta"/>
+                                            <Separator/>
+                                            <MenuItem Name="ctxDelete"       Header="🗑  Eliminar carpeta..."
+                                                      Style="{StaticResource MenuItemDanger}"/>
+                                            <Separator/>
+                                            <MenuItem Name="ctxShowOutput"   Header="🖥  Mostrar Output"/>
+                                        </ContextMenu>
+                                    </ListBox.ContextMenu>
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <Border x:Name="lbiBd" Background="Transparent"
+                                                                BorderBrush="{DynamicResource TB_2A3448}" BorderThickness="0,0,0,1">
+                                                            <ContentPresenter/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter TargetName="lbiBd" Property="Background" Value="{DynamicResource TB_1A3A5C}"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="lbiBd" Property="Background" Value="{DynamicResource TB_252B3B}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Height="30">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="100"/>
+                                                    <ColumnDefinition Width="70"/>
+                                                    <ColumnDefinition Width="90"/>
+                                                </Grid.ColumnDefinitions>
+                                                <!-- Barra de fondo proporcional -->
+                                                <Border Grid.Column="0" Grid.ColumnSpan="4"
+                                                        HorizontalAlignment="Left"
+                                                        Width="{Binding BarWidth}" Height="30"
+                                                        Background="{Binding BarColor}" Opacity="0.15"/>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"
+                                                            Margin="{Binding Indent}">
+                                                    <!-- Botón colapsar/expandir (solo visible en carpetas con hijos) -->
+                                                    <Button Name="btnToggle" Content="{Binding ToggleIcon}"
+                                                            Tag="{Binding FullPath}"
+                                                            Width="18" Height="18" Padding="0" Margin="0,0,3,0"
+                                                            Background="Transparent" BorderThickness="0"
+                                                            Foreground="{DynamicResource TB_7BA8E0}" FontSize="9" FontWeight="Bold"
+                                                            Cursor="Hand"
+                                                            Visibility="{Binding ToggleVisibility}"/>
+                                                    <TextBlock Text="{Binding Icon}" FontSize="12" Margin="0,0,5,0"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding DisplayName}" FontFamily="Segoe UI" FontSize="11"
+                                                               Foreground="{DynamicResource TB_D0D8F0}" VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding SizeStr}" FontFamily="Segoe UI"
+                                                           FontSize="11" FontWeight="SemiBold" Foreground="{Binding SizeColor}"
+                                                           VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding PctStr}" FontFamily="Segoe UI"
+                                                           FontSize="10" Foreground="{DynamicResource TB_8B96B8}"
+                                                           VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding FileCount}" FontFamily="Segoe UI"
+                                                           FontSize="10" Foreground="{DynamicResource TB_8B96B8}"
+                                                           VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Border>
+
+                        <!-- Panel lateral de detalle -->
+                        <Border Grid.Column="2" Background="{DynamicResource TB_131625}" Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="DETALLE" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TB_6B7A9E}" Margin="0,0,0,10"/>
+                                <TextBlock Name="txtDiskDetailName" Text="—" FontFamily="Segoe UI" FontSize="12"
+                                           FontWeight="Bold" Foreground="{DynamicResource TB_F0F3FA}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Tamaño:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
+                                    <TextBlock Name="txtDiskDetailSize" Grid.Column="1" Text="—" FontFamily="Segoe UI"
+                                               FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Archivos:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
+                                    <TextBlock Name="txtDiskDetailFiles" Grid.Column="1" Text="—" FontFamily="Segoe UI"
+                                               FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Carpetas:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
+                                    <TextBlock Name="txtDiskDetailDirs" Grid.Column="1" Text="—" FontFamily="Segoe UI"
+                                               FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="% del padre:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
+                                    <TextBlock Name="txtDiskDetailPct" Grid.Column="1" Text="—" FontFamily="Segoe UI"
+                                               FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_C07AFF}"/>
+                                </Grid>
+                                <Rectangle Height="1" Fill="{DynamicResource TB_3A4468}" Margin="0,0,0,12"/>
+                                <TextBlock Text="TOP 10 ARCHIVOS MÁS GRANDES" FontFamily="Segoe UI" FontSize="9"
+                                           FontWeight="SemiBold" Foreground="{DynamicResource TB_6B7A9E}" Margin="0,0,0,8"/>
+                                <ItemsControl Name="icTopFiles">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,0,0,6">
+                                                <TextBlock Text="{Binding FileName}" FontFamily="Segoe UI" FontSize="10"
+                                                           Foreground="{DynamicResource TB_B0BACC}" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding FileSize}" FontFamily="Segoe UI" FontSize="10"
+                                                           FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Barra de estado del escaneo -->
+                    <Border Grid.Row="3" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,1,0,0" Padding="10,6">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Name="txtDiskScanStatus" Text="Listo"
+                                       FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center"/>
+                            <!-- [B3] Exportar CSV + Informe HTML -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Name="btnDedup" Content="🔍  Duplicados"
+                                        Style="{StaticResource BtnGhost}" Height="22" FontSize="10"
+                                        Margin="0,0,6,0" IsEnabled="False"
+                                        ToolTip="Busca archivos duplicados por SHA256 (&gt;10 MB) en el escaneo actual"/>
+                                <Button Name="btnExportCsv" Content="📄  Exportar CSV"
+                                        Style="{StaticResource BtnGhost}" Height="22" FontSize="10"
+                                        Margin="0,0,6,0" IsEnabled="False" ToolTip="Exportar resultados a CSV"/>
+                                <Button Name="btnDiskReport" Content="🌐  Informe HTML"
+                                        Style="{StaticResource BtnGhost}" Height="22" FontSize="10"
+                                        Margin="0,0,6,0" IsEnabled="False"
+                                        ToolTip="Genera informe HTML visual del escaneo en .\output\"/>
+                            </StackPanel>
+                            <ProgressBar Name="pbDiskScan" Grid.Column="2" Width="150" Height="6"
+                                         Minimum="0" Maximum="100" Value="0" IsIndeterminate="False"
+                                         VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+                </TabItem>
+
+
+                <!-- ── [B4] Pestaña Historial de Escaneos ── -->
+                <TabItem Name="tabHistorial" Header="🕒  Historial">
+                <Grid Background="{DynamicResource TB_131625}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Toolbar fila 1: nombre + guardar -->
+                    <Border Grid.Row="0" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,0,1" Padding="10,7">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Fila 1: campo nombre + botón guardar -->
+                            <Grid Grid.Row="0" Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Nombre:" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TB_7880A0}" FontSize="11" Margin="0,0,8,0"
+                                           FontFamily="JetBrains Mono"/>
+                                <TextBox Name="txtSnapshotName" Grid.Column="1"
+                                         Background="{DynamicResource TB_0D0F1A}" Foreground="{DynamicResource TB_E8ECF4}"
+                                         BorderBrush="{DynamicResource TB_2A3448}" BorderThickness="1"
+                                         CaretBrush="{DynamicResource TB_5BA3FF}" SelectionBrush="{DynamicResource TB_1A3A5C}"
+                                         FontSize="12" Padding="8,5"
+                                         FontFamily="JetBrains Mono, Consolas"
+                                         IsEnabled="False"/>
+                                <Button Name="btnSnapshotSave" Grid.Column="2" Content="💾  Guardar"
+                                        Style="{StaticResource BtnSecondary}"
+                                        Margin="6,0,0,0" Padding="12,5"
+                                        Cursor="Hand" FontSize="12" IsEnabled="False"/>
+                            </Grid>
+
+                            <!-- Fila 2: acciones sobre snapshots existentes -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <CheckBox Name="chkSnapshotSelectAll" Grid.Column="0"
+                                          Content="Todo" Foreground="{DynamicResource TB_7880A0}" FontSize="11"
+                                          VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock Grid.Column="1" Name="txtSnapshotSelCount"
+                                           Text="Snapshots guardados" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TB_7880A0}" FontSize="11" FontFamily="JetBrains Mono"/>
+                                <Button Name="btnSnapshotCompare" Grid.Column="2" Content="📊  Comparar"
+                                        Style="{StaticResource BtnPrimary}"
+                                        Margin="0,0,6,0" Padding="10,4"
+                                        Cursor="Hand" FontSize="11" IsEnabled="False"
+                                        ToolTip="Compara los snapshots marcados entre sí o contra el escaneo actual"/>
+                                <Button Name="btnSnapshotDelete" Grid.Column="3" Content="🗑  Eliminar"
+                                        Style="{StaticResource BtnDanger}"
+                                        Padding="10,4"
+                                        Cursor="Hand" FontSize="11" IsEnabled="False"
+                                        ToolTip="Elimina todos los snapshots marcados"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Lista de snapshots + panel de detalle/comparación -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="320"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Lista de snapshots con checkboxes -->
+                        <Border Grid.Column="0" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,1,0" Background="{DynamicResource TB_0D0F1A}">
+                            <ListBox Name="lbSnapshots" Background="Transparent" BorderThickness="0"
+                                     SelectionMode="Extended" FontSize="12"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="8,6" Background="Transparent">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <!-- CheckBox que bindea a IsChecked del item -->
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                          VerticalAlignment="Center" Margin="0,0,8,0"
+                                                          Focusable="False"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding Label}"
+                                                               FontWeight="SemiBold" Foreground="{DynamicResource TB_E8ECF4}" FontSize="12"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding DateStr}"
+                                                               Foreground="{DynamicResource TB_5BA3FF}" FontSize="10" Margin="0,2,0,0"
+                                                               FontFamily="JetBrains Mono"/>
+                                                    <TextBlock Text="{Binding SummaryStr}"
+                                                               Foreground="{DynamicResource TB_7880A0}" FontSize="10" Margin="0,2,0,0"
+                                                               FontFamily="JetBrains Mono"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TB_E8ECF4}"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource TB_1A2F4A}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource TB_181D2E}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                        </Border>
+
+                        <!-- Panel detalle / comparación -->
+                        <Grid Grid.Column="1" Background="{DynamicResource TB_0D0F1A}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Header con info del snapshot seleccionado -->
+                            <Border Grid.Row="0" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,0,1" Padding="14,10">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Name="txtSnapshotDetailTitle" Text="Selecciona un snapshot"
+                                               Foreground="{DynamicResource TB_7880A0}" FontSize="13" FontWeight="SemiBold"/>
+                                    <TextBlock Name="txtSnapshotDetailMeta" Text="" Margin="12,0,0,0"
+                                               Foreground="{DynamicResource TB_5BA3FF}" FontSize="11" FontFamily="JetBrains Mono"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Lista de carpetas del snapshot / comparación -->
+                            <ListBox Name="lbSnapshotDetail" Grid.Row="1"
+                                     Background="Transparent" BorderThickness="0"
+                                     FontSize="12" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="10,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="70"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding FolderName}"
+                                                       Foreground="{DynamicResource TB_E8ECF4}" TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding FullPath}"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding SizeStr}"
+                                                       Foreground="{Binding SizeColor}" FontFamily="JetBrains Mono"
+                                                       HorizontalAlignment="Right" FontSize="11"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding DeltaStr}"
+                                                       Foreground="{Binding DeltaColor}" FontFamily="JetBrains Mono"
+                                                       HorizontalAlignment="Right" FontSize="11"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource TB_131625}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                        </Grid>
+                    </Grid>
+
+                    <!-- Status bar -->
+                    <Border Grid.Row="2" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,1,0,0" Padding="10,5">
+                        <TextBlock Name="txtSnapshotStatus" Text="Sin snapshots guardados."
+                                   Foreground="{DynamicResource TB_7880A0}" FontSize="11" FontFamily="JetBrains Mono"/>
+                    </Border>
+
+                </Grid>
+                </TabItem>
+
+                <!-- ── Pestaña Tareas en Segundo Plano ── -->
+            </TabControl>
+
+            <!-- ═══ CONSOLA ════════════════════════════════════════════ -->
+            <Border Name="OutputPanel" Grid.Row="3" CornerRadius="10" Background="{DynamicResource TB_1A2035}"
+                    BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1" Margin="0,0,0,10">
+                <Grid Margin="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Barra de título de la consola -->
+                    <Border Grid.Row="0" CornerRadius="10,10,0,0" Background="{DynamicResource TB_1A1E2F}"
+                            BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,0,1" Padding="10,6">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- Botones de ventana funcionales -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Rojo: Cerrar/ocultar output -->
+                                <Button Name="btnOutputClose" Width="13" Height="13" Margin="0,0,7,0"
+                                        Cursor="Hand" ToolTip="Ocultar output"
+                                        BorderThickness="0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Ellipse x:Name="el" Width="13" Height="13" Fill="{DynamicResource TB_FF6B84}"/>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="el" Property="Fill" Value="{DynamicResource TB_CC2244}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <!-- Amarillo: Minimizar output -->
+                                <Button Name="btnOutputMinimize" Width="13" Height="13" Margin="0,0,7,0"
+                                        Cursor="Hand" ToolTip="Minimizar output"
+                                        Background="{DynamicResource TB_F5A623}" BorderThickness="0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Ellipse x:Name="el" Width="13" Height="13" Fill="{DynamicResource TB_F5A623}"/>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="el" Property="Fill" Value="{DynamicResource TB_D4850A}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <!-- Verde: Expandir output -->
+                                <Button Name="btnOutputExpand" Width="13" Height="13" Margin="0,0,14,0"
+                                        Cursor="Hand" ToolTip="Expandir output"
+                                        Background="{DynamicResource TB_4AE896}" BorderThickness="0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Ellipse x:Name="el" Width="13" Height="13" Fill="{DynamicResource TB_4AE896}"/>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="el" Property="Fill" Value="{DynamicResource TB_28C874}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </StackPanel>
+                            <!-- Etiquetas centradas -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="OUTPUT" FontFamily="Segoe UI" FontSize="9" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TB_8B96B8}" VerticalAlignment="Center"/>
+                                <TextBlock Name="TaskText" FontFamily="Segoe UI" FontSize="10"
+                                           Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center" Margin="14,0,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Texto de salida -->
+                    <TextBox Name="ConsoleOutput" Grid.Row="1"
+                             IsReadOnly="True"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Disabled"
+                             FontFamily="Cascadia Code, Consolas, Courier New"
+                             FontSize="10.5"
+                             Background="Transparent"
+                             Foreground="{DynamicResource TB_5AE88A}"
+                             BorderThickness="0"
+                             Padding="14,10"
+                             TextWrapping="Wrap"
+                             SelectionBrush="{DynamicResource TB_3D8EFF}"/>
+
+                    <!-- Barra de progreso + porcentaje -->
+                    <Grid Grid.Row="2" Margin="14,6,14,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ProgressBar Name="ProgressBar" Grid.Column="0" Height="6"
+                                     Minimum="0" Maximum="100" Value="0"
+                                     VerticalAlignment="Center"/>
+                        <TextBlock Name="ProgressText" Grid.Column="1"
+                                   Text="0%" FontFamily="Segoe UI" FontSize="10"
+                                   FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}"
+                                   VerticalAlignment="Center" Margin="12,0,0,0" Width="36"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- ═══ FOOTER / BOTONES ══════════════════════════════════ -->
+            <Grid Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Reinicio automático -->
+                <Border Grid.Column="0" CornerRadius="8" Background="{DynamicResource TB_1A1E2F}"
+                        BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1" Padding="12,0" Margin="0,0,8,0">
+                    <CheckBox Name="chkAutoRestart" VerticalAlignment="Center">
+                        <CheckBox.Content>
+                            <TextBlock Text="Reiniciar al finalizar" FontFamily="Segoe UI"
+                                       FontSize="11" Foreground="{DynamicResource TB_9BA4C0}"/>
+                        </CheckBox.Content>
+                    </CheckBox>
+                </Border>
+
+                <!-- Spacer -->
+                <Rectangle Grid.Column="1"/>
+
+                <Button Name="btnShowOutput"   Grid.Column="2" Style="{StaticResource BtnGhost}"
+                        Content="🖥 Output" MinWidth="90" Visibility="Collapsed"
+                        ToolTip="Mostrar panel de output"/>
+                <Button Name="btnSelectAll"    Grid.Column="3" Style="{StaticResource BtnGhost}"
+                        Content="Seleccionar todo" MinWidth="130"/>
+                <Button Name="btnDryRun"       Grid.Column="4" Style="{StaticResource BtnCyan}"
+                        Content="Analizar" MinWidth="90"
+                        ToolTip="Dry Run — reportar sin ejecutar cambios"/>
+                <Button Name="btnStart"        Grid.Column="5" Style="{StaticResource BtnPrimary}"
+                        Content="▶  Iniciar optimización" MinWidth="160" FontWeight="Bold"/>
+                <Button Name="btnCancel"       Grid.Column="6" Style="{StaticResource BtnAmber}"
+                        Content="Cancelar" MinWidth="90" IsEnabled="False"/>
+                <Button Name="btnSaveLog"      Grid.Column="7" Style="{StaticResource BtnGhost}"
+                        Content="Guardar log" MinWidth="100"/>
+                <Button Name="btnExit"         Grid.Column="8" Style="{StaticResource BtnDanger}"
+                        Content="Salir" MinWidth="80"/>
+            </Grid>
+
+        </Grid>
+    </Grid>
+</Window>

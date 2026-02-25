@@ -92,47 +92,6 @@ public static class LangEngine
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// XamlLoader — Carga de archivos .xaml externos desde .\assets\xaml\
-// ═══════════════════════════════════════════════════════════════════════════════
-public static class XamlLoader
-{
-    /// <summary>
-    /// Carga un archivo .xaml desde la carpeta xamlFolder y devuelve su contenido
-    /// como string listo para pasarlo a XamlReader.Load().
-    /// name puede ser "MainWindow", "SplashWindow", "DedupWindow", etc.
-    /// </summary>
-    public static string Load(string xamlFolder, string name)
-    {
-        if (string.IsNullOrEmpty(xamlFolder))
-            throw new ArgumentNullException("xamlFolder");
-        if (string.IsNullOrEmpty(name))
-            throw new ArgumentNullException("name");
-
-        // Admite nombre con o sin extensión
-        string fileName = name.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase)
-            ? name : name + ".xaml";
-        string path = Path.Combine(xamlFolder, fileName);
-
-        if (!File.Exists(path))
-            throw new FileNotFoundException("XAML file not found: " + path);
-
-        return File.ReadAllText(path, System.Text.Encoding.UTF8);
-    }
-
-    /// <summary>Lista los nombres (sin extensión) de todos los .xaml disponibles.</summary>
-    public static string[] ListXaml(string xamlFolder)
-    {
-        if (!Directory.Exists(xamlFolder)) return new string[0];
-        var files = Directory.GetFiles(xamlFolder, "*.xaml");
-        var names = new string[files.Length];
-        for (int i = 0; i < files.Length; i++)
-            names[i] = Path.GetFileNameWithoutExtension(files[i]);
-        Array.Sort(names, StringComparer.OrdinalIgnoreCase);
-        return names;
-    }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
 // SettingsHelper — Lectura/escritura de configuración JSON simple
 // ═══════════════════════════════════════════════════════════════════════════════
 public static class SettingsHelper

@@ -68,7 +68,6 @@ Add-Type -AssemblyName Microsoft.VisualBasic
 Add-Type -AssemblyName WindowsBase
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [FIX-SPLASH] Ventana de carga inmediata — evita pantalla en blanco al arrancar
 # ─────────────────────────────────────────────────────────────────────────────
 $splashXaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -168,7 +167,7 @@ if (-not ([System.Management.Automation.PSTypeName]'DiskItem_v211').Type) {
 } # end guard: DiskItem_v211 / ScanCtl211 / PScanner211
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [DLL] Core -- libs\SysOpt.Core.dll  (LangEngine + SettingsHelper)
+# [DLL] Core -- libs\SysOpt.Core.dll  (LangEngine + SettingsHelper + XamlLoader)
 # ─────────────────────────────────────────────────────────────────────────────
 if (-not ([System.Management.Automation.PSTypeName]'LangEngine').Type) {
     $script:_dllCore = Join-Path $PSScriptRoot "libs\SysOpt.Core.dll"
@@ -178,6 +177,9 @@ if (-not ([System.Management.Automation.PSTypeName]'LangEngine').Type) {
     try { Add-Type -Path $script:_dllCore -ErrorAction Stop }
     catch { Write-Verbose "SysOpt: Core.dll ya cargado en esta sesion" }
 }
+
+# Ruta centralizada a los XAML externos estáticos
+$script:XamlFolder = Join-Path $PSScriptRoot "assets\xaml"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [DLL] ThemeEngine -- libs\SysOpt.ThemeEngine.dll
@@ -238,19 +240,22 @@ function Update-DynamicThemeValues {
     $purple = if ($tc.ContainsKey("AccentPurple")) { $tc["AccentPurple"] } else { "#9B7EFF" }
     $cyan   = if ($tc.ContainsKey("AccentCyan"))   { $tc["AccentCyan"] }   else { "#2EDFBF" }
 
-    $tc["StatusRunningBg"] = DarkAccent $blue   0.18
-    $tc["StatusRunningFg"] = $blue
-    $tc["StatusDoneBg"]    = DarkAccent $green  0.18
-    $tc["StatusDoneFg"]    = $green
-    $tc["StatusErrorBg"]   = DarkAccent $red    0.22
-    $tc["StatusErrorFg"]   = $red
-    $tc["StatusCancelBg"]  = DarkAccent $amber  0.22
-    $tc["StatusCancelFg"]  = $amber
+    # Usar BgStatus*/FgStatus* del tema cuando existen — son valores ajustados
+    # manualmente para cada tema (light y dark). DarkAccent solo como fallback.
+    $tc["StatusRunningBg"] = if ($tc.ContainsKey("BgStatusInfo"))  { $tc["BgStatusInfo"] }  else { DarkAccent $blue  0.18 }
+    $tc["StatusRunningFg"] = if ($tc.ContainsKey("FgStatusInfo"))  { $tc["FgStatusInfo"] }  else { $blue }
+    $tc["StatusDoneBg"]    = if ($tc.ContainsKey("BgStatusOk"))    { $tc["BgStatusOk"] }    else { DarkAccent $green 0.18 }
+    $tc["StatusDoneFg"]    = if ($tc.ContainsKey("FgStatusOk"))    { $tc["FgStatusOk"] }    else { $green }
+    $tc["StatusErrorBg"]   = if ($tc.ContainsKey("BgStatusErr"))   { $tc["BgStatusErr"] }   else { DarkAccent $red   0.22 }
+    $tc["StatusErrorFg"]   = if ($tc.ContainsKey("FgStatusErr"))   { $tc["FgStatusErr"] }   else { $red }
+    $tc["StatusCancelBg"]  = if ($tc.ContainsKey("BgStatusWarn"))  { $tc["BgStatusWarn"] }  else { DarkAccent $amber 0.22 }
+    $tc["StatusCancelFg"]  = if ($tc.ContainsKey("FgStatusWarn"))  { $tc["FgStatusWarn"] }  else { $amber }
 
-    $tc["IconRunningBg"]   = DarkAccent $blue   0.15
-    $tc["IconDoneBg"]      = DarkAccent $green  0.15
-    $tc["IconErrorBg"]     = DarkAccent $red    0.18
-    $tc["IconCancelBg"]    = DarkAccent $amber  0.18
+    # IconBg = mismo que StatusBg para coherencia visual entre badge e icono
+    $tc["IconRunningBg"]   = $tc["StatusRunningBg"]
+    $tc["IconDoneBg"]      = $tc["StatusDoneBg"]
+    $tc["IconErrorBg"]     = $tc["StatusErrorBg"]
+    $tc["IconCancelBg"]    = $tc["StatusCancelBg"]
 
     # Update TaskStatusMap with themed colors
     $script:TaskStatusMap = @{
@@ -262,9 +267,7 @@ function Update-DynamicThemeValues {
 }
 
 
-
 # ─────────────────────────────────────────────────────────────────────────────
-# [RAM-05] RunspacePool centralizado — InitialSessionState mínimo
 # Reutiliza runspaces entre operaciones async (exportar, cargar entries, top-files)
 # eliminando el overhead de arranque (~2-5 MB por runspace) y la carga de módulos.
 # Pool de 1 mín / 3 máx runspaces. Se abre una sola vez al inicio.
@@ -306,7 +309,6 @@ function Dispose-PooledPS($ctx) {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [RAM-06] GC agresivo post-operación — libera LOH y Working Set al SO
 # ─────────────────────────────────────────────────────────────────────────────
 function Invoke-AggressiveGC {
     try {
@@ -344,7 +346,6 @@ if (-not (Test-Administrator)) {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [B3] Evitar doble ejecución — manejo de AbandonedMutexException
 # ─────────────────────────────────────────────────────────────────────────────
 $script:AppMutex = New-Object System.Threading.Mutex($false, "Global\OptimizadorSistemaGUI_v5")
 $mutexAcquired = $false
@@ -370,1742 +371,7 @@ Set-SplashProgress 40 "Analizando permisos..."
 # ─────────────────────────────────────────────────────────────────────────────
 # XAML — Interfaz Gráfica v1.0
 # ─────────────────────────────────────────────────────────────────────────────
-$xaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SysOpt - Windows Optimizer GUI v3.1.0" Height="980" Width="1220"
-        WindowStartupLocation="CenterScreen" ResizeMode="CanResize"
-        Background="{DynamicResource TB_0D0F1A}">
-    <Window.Resources>
-        <!-- Theme DynamicResource Brushes -->
-        <SolidColorBrush x:Key="TB_00D4B4" Color="#00D4B4"/>
-        <SolidColorBrush x:Key="TB_080A14" Color="#080A14"/>
-        <SolidColorBrush x:Key="TB_0D0F1A" Color="#0D0F1A"/>
-        <SolidColorBrush x:Key="TB_0E2E2A" Color="#0E2E2A"/>
-        <SolidColorBrush x:Key="TB_131625" Color="#131625"/>
-        <SolidColorBrush x:Key="TB_132040" Color="#132040"/>
-        <SolidColorBrush x:Key="TB_161925" Color="#161925"/>
-        <SolidColorBrush x:Key="TB_163530" Color="#163530"/>
-        <SolidColorBrush x:Key="TB_181D2E" Color="#181D2E"/>
-        <SolidColorBrush x:Key="TB_182A1E" Color="#182A1E"/>
-        <SolidColorBrush x:Key="TB_1A1E2A" Color="#1A1E2A"/>
-        <SolidColorBrush x:Key="TB_1A1E2F" Color="#1A1E2F"/>
-        <SolidColorBrush x:Key="TB_1A2035" Color="#1A2035"/>
-        <SolidColorBrush x:Key="TB_1A2040" Color="#1A2040"/>
-        <SolidColorBrush x:Key="TB_1A2540" Color="#1A2540"/>
-        <SolidColorBrush x:Key="TB_1A2F4A" Color="#1A2F4A"/>
-        <SolidColorBrush x:Key="TB_1A3A5C" Color="#1A3A5C"/>
-        <SolidColorBrush x:Key="TB_1A4A35" Color="#1A4A35"/>
-        <SolidColorBrush x:Key="TB_1A6B3E" Color="#1A6B3E"/>
-        <SolidColorBrush x:Key="TB_1E2235" Color="#1E2235"/>
-        <SolidColorBrush x:Key="TB_1E3058" Color="#1E3058"/>
-        <SolidColorBrush x:Key="TB_1E3A5C" Color="#1E3A5C"/>
-        <SolidColorBrush x:Key="TB_252A38" Color="#252A38"/>
-        <SolidColorBrush x:Key="TB_252B3B" Color="#252B3B"/>
-        <SolidColorBrush x:Key="TB_252B40" Color="#252B40"/>
-        <SolidColorBrush x:Key="TB_253060" Color="#253060"/>
-        <SolidColorBrush x:Key="TB_28C874" Color="#28C874"/>
-        <SolidColorBrush x:Key="TB_2A1018" Color="#2A1018"/>
-        <SolidColorBrush x:Key="TB_2A1A4A" Color="#2A1A4A"/>
-        <SolidColorBrush x:Key="TB_2A2010" Color="#2A2010"/>
-        <SolidColorBrush x:Key="TB_2A2F48" Color="#2A2F48"/>
-        <SolidColorBrush x:Key="TB_2A3048" Color="#2A3048"/>
-        <SolidColorBrush x:Key="TB_2A3448" Color="#2A3448"/>
-        <SolidColorBrush x:Key="TB_2A3A5A" Color="#2A3A5A"/>
-        <SolidColorBrush x:Key="TB_2E0E14" Color="#2E0E14"/>
-        <SolidColorBrush x:Key="TB_2E1E08" Color="#2E1E08"/>
-        <SolidColorBrush x:Key="TB_2E3650" Color="#2E3650"/>
-        <SolidColorBrush x:Key="TB_2EDFBF" Color="#2EDFBF"/>
-        <SolidColorBrush x:Key="TB_2FD980" Color="#2FD980"/>
-        <SolidColorBrush x:Key="TB_3A2010" Color="#3A2010"/>
-        <SolidColorBrush x:Key="TB_3A4060" Color="#3A4060"/>
-        <SolidColorBrush x:Key="TB_3A4468" Color="#3A4468"/>
-        <SolidColorBrush x:Key="TB_3D5080" Color="#3D5080"/>
-        <SolidColorBrush x:Key="TB_3D8EFF" Color="#3D8EFF"/>
-        <SolidColorBrush x:Key="TB_4A3010" Color="#4A3010"/>
-        <SolidColorBrush x:Key="TB_4AE896" Color="#4AE896"/>
-        <SolidColorBrush x:Key="TB_5AE88A" Color="#5AE88A"/>
-        <SolidColorBrush x:Key="TB_5BA3FF" Color="#5BA3FF"/>
-        <SolidColorBrush x:Key="TB_6ABDA0" Color="#6ABDA0"/>
-        <SolidColorBrush x:Key="TB_6B7A9E" Color="#6B7A9E"/>
-        <SolidColorBrush x:Key="TB_7880A0" Color="#7880A0"/>
-        <SolidColorBrush x:Key="TB_7BA8E0" Color="#7BA8E0"/>
-        <SolidColorBrush x:Key="TB_8B96B8" Color="#8B96B8"/>
-        <SolidColorBrush x:Key="TB_9B7EFF" Color="#9B7EFF"/>
-        <SolidColorBrush x:Key="TB_9BA4C0" Color="#9BA4C0"/>
-        <SolidColorBrush x:Key="TB_A47CFF" Color="#A47CFF"/>
-        <SolidColorBrush x:Key="TB_B0BACC" Color="#B0BACC"/>
-        <SolidColorBrush x:Key="TB_C07AFF" Color="#C07AFF"/>
-        <SolidColorBrush x:Key="TB_C0933A" Color="#C0933A"/>
-        <SolidColorBrush x:Key="TB_CC2244" Color="#CC2244"/>
-        <SolidColorBrush x:Key="TB_D0D8F0" Color="#D0D8F0"/>
-        <SolidColorBrush x:Key="TB_D4850A" Color="#D4850A"/>
-        <SolidColorBrush x:Key="TB_D4D9E8" Color="#D4D9E8"/>
-        <SolidColorBrush x:Key="TB_E0E8F4" Color="#E0E8F4"/>
-        <SolidColorBrush x:Key="TB_E8ECF4" Color="#E8ECF4"/>
-        <SolidColorBrush x:Key="TB_F0F3FA" Color="#F0F3FA"/>
-        <SolidColorBrush x:Key="TB_F5A623" Color="#F5A623"/>
-        <SolidColorBrush x:Key="TB_FF4D6A" Color="#FF4D6A"/>
-        <SolidColorBrush x:Key="TB_FF6B84" Color="#FF6B84"/>
-        <SolidColorBrush x:Key="TB_FFB547" Color="#FFB547"/>
-        <SolidColorBrush x:Key="TB_FFFFFF" Color="#FFFFFF"/>
-
-
-        <!-- ── Colores base ── -->
-        <SolidColorBrush x:Key="BgDeep"       Color="#0D0F1A"/>
-        <SolidColorBrush x:Key="BgCard"        Color="#131625"/>
-        <SolidColorBrush x:Key="BgCardHover"   Color="#1A1E2F"/>
-        <SolidColorBrush x:Key="BorderSubtle"  Color="#252B40"/>
-        <SolidColorBrush x:Key="BorderActive"  Color="#5BA3FF"/>
-        <SolidColorBrush x:Key="AccentBlue"    Color="#5BA3FF"/>
-        <SolidColorBrush x:Key="AccentCyan"    Color="#2EDFBF"/>
-        <SolidColorBrush x:Key="AccentAmber"   Color="#FFB547"/>
-        <SolidColorBrush x:Key="AccentRed"     Color="#FF6B84"/>
-        <SolidColorBrush x:Key="AccentGreen"   Color="#4AE896"/>
-        <SolidColorBrush x:Key="TextPrimary"   Color="#E8ECF4"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#B0BACC"/>
-        <SolidColorBrush x:Key="TextMuted"     Color="#7880A0"/>
-        <!-- ── Recursos adicionales para theming dinámico ── -->
-        <SolidColorBrush x:Key="AccentPurple"       Color="#A47CFF"/>
-        <SolidColorBrush x:Key="BgInput"             Color="#1E2235"/>
-        <SolidColorBrush x:Key="BorderHover"         Color="#3A4060"/>
-        <SolidColorBrush x:Key="ProgressStart"       Color="#5BA3FF"/>
-        <SolidColorBrush x:Key="ProgressEnd"         Color="#4AE896"/>
-        <SolidColorBrush x:Key="BtnPrimaryBg"        Color="#1A6B3E"/>
-        <SolidColorBrush x:Key="BtnPrimaryFg"        Color="#2FD980"/>
-        <SolidColorBrush x:Key="BtnPrimaryBorder"    Color="#2FD980"/>
-        <SolidColorBrush x:Key="BtnPrimaryHover"     Color="#2FD980"/>
-        <SolidColorBrush x:Key="BtnSecondaryBg"      Color="#132040"/>
-        <SolidColorBrush x:Key="BtnSecondaryFg"      Color="#3D8EFF"/>
-        <SolidColorBrush x:Key="BtnSecondaryBorder"  Color="#3D8EFF"/>
-        <SolidColorBrush x:Key="BtnSecondaryHover"   Color="#3D8EFF"/>
-        <SolidColorBrush x:Key="BtnCyanBg"           Color="#0E2E2A"/>
-        <SolidColorBrush x:Key="BtnCyanFg"           Color="#00D4B4"/>
-        <SolidColorBrush x:Key="BtnAmberBg"          Color="#2E1E08"/>
-        <SolidColorBrush x:Key="BtnAmberFg"          Color="#F5A623"/>
-        <SolidColorBrush x:Key="BtnDangerBg"         Color="#2E0E14"/>
-        <SolidColorBrush x:Key="BtnDangerFg"         Color="#FF4D6A"/>
-        <SolidColorBrush x:Key="BtnGhostBg"          Color="#1A1E2A"/>
-        <SolidColorBrush x:Key="BtnGhostBorder"      Color="#252A38"/>
-        <SolidColorBrush x:Key="BtnGhostFg"          Color="#9BA4C0"/>
-        <SolidColorBrush x:Key="HdrBtnBg"            Color="#1A2040"/>
-        <SolidColorBrush x:Key="HdrBtnBorder"        Color="#3D5080"/>
-        <SolidColorBrush x:Key="HdrBtnHover"         Color="#253060"/>
-        <SolidColorBrush x:Key="DryRunBg"            Color="#163530"/>
-        <SolidColorBrush x:Key="ComboHover"          Color="#1E3A5C"/>
-        <SolidColorBrush x:Key="ComboSelected"       Color="#132040"/>
-        <SolidColorBrush x:Key="ComboSelectedFg"     Color="#5BA3FF"/>
-        <SolidColorBrush x:Key="CtxHover"            Color="#1E3058"/>
-        <SolidColorBrush x:Key="CtxSepFill"          Color="#2A3448"/>
-        <SolidColorBrush x:Key="LbItemHover"         Color="#1A1E2F"/>
-        <SolidColorBrush x:Key="DetailBorder"        Color="#252B40"/>
-        <SolidColorBrush x:Key="TabSelectedBg"       Color="#2E3650"/>
-        <SolidColorBrush x:Key="TabHoverBg"          Color="#2A3048"/>
-        <SolidColorBrush x:Key="BgCardDark"          Color="#131625"/>
-        <SolidColorBrush x:Key="ConsoleBg"           Color="#080A14"/>
-        <SolidColorBrush x:Key="ConsoleFg"           Color="#4AE896"/>
-        <SolidColorBrush x:Key="ScrollBarTrack"      Color="#161925"/>
-        <SolidColorBrush x:Key="ScrollBarThumb"      Color="#2A2F48"/>
-        <SolidColorBrush x:Key="ScrollBarThumbHover" Color="#5BA3FF"/>
-        <SolidColorBrush x:Key="StatusSuccess"       Color="#4AE896"/>
-        <SolidColorBrush x:Key="StatusWarning"       Color="#FFB547"/>
-        <SolidColorBrush x:Key="StatusError"         Color="#FF6B84"/>
-        <SolidColorBrush x:Key="StatusInfo"          Color="#5BA3FF"/>
-        <SolidColorBrush x:Key="BgStatusOk"          Color="#182A1E"/>
-        <SolidColorBrush x:Key="BgStatusWarn"        Color="#2A2010"/>
-        <SolidColorBrush x:Key="BgStatusErr"         Color="#2A1018"/>
-        <SolidColorBrush x:Key="BgStatusInfo"        Color="#1A2F4A"/>
-        <SolidColorBrush x:Key="FgStatusOk"          Color="#4AE896"/>
-        <SolidColorBrush x:Key="FgStatusWarn"        Color="#FFB547"/>
-        <SolidColorBrush x:Key="FgStatusErr"         Color="#FF6B84"/>
-        <SolidColorBrush x:Key="FgStatusInfo"        Color="#5BA3FF"/>
-
-        <!-- Gradiente de acento para la barra de progreso -->
-        <LinearGradientBrush x:Key="ProgressGradient" StartPoint="0,0" EndPoint="1,0">
-            <GradientStop Color="#5BA3FF" Offset="0"/>
-            <GradientStop Color="#2EDFBF" Offset="1"/>
-        </LinearGradientBrush>
-
-        <!-- ── Background: grid de líneas finas + blobs de color ── -->
-        <VisualBrush x:Key="GridBrush" TileMode="Tile"
-                     Viewport="0,0,40,40" ViewportUnits="Absolute"
-                     Viewbox="0,0,40,40"  ViewboxUnits="Absolute">
-            <VisualBrush.Visual>
-                <Canvas Width="40" Height="40">
-                    <!-- línea horizontal -->
-                    <Line X1="0" Y1="0" X2="40" Y2="0"
-                          Stroke="{DynamicResource TB_5BA3FF}" StrokeThickness="0.6" Opacity="0.22"/>
-                    <!-- línea vertical -->
-                    <Line X1="0" Y1="0" X2="0" Y2="40"
-                          Stroke="{DynamicResource TB_5BA3FF}" StrokeThickness="0.6" Opacity="0.22"/>
-                </Canvas>
-            </VisualBrush.Visual>
-        </VisualBrush>
-
-        <!-- Estilo de botón base -->
-        <Style x:Key="BtnBase" TargetType="Button">
-            <Setter Property="FontFamily"      Value="Segoe UI"/>
-            <Setter Property="FontSize"        Value="12"/>
-            <Setter Property="FontWeight"      Value="SemiBold"/>
-            <Setter Property="Height"          Value="36"/>
-            <Setter Property="Padding"         Value="16,0"/>
-            <Setter Property="Margin"          Value="4,0"/>
-            <Setter Property="Cursor"          Value="Hand"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" CornerRadius="8"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Opacity" Value="0.82"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Opacity" Value="0.65"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="bd" Property="Opacity" Value="0.3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Botón primario (verde) -->
-        <Style x:Key="BtnPrimary" TargetType="Button" BasedOn="{StaticResource BtnBase}">
-            <Setter Property="Background"    Value="{DynamicResource BtnPrimaryBg}"/>
-            <Setter Property="BorderBrush"   Value="{DynamicResource BtnPrimaryBorder}"/>
-            <Setter Property="Foreground"    Value="{DynamicResource BtnPrimaryFg}"/>
-        </Style>
-
-        <!-- Botón secundario (azul) -->
-        <Style x:Key="BtnSecondary" TargetType="Button" BasedOn="{StaticResource BtnBase}">
-            <Setter Property="Background"    Value="{DynamicResource BtnSecondaryBg}"/>
-            <Setter Property="BorderBrush"   Value="{DynamicResource BtnSecondaryBorder}"/>
-            <Setter Property="Foreground"    Value="{DynamicResource BtnSecondaryFg}"/>
-        </Style>
-
-        <!-- Botón cyan (analizar) -->
-        <Style x:Key="BtnCyan" TargetType="Button" BasedOn="{StaticResource BtnBase}">
-            <Setter Property="Background"    Value="{DynamicResource BtnCyanBg}"/>
-            <Setter Property="BorderBrush"   Value="{DynamicResource BtnCyanFg}"/>
-            <Setter Property="Foreground"    Value="{DynamicResource BtnCyanFg}"/>
-        </Style>
-
-        <!-- Botón amber (cancelar) -->
-        <Style x:Key="BtnAmber" TargetType="Button" BasedOn="{StaticResource BtnBase}">
-            <Setter Property="Background"    Value="{DynamicResource BtnAmberBg}"/>
-            <Setter Property="BorderBrush"   Value="{DynamicResource BtnAmberFg}"/>
-            <Setter Property="Foreground"    Value="{DynamicResource BtnAmberFg}"/>
-        </Style>
-
-        <!-- Botón rojo (salir) -->
-        <Style x:Key="BtnDanger" TargetType="Button" BasedOn="{StaticResource BtnBase}">
-            <Setter Property="Background"    Value="{DynamicResource BtnDangerBg}"/>
-            <Setter Property="BorderBrush"   Value="{DynamicResource BtnDangerFg}"/>
-            <Setter Property="Foreground"    Value="{DynamicResource BtnDangerFg}"/>
-        </Style>
-
-        <!-- Botón fantasma (guardar log) -->
-        <Style x:Key="BtnGhost" TargetType="Button" BasedOn="{StaticResource BtnBase}">
-            <Setter Property="Background"    Value="{DynamicResource BtnGhostBg}"/>
-            <Setter Property="BorderBrush"   Value="{DynamicResource BtnGhostBorder}"/>
-            <Setter Property="Foreground"    Value="{DynamicResource BtnGhostFg}"/>
-        </Style>
-
-        <!-- CheckBox moderno -->
-        <Style TargetType="CheckBox">
-            <Setter Property="FontFamily"  Value="Segoe UI"/>
-            <Setter Property="FontSize"    Value="12"/>
-            <Setter Property="Foreground"  Value="{DynamicResource TB_D4D9E8}"/>
-            <Setter Property="Margin"      Value="0,4"/>
-            <Setter Property="Cursor"      Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="CheckBox">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border x:Name="box" Width="18" Height="18" CornerRadius="5"
-                                    Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1.5"
-                                    Margin="0,0,9,0" VerticalAlignment="Center">
-                                <TextBlock x:Name="chk" Text="✓" FontSize="11" FontWeight="Bold"
-                                           Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" Visibility="Collapsed"/>
-                            </Border>
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="box" Property="Background"    Value="{DynamicResource TB_132040}"/>
-                                <Setter TargetName="box" Property="BorderBrush"   Value="{DynamicResource TB_3D8EFF}"/>
-                                <Setter TargetName="chk" Property="Visibility"    Value="Visible"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.35"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ScrollBar delgado -->
-        <Style TargetType="ScrollBar">
-            <Setter Property="Width" Value="5"/>
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
-
-        <!-- ── ComboBox temático oscuro (sin ControlTemplate complejo) ── -->
-        <Style TargetType="ComboBox">
-            <Setter Property="FontFamily"      Value="Segoe UI"/>
-            <Setter Property="FontSize"        Value="11"/>
-            <Setter Property="Foreground"      Value="{DynamicResource TB_E8ECF4}"/>
-            <Setter Property="Background"      Value="{DynamicResource TB_1A1E2F}"/>
-            <Setter Property="BorderBrush"     Value="{DynamicResource TB_3A4468}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding"         Value="6,3"/>
-        </Style>
-        <Style TargetType="ComboBoxItem">
-            <Setter Property="FontFamily"  Value="Segoe UI"/>
-            <Setter Property="FontSize"    Value="11"/>
-            <Setter Property="Foreground"  Value="{DynamicResource TB_E8ECF4}"/>
-            <Setter Property="Background"  Value="{DynamicResource TB_1A1E2F}"/>
-            <Setter Property="Padding"     Value="8,5"/>
-            <Setter Property="Cursor"      Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                BorderThickness="0" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_1E3A5C}"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_132040}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TB_5BA3FF}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ── ContextMenu temático oscuro ── -->
-        <Style TargetType="ContextMenu">
-            <Setter Property="Background"      Value="{DynamicResource TB_1A1E2F}"/>
-            <Setter Property="BorderBrush"     Value="{DynamicResource TB_3A4468}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding"         Value="4"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_3A4468}" BorderThickness="1"
-                                CornerRadius="8" Padding="4,4">
-                                                        <ItemsPresenter/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ── MenuItem temático (sin ContentSource="Icon" que requiere role) ── -->
-        <Style TargetType="MenuItem">
-            <Setter Property="FontFamily"  Value="Segoe UI"/>
-            <Setter Property="FontSize"    Value="12"/>
-            <Setter Property="Foreground"  Value="{DynamicResource TB_E8ECF4}"/>
-            <Setter Property="Background"  Value="Transparent"/>
-            <Setter Property="Padding"     Value="10,6"/>
-            <Setter Property="Cursor"      Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="MenuItem">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                CornerRadius="5" Margin="2,1"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter ContentSource="Header"
-                                              VerticalAlignment="Center"
-                                              RecognizesAccessKey="True"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_1E3058}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.4"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="MenuItemDanger" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-            <Setter Property="Foreground" Value="{DynamicResource TB_FF6B84}"/>
-        </Style>
-
-        <!-- ── Separator temático ── -->
-        <Style TargetType="Separator">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Separator">
-                        <Rectangle Height="1" Fill="{DynamicResource TB_2A3448}" Margin="8,3"/>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ProgressBar con gradiente -->
-        <Style TargetType="ProgressBar">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ProgressBar">
-                        <Border CornerRadius="4" Background="{DynamicResource TB_1A1E2F}"
-                                BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1" Height="6">
-                            <Border x:Name="PART_Track">
-                                <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="4">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                            <GradientStop Color="#5BA3FF" Offset="0"/>
-                                            <GradientStop Color="#2EDFBF" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Border.Background>
-                                </Border>
-                            </Border>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-    </Window.Resources>
-
-    <!-- ══════════════════════════════════════════════════════════════════
-         FONDO: cuadrícula sutil + blobs de color difuminados
-         Mismo estilo que la hoja de ruta HTML del proyecto.
-         ══════════════════════════════════════════════════════════════════ -->
-    <Grid>
-        <!-- Capa 1: fondo sólido oscuro -->
-        <Rectangle Fill="{DynamicResource TB_0D0F1A}"/>
-
-        <!-- Capa 2: cuadrícula de líneas finas (VisualBrush en tile) -->
-        <Rectangle Fill="{StaticResource GridBrush}" Opacity="1"/>
-
-        <!-- Capa 3: blob azul — esquina superior izquierda -->
-        <Ellipse Width="600" Height="600" Opacity="0.13"
-                 HorizontalAlignment="Left" VerticalAlignment="Top"
-                 Margin="-180,-180,0,0">
-            <Ellipse.Fill>
-                <RadialGradientBrush>
-                    <GradientStop Color="#5BA3FF" Offset="0"/>
-                    <GradientStop Color="Transparent" Offset="1"/>
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-        </Ellipse>
-
-        <!-- Capa 4: blob cyan — esquina inferior derecha -->
-        <Ellipse Width="500" Height="500" Opacity="0.13"
-                 HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                 Margin="0,0,-160,-160">
-            <Ellipse.Fill>
-                <RadialGradientBrush>
-                    <GradientStop Color="#2EDFBF" Offset="0"/>
-                    <GradientStop Color="Transparent" Offset="1"/>
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-        </Ellipse>
-
-        <!-- Capa 5: blob púrpura — centro -->
-        <Ellipse Width="380" Height="380" Opacity="0.11"
-                 HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Ellipse.Fill>
-                <RadialGradientBrush>
-                    <GradientStop Color="#9B7EFF" Offset="0"/>
-                    <GradientStop Color="Transparent" Offset="1"/>
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-        </Ellipse>
-
-        <!-- Capa 6: todo el contenido de la app encima -->
-        <Grid Margin="16,12,16,12">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>   <!-- Header -->
-                <RowDefinition Height="Auto"/>   <!-- Sysinfo bar + Charts -->
-                <RowDefinition Height="*"/>      <!-- Opciones scroll -->
-                <RowDefinition Name="OutputRow" Height="200"/>    <!-- Consola -->
-                <RowDefinition Height="Auto"/>   <!-- Footer/botones -->
-            </Grid.RowDefinitions>
-
-            <!-- ═══ HEADER ═══════════════════════════════════════════ -->
-            <Grid Grid.Row="0" Margin="0,0,0,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Logo SysOpt -->
-                    <Image Name="imgLogo" Width="48" Height="48" Margin="0,0,12,0" VerticalAlignment="Center"
-                           RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock FontFamily="Segoe UI" FontSize="22" FontWeight="Bold"
-                                   Foreground="{DynamicResource TB_E8ECF4}">
-                            <Run Text="SYS"/>
-                            <Run Foreground="{DynamicResource TB_5BA3FF}" Text="OPT"/>
-                            <Run Foreground="{DynamicResource TB_B0BACC}" FontSize="13" FontWeight="Normal" Text="  v3.1.0  ·  Windows Optimizer GUI"/>
-                        </TextBlock>
-                        <TextBlock Name="StatusText" FontFamily="Segoe UI" FontSize="11"
-                                   Foreground="{DynamicResource TB_9BA4C0}" Margin="2,3,0,0"
-                                   Text="Listo para optimizar"/>
-                    </StackPanel>
-                </StackPanel>
-
-                <!-- Controles derecha del header: Tareas + Acerca de + Modo Análisis -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Botón Tareas en segundo plano -->
-                    <Button Name="btnShowTasks"
-                            Width="32" Height="32" Padding="0" Margin="0,0,8,0"
-                            Background="{DynamicResource TB_1A2040}" BorderBrush="{DynamicResource TB_3D5080}" BorderThickness="1"
-                            Foreground="{DynamicResource TB_9BA4C0}" FontFamily="Segoe UI" FontSize="15" FontWeight="Bold"
-                            Cursor="Hand" ToolTip="Tareas en segundo plano">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="bd" CornerRadius="8"
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}">
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_253060}"/>
-                                        <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource TB_FFB547}"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                        <TextBlock Text="⚡" FontSize="15" Foreground="{DynamicResource TB_FFB547}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
-                    <!-- Botón Opciones (Temas/Idioma) -->
-                    <Button Name="btnOptions"
-                            Width="32" Height="32" Padding="0" Margin="0,0,8,0"
-                            Background="{DynamicResource TB_1A2040}" BorderBrush="{DynamicResource TB_3D5080}" BorderThickness="1"
-                            Foreground="{DynamicResource TB_9BA4C0}" FontFamily="Segoe UI" FontSize="15" FontWeight="Bold"
-                            Cursor="Hand" ToolTip="Opciones — Tema e Idioma">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="bd" CornerRadius="8"
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}">
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_253060}"/>
-                                        <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource TB_A47CFF}"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                        <TextBlock Text="⚙" FontSize="15" Foreground="{DynamicResource TB_A47CFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
-                    <!-- Botón Acerca de la versión -->
-                    <Button Name="btnAbout"
-                            Width="32" Height="32" Padding="0" Margin="0,0,8,0"
-                            Background="{DynamicResource TB_1A2040}" BorderBrush="{DynamicResource TB_3D5080}" BorderThickness="1"
-                            Foreground="{DynamicResource TB_9BA4C0}" FontFamily="Segoe UI" FontSize="15" FontWeight="Bold"
-                            Cursor="Hand" ToolTip="Acerca de SysOpt — Novedades de la versión">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="bd" CornerRadius="8"
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}">
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_253060}"/>
-                                        <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource TB_5BA3FF}"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                        <TextBlock Text="ℹ" FontSize="15" Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
-                    <!-- Modo Dry Run toggle -->
-                    <Border CornerRadius="8" Background="{DynamicResource TB_163530}"
-                            BorderBrush="{DynamicResource TB_2EDFBF}" BorderThickness="1"
-                            Padding="14,8" VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox Name="chkDryRun" VerticalAlignment="Center">
-                                <CheckBox.Content>
-                                    <TextBlock FontFamily="Segoe UI" FontSize="11" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TB_2EDFBF}" Text="MODO ANÁLISIS  (sin cambios)"/>
-                                </CheckBox.Content>
-                            </CheckBox>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </Grid>
-
-            <!-- ═══ SYSINFO BAR + CHARTS ══════════════════════════════════ -->
-            <Border Grid.Row="1" CornerRadius="10" Background="{DynamicResource TB_1A1E2F}"
-                    BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1"
-                    Padding="16,12" Margin="0,0,0,10">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- CPU Panel + Chart -->
-                    <StackPanel Grid.Column="0">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                            <Border Width="22" Height="22" CornerRadius="5" Background="{DynamicResource TB_1A3A5C}" Margin="0,0,7,0" VerticalAlignment="Center">
-                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="CPU" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
-                                      Foreground="{DynamicResource TB_7BA8E0}" VerticalAlignment="Center"/>
-                            <TextBlock Name="CpuPctText" Text="  0%" FontFamily="Segoe UI" FontSize="10"
-                                       FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <TextBlock Name="InfoCPU" Text="—" FontFamily="Segoe UI" FontSize="10"
-                                   FontWeight="SemiBold" Foreground="{DynamicResource TB_5BA3FF}" Margin="0,0,0,5" TextWrapping="Wrap"/>
-                        <Border Background="{DynamicResource TB_1A2540}" CornerRadius="5" Height="52" ClipToBounds="True">
-                            <Canvas Name="CpuChart" Background="Transparent"/>
-                        </Border>
-                    </StackPanel>
-
-                    <!-- Divider -->
-                    <Rectangle Grid.Column="1" Fill="{DynamicResource TB_3A4468}" Width="1" Margin="0,2"/>
-
-                    <!-- RAM Panel + Chart -->
-                    <StackPanel Grid.Column="2" Margin="4,0,0,0">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                            <Border Width="22" Height="22" CornerRadius="5" Background="{DynamicResource TB_1A4A35}" Margin="0,0,7,0" VerticalAlignment="Center">
-                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="RAM" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
-                                      Foreground="{DynamicResource TB_6ABDA0}" VerticalAlignment="Center"/>
-                            <TextBlock Name="RamPctText" Text="  0%" FontFamily="Segoe UI" FontSize="10"
-                                       FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <TextBlock Name="InfoRAM" Text="—" FontFamily="Segoe UI" FontSize="10"
-                                   FontWeight="SemiBold" Foreground="{DynamicResource TB_4AE896}" Margin="0,0,0,5"/>
-                        <Border Background="{DynamicResource TB_1A2540}" CornerRadius="5" Height="52" ClipToBounds="True">
-                            <Canvas Name="RamChart" Background="Transparent"/>
-                        </Border>
-                    </StackPanel>
-
-                    <!-- Divider -->
-                    <Rectangle Grid.Column="3" Fill="{DynamicResource TB_3A4468}" Width="1" Margin="0,2"/>
-
-                    <!-- Disco Panel + Chart -->
-                    <StackPanel Grid.Column="4" Margin="4,0,0,0">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                            <Border Width="22" Height="22" CornerRadius="5" Background="{DynamicResource TB_4A3010}" Margin="0,0,7,0" VerticalAlignment="Center">
-                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="DISCO C:" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
-                                      Foreground="{DynamicResource TB_C0933A}" VerticalAlignment="Center"/>
-                            <TextBlock Name="DiskPctText" Text="  0%" FontFamily="Segoe UI" FontSize="10"
-                                       FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <TextBlock Name="InfoDisk" Text="—" FontFamily="Segoe UI" FontSize="10"
-                                   FontWeight="SemiBold" Foreground="{DynamicResource TB_FFB547}" Margin="0,0,0,5"/>
-                        <Border Background="{DynamicResource TB_1A2540}" CornerRadius="5" Height="52" ClipToBounds="True">
-                            <Canvas Name="DiskChart" Background="Transparent"/>
-                        </Border>
-                    </StackPanel>
-
-                    <!-- Refresh -->
-                    <Button Name="btnRefreshInfo" Grid.Column="5" Style="{StaticResource BtnGhost}"
-                            Content="↻" FontSize="16" Height="32" Width="32" Padding="0"
-                            ToolTip="Actualizar información del sistema" Margin="10,0,0,0" VerticalAlignment="Top"/>
-                </Grid>
-            </Border>
-
-            <!-- ═══ PESTAÑAS PRINCIPALES ══════════════════════════════ -->
-            <TabControl Name="tabMain" Grid.Row="2" Margin="0,0,0,10"
-                        Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1">
-                <TabControl.Resources>
-                    <Style TargetType="TabItem">
-                        <Setter Property="FontFamily" Value="Segoe UI"/>
-                        <Setter Property="FontSize" Value="12"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="Foreground" Value="{DynamicResource TB_9BA4C0}"/>
-                        <Setter Property="Background" Value="{DynamicResource TB_252B3B}"/>
-                        <Setter Property="Padding" Value="16,8"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="TabItem">
-                                    <Border x:Name="tabBorder" Background="{TemplateBinding Background}"
-                                            BorderThickness="0,0,0,2" BorderBrush="Transparent"
-                                            Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter ContentSource="Header"
-                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="tabBorder" Property="BorderBrush" Value="{DynamicResource TB_5BA3FF}"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource TB_F0F3FA}"/>
-                                            <Setter TargetName="tabBorder" Property="Background" Value="{DynamicResource TB_2E3650}"/>
-                                        </Trigger>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="tabBorder" Property="Background" Value="{DynamicResource TB_2A3048}"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </TabControl.Resources>
-
-                <!-- ══ TAB 1: OPTIMIZACIÓN ══ -->
-                <TabItem Header="⚙  Optimización">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource TB_131625}">
-                <Grid Margin="4,8,4,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Columna izquierda -->
-                    <StackPanel Grid.Column="0">
-
-                        <!-- Card: Discos y Archivos -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
-                                            Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="DISCOS Y ARCHIVOS" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
-                                              />
-                                </StackPanel>
-                                <CheckBox Name="chkOptimizeDisks" Content="Optimizar discos (Defrag HDD / TRIM SSD·NVMe)" IsChecked="True"/>
-                                <CheckBox Name="chkRecycleBin"    Content="Vaciar papelera de reciclaje" IsChecked="True"/>
-                                <CheckBox Name="chkTempFiles"     Content="Temp de Windows (System\Temp, Prefetch)" IsChecked="True"/>
-                                <CheckBox Name="chkUserTemp"      Content="Temp de usuario (%TEMP%, AppData\Local\Temp)" IsChecked="True"/>
-                                <CheckBox Name="chkWUCache"       Content="Caché de Windows Update" IsChecked="False"/>
-                                <CheckBox Name="chkChkdsk"        Content="Check Disk (CHKDSK)  —  requiere reinicio" IsChecked="False"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Card: Memoria y Procesos -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
-                                            Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="MEMORIA Y PROCESOS" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
-                                              />
-                                </StackPanel>
-                                <CheckBox Name="chkClearMemory"    Content="Liberar RAM (vaciar Working Set de procesos)" IsChecked="True"/>
-                                <CheckBox Name="chkCloseProcesses" Content="Cerrar procesos no críticos" IsChecked="False"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Card: Red y Navegadores -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
-                                            Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="RED Y NAVEGADORES" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
-                                              />
-                                </StackPanel>
-                                <CheckBox Name="chkDNSCache"     Content="Limpiar caché DNS" IsChecked="True"/>
-                                <CheckBox Name="chkBrowserCache" Content="Caché de navegadores (Chrome, Edge, Firefox, Opera, Brave)" IsChecked="True"/>
-                            </StackPanel>
-                        </Border>
-
-                    </StackPanel>
-
-                    <!-- Columna derecha -->
-                    <StackPanel Grid.Column="2">
-
-                        <!-- Card: Registro -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
-                                            Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="REGISTRO DE WINDOWS" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
-                                              />
-                                </StackPanel>
-                                <CheckBox Name="chkBackupRegistry" Content="Backup del registro (recomendado)" IsChecked="True"/>
-                                <CheckBox Name="chkCleanRegistry"  Content="Limpiar claves huérfanas" IsChecked="False"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Card: Verificación del Sistema -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
-                                            Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="VERIFICACIÓN DEL SISTEMA" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
-                                              />
-                                </StackPanel>
-                                <CheckBox Name="chkSFC"  Content="SFC /SCANNOW  —  verificador de archivos" IsChecked="False"/>
-                                <CheckBox Name="chkDISM" Content="DISM  —  reparar imagen del sistema" IsChecked="False"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Card: Registros de Eventos -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
-                                            Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="REGISTROS DE EVENTOS" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
-                                              />
-                                </StackPanel>
-                                <CheckBox Name="chkEventLogs" Content="Event Viewer (System, Application, Setup)" IsChecked="False"/>
-                                <TextBlock Text="El log Security no se toca" FontFamily="Segoe UI" FontSize="10"
-                                           Foreground="{DynamicResource TB_8B96B8}" Margin="27,3,0,0"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Card: Programas de inicio -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Width="28" Height="28" CornerRadius="7" Background="Transparent" BorderBrush="{DynamicResource TB_FFFFFF}" BorderThickness="1.5"
-                                            Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="PROGRAMAS DE INICIO" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
-                                              />
-                                </StackPanel>
-                                <CheckBox Name="chkShowStartup" Content="Gestionar entradas de autoarranque" IsChecked="False"/>
-                                <TextBlock Text="Abre ventana de gestión al iniciar" FontFamily="Segoe UI" FontSize="10"
-                                           Foreground="{DynamicResource TB_8B96B8}" Margin="27,3,0,0"/>
-                            </StackPanel>
-                        </Border>
-
-                    </StackPanel>
-                </Grid>
-                </ScrollViewer>
-                </TabItem>
-
-                <!-- ══ TAB 2: RENDIMIENTO ══ -->
-                <TabItem Header="📊  Rendimiento">
-                <Grid Background="{DynamicResource TB_131625}" Margin="0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <!-- Toolbar rendimiento -->
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10,8,10,4">
-                        <Button Name="btnRefreshPerf" Style="{StaticResource BtnSecondary}"
-                                Content="↻  Actualizar" MinWidth="110" Height="30"/>
-                        <!-- [A3] Auto-refresco -->
-                        <CheckBox Name="chkAutoRefresh" VerticalAlignment="Center" Margin="14,0,4,0">
-                            <CheckBox.Content>
-                                <TextBlock Text="Auto-refresco" FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_9BA4C0}"/>
-                            </CheckBox.Content>
-                        </CheckBox>
-                        <ComboBox Name="cmbRefreshInterval" Width="72" Height="26" Margin="2,0,0,0"
-                                  VerticalAlignment="Center" FontFamily="Segoe UI" FontSize="11"
-                                  Background="{DynamicResource TB_1A1E2F}" Foreground="{DynamicResource TB_E8ECF4}" BorderBrush="{DynamicResource TB_3A4468}">
-                            <ComboBoxItem Content="5 s"  Tag="5"  IsSelected="True"/>
-                            <ComboBoxItem Content="15 s" Tag="15"/>
-                            <ComboBoxItem Content="30 s" Tag="30"/>
-                            <ComboBoxItem Content="60 s" Tag="60"/>
-                        </ComboBox>
-                        <TextBlock Name="txtPerfStatus" Text="  Haz clic en Actualizar para cargar datos"
-                                   FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_9BA4C0}"
-                                   VerticalAlignment="Center" Margin="10,0,0,0"/>
-                    </StackPanel>
-                    <!-- Contenido en scroll -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="10,0,10,10">
-
-                        <!-- ── CPU CORES ── -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Border Width="26" Height="26" CornerRadius="6" Background="{DynamicResource TB_1A3A5C}" Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                                   Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="CORES DEL PROCESADOR" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <!-- Nombre CPU -->
-                                <TextBlock Name="txtCpuName" Text="—" FontFamily="Segoe UI" FontSize="11"
-                                           Foreground="{DynamicResource TB_9BA4C0}" Margin="0,0,0,8"/>
-                                <!-- Grid de cores generado dinámicamente -->
-                                <ItemsControl Name="icCpuCores">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel Orientation="Horizontal"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border CornerRadius="8" Background="{DynamicResource TB_1A2540}" BorderBrush="{DynamicResource TB_3A4468}"
-                                                    BorderThickness="1" Padding="10,8" Margin="4,4"
-                                                    Width="120">
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding CoreLabel}" FontFamily="Segoe UI"
-                                                               FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TB_B0BACC}"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding Usage}" FontFamily="Segoe UI"
-                                                               FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}"
-                                                               HorizontalAlignment="Center" Margin="0,2"/>
-                                                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding UsageNum}"
-                                                                 Height="4" Margin="0,4,0,2"/>
-                                                    <TextBlock Text="{Binding Freq}" FontFamily="Segoe UI"
-                                                               FontSize="9" Foreground="{DynamicResource TB_8B96B8}"
-                                                               HorizontalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- ── RAM DETALLADA ── -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Border Width="26" Height="26" CornerRadius="6" Background="{DynamicResource TB_1A4A35}" Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                                   Foreground="{DynamicResource TB_4AE896}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="MEMORIA RAM" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                                        <TextBlock Text="TOTAL" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
-                                        <TextBlock Name="txtRamTotal" Text="—" FontFamily="Segoe UI" FontSize="18"
-                                                   FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                                        <TextBlock Text="USADA" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
-                                        <TextBlock Name="txtRamUsed" Text="—" FontFamily="Segoe UI" FontSize="18"
-                                                   FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="LIBRE" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
-                                        <TextBlock Name="txtRamFree" Text="—" FontFamily="Segoe UI" FontSize="18"
-                                                   FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="3" HorizontalAlignment="Center">
-                                        <TextBlock Text="USO%" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
-                                        <TextBlock Name="txtRamPct" Text="—" FontFamily="Segoe UI" FontSize="18"
-                                                   FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                </Grid>
-                                <ProgressBar Name="pbRam" Minimum="0" Maximum="100" Value="0"
-                                             Height="8" Margin="0,10,0,4"/>
-                                <!-- Módulos de RAM -->
-                                <ItemsControl Name="icRamModules">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border CornerRadius="6" Background="{DynamicResource TB_1A2540}" BorderBrush="{DynamicResource TB_2A3A5A}"
-                                                    BorderThickness="1" Padding="10,6" Margin="0,3">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Text="{Binding Slot}" FontFamily="Segoe UI"
-                                                               FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}"
-                                                               VerticalAlignment="Center" Width="60"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Info}" FontFamily="Segoe UI"
-                                                               FontSize="10" Foreground="{DynamicResource TB_B0BACC}" VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding Size}" FontFamily="Segoe UI"
-                                                               FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}"
-                                                               VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- ── SMART DEL DISCO ── -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Border Width="26" Height="26" CornerRadius="6" Background="{DynamicResource TB_3A2010}" Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                                   Foreground="{DynamicResource TB_FFB547}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="ESTADO S.M.A.R.T. DEL DISCO" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <ItemsControl Name="icSmartDisks">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border CornerRadius="8" Background="{DynamicResource TB_1A2540}" BorderBrush="{DynamicResource TB_2A3A5A}"
-                                                    BorderThickness="1" Padding="14,10" Margin="0,4">
-                                                <StackPanel>
-                                                    <Grid Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="{Binding DiskName}" FontFamily="Segoe UI"
-                                                                   FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TB_E0E8F4}"/>
-                                                        <Border Grid.Column="1" CornerRadius="4" Padding="8,2"
-                                                                Background="{Binding StatusBg}">
-                                                            <TextBlock Text="{Binding Status}" FontFamily="Segoe UI"
-                                                                       FontSize="10" FontWeight="Bold" Foreground="{Binding StatusFg}"/>
-                                                        </Border>
-                                                    </Grid>
-                                                    <ItemsControl ItemsSource="{Binding Attributes}">
-                                                        <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate>
-                                                                <WrapPanel Orientation="Horizontal"/>
-                                                            </ItemsPanelTemplate>
-                                                        </ItemsControl.ItemsPanel>
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <Border CornerRadius="5" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_3A4468}"
-                                                                        BorderThickness="1" Padding="8,4" Margin="3,3" MinWidth="130">
-                                                                    <StackPanel>
-                                                                        <TextBlock Text="{Binding Name}" FontFamily="Segoe UI"
-                                                                                   FontSize="9" Foreground="{DynamicResource TB_8B96B8}"/>
-                                                                        <TextBlock Text="{Binding Value}" FontFamily="Segoe UI"
-                                                                                   FontSize="12" FontWeight="Bold"
-                                                                                   Foreground="{Binding ValueColor}"/>
-                                                                    </StackPanel>
-                                                                </Border>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- ── RED ── -->
-                        <Border CornerRadius="10" Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}"
-                                BorderThickness="1" Padding="16,14" Margin="0,0,0,8">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Border Width="26" Height="26" CornerRadius="6" Background="{DynamicResource TB_2A1A4A}" Margin="0,0,10,0">
-                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                                   Foreground="{DynamicResource TB_C07AFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="TARJETAS DE RED" FontFamily="Segoe UI" FontSize="13"
-                                               FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <ItemsControl Name="icNetAdapters">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border CornerRadius="8" Background="{DynamicResource TB_1A2540}" BorderBrush="{DynamicResource TB_2A3A5A}"
-                                                    BorderThickness="1" Padding="14,10" Margin="0,4">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <StackPanel Grid.Column="0">
-                                                        <TextBlock Text="{Binding Name}" FontFamily="Segoe UI"
-                                                                   FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TB_E0E8F4}"/>
-                                                        <TextBlock Text="{Binding IP}" FontFamily="Segoe UI"
-                                                                   FontSize="10" Foreground="{DynamicResource TB_8B96B8}" Margin="0,2"/>
-                                                        <TextBlock Text="{Binding MAC}" FontFamily="Segoe UI"
-                                                                   FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
-                                                    </StackPanel>
-                                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                                        <TextBlock Text="{Binding Speed}" FontFamily="Segoe UI"
-                                                                   FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TB_C07AFF}"
-                                                                   HorizontalAlignment="Right"/>
-                                                        <TextBlock Text="{Binding Status}" FontFamily="Segoe UI"
-                                                                   FontSize="10" Foreground="{Binding StatusColor}"
-                                                                   HorizontalAlignment="Right"/>
-                                                        <TextBlock Text="{Binding BytesIO}" FontFamily="Segoe UI"
-                                                                   FontSize="9" Foreground="{DynamicResource TB_8B96B8}"
-                                                                   HorizontalAlignment="Right" Margin="0,2"/>
-                                                    </StackPanel>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-
-                    </StackPanel>
-                    </ScrollViewer>
-                </Grid>
-                </TabItem>
-
-                <!-- ══ TAB 3: EXPLORADOR DE DISCO ══ -->
-                <TabItem Header="💾  Explorador de Disco">
-                <Grid Background="{DynamicResource TB_131625}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Toolbar fila 1: ruta + scan -->
-                    <Border Grid.Row="0" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,0,1" Padding="10,8,10,4">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Ruta:" FontFamily="Segoe UI" FontSize="11"
-                                       Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBox Name="txtDiskScanPath" Grid.Column="1" Text="C:\"
-                                     FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_F0F3FA}"
-                                     Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1"
-                                     Padding="6,4" VerticalAlignment="Center"/>
-                            <Button Name="btnDiskBrowse" Grid.Column="2" Style="{StaticResource BtnGhost}"
-                                    Content="📁" Height="28" Width="32" Padding="0" Margin="4,0"/>
-                            <Button Name="btnDiskScan" Grid.Column="3" Style="{StaticResource BtnSecondary}"
-                                    Content="🔍  Escanear" Height="28" MinWidth="100" Margin="0,0,4,0"/>
-                            <Button Name="btnDiskStop" Grid.Column="4" Style="{StaticResource BtnAmber}"
-                                    Content="⏹  Detener" Height="28" MinWidth="90" IsEnabled="False"/>
-                        </Grid>
-                    </Border>
-                    <!-- [B1] Toolbar fila 2: filtro de búsqueda -->
-                    <Border Grid.Row="1" Background="{DynamicResource TB_0D0F1A}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,0,1" Padding="10,5">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="🔎  Filtrar:" FontFamily="Segoe UI" FontSize="11"
-                                       Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBox Name="txtDiskFilter" Grid.Column="1"
-                                     FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_F0F3FA}"
-                                     Background="{DynamicResource TB_1A1E2F}" BorderBrush="{DynamicResource TB_3A4468}" BorderThickness="1"
-                                     Padding="6,3" VerticalAlignment="Center"
-                                     ToolTip="Filtra carpetas por nombre en tiempo real"/>
-                            <Button Name="btnDiskFilterClear" Grid.Column="2" Content="✕"
-                                    Style="{StaticResource BtnGhost}" Height="24" Width="28"
-                                    Padding="0" Margin="4,0,0,0" ToolTip="Limpiar filtro"/>
-                        </Grid>
-                    </Border>
-
-                    <!-- TreeView de resultados -->
-                    <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="4"/>
-                            <ColumnDefinition Width="260"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- ListView principal -->
-                        <Border Grid.Column="0" Background="{DynamicResource TB_1A2035}" BorderBrush="{DynamicResource TB_3A4468}" BorderThickness="0,0,1,0">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <!-- Header de columnas -->
-                                <Grid Grid.Row="0" Background="{DynamicResource TB_131625}" Margin="0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="70"/>
-                                        <ColumnDefinition Width="90"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="  Nombre" FontFamily="Segoe UI" FontSize="10"
-                                               FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5"/>
-                                    <TextBlock Grid.Column="1" Text="Tamaño" FontFamily="Segoe UI" FontSize="10"
-                                               FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5" TextAlignment="Right"/>
-                                    <TextBlock Grid.Column="2" Text="%" FontFamily="Segoe UI" FontSize="10"
-                                               FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5" TextAlignment="Right"/>
-                                    <TextBlock Grid.Column="3" Text="Archivos" FontFamily="Segoe UI" FontSize="10"
-                                               FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5" TextAlignment="Right"/>
-                                </Grid>
-                                <ListBox Name="lbDiskTree" Grid.Row="1"
-                                         Background="Transparent" BorderThickness="0"
-                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                         VirtualizingStackPanel.IsVirtualizing="True">
-                                    <!-- [B2] Menú contextual -->
-                                    <ListBox.ContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Name="ctxOpen"         Header="📂  Abrir en Explorador"/>
-                                            <MenuItem Name="ctxCopy"         Header="📋  Copiar ruta"/>
-                                            <Separator/>
-                                            <MenuItem Name="ctxScanFolder"   Header="🔍  Escanear carpeta"/>
-                                            <Separator/>
-                                            <MenuItem Name="ctxDelete"       Header="🗑  Eliminar carpeta..."
-                                                      Style="{StaticResource MenuItemDanger}"/>
-                                            <Separator/>
-                                            <MenuItem Name="ctxShowOutput"   Header="🖥  Mostrar Output"/>
-                                        </ContextMenu>
-                                    </ListBox.ContextMenu>
-                                    <ListBox.ItemContainerStyle>
-                                        <Style TargetType="ListBoxItem">
-                                            <Setter Property="Padding" Value="0"/>
-                                            <Setter Property="Margin" Value="0"/>
-                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="ListBoxItem">
-                                                        <Border x:Name="lbiBd" Background="Transparent"
-                                                                BorderBrush="{DynamicResource TB_2A3448}" BorderThickness="0,0,0,1">
-                                                            <ContentPresenter/>
-                                                        </Border>
-                                                        <ControlTemplate.Triggers>
-                                                            <Trigger Property="IsSelected" Value="True">
-                                                                <Setter TargetName="lbiBd" Property="Background" Value="{DynamicResource TB_1A3A5C}"/>
-                                                            </Trigger>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="lbiBd" Property="Background" Value="{DynamicResource TB_252B3B}"/>
-                                                            </Trigger>
-                                                        </ControlTemplate.Triggers>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </ListBox.ItemContainerStyle>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Height="30">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="100"/>
-                                                    <ColumnDefinition Width="70"/>
-                                                    <ColumnDefinition Width="90"/>
-                                                </Grid.ColumnDefinitions>
-                                                <!-- Barra de fondo proporcional -->
-                                                <Border Grid.Column="0" Grid.ColumnSpan="4"
-                                                        HorizontalAlignment="Left"
-                                                        Width="{Binding BarWidth}" Height="30"
-                                                        Background="{Binding BarColor}" Opacity="0.15"/>
-                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"
-                                                            Margin="{Binding Indent}">
-                                                    <!-- Botón colapsar/expandir (solo visible en carpetas con hijos) -->
-                                                    <Button Name="btnToggle" Content="{Binding ToggleIcon}"
-                                                            Tag="{Binding FullPath}"
-                                                            Width="18" Height="18" Padding="0" Margin="0,0,3,0"
-                                                            Background="Transparent" BorderThickness="0"
-                                                            Foreground="{DynamicResource TB_7BA8E0}" FontSize="9" FontWeight="Bold"
-                                                            Cursor="Hand"
-                                                            Visibility="{Binding ToggleVisibility}"/>
-                                                    <TextBlock Text="{Binding Icon}" FontSize="12" Margin="0,0,5,0"
-                                                               VerticalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding DisplayName}" FontFamily="Segoe UI" FontSize="11"
-                                                               Foreground="{DynamicResource TB_D0D8F0}" VerticalAlignment="Center"
-                                                               TextTrimming="CharacterEllipsis"/>
-                                                </StackPanel>
-                                                <TextBlock Grid.Column="1" Text="{Binding SizeStr}" FontFamily="Segoe UI"
-                                                           FontSize="11" FontWeight="SemiBold" Foreground="{Binding SizeColor}"
-                                                           VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0"/>
-                                                <TextBlock Grid.Column="2" Text="{Binding PctStr}" FontFamily="Segoe UI"
-                                                           FontSize="10" Foreground="{DynamicResource TB_8B96B8}"
-                                                           VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0"/>
-                                                <TextBlock Grid.Column="3" Text="{Binding FileCount}" FontFamily="Segoe UI"
-                                                           FontSize="10" Foreground="{DynamicResource TB_8B96B8}"
-                                                           VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Grid>
-                        </Border>
-
-                        <!-- Panel lateral de detalle -->
-                        <Border Grid.Column="2" Background="{DynamicResource TB_131625}" Padding="12">
-                            <StackPanel>
-                                <TextBlock Text="DETALLE" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TB_6B7A9E}" Margin="0,0,0,10"/>
-                                <TextBlock Name="txtDiskDetailName" Text="—" FontFamily="Segoe UI" FontSize="12"
-                                           FontWeight="Bold" Foreground="{DynamicResource TB_F0F3FA}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                                <Grid Margin="0,0,0,6">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <TextBlock Text="Tamaño:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
-                                    <TextBlock Name="txtDiskDetailSize" Grid.Column="1" Text="—" FontFamily="Segoe UI"
-                                               FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,6">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <TextBlock Text="Archivos:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
-                                    <TextBlock Name="txtDiskDetailFiles" Grid.Column="1" Text="—" FontFamily="Segoe UI"
-                                               FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,6">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <TextBlock Text="Carpetas:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
-                                    <TextBlock Name="txtDiskDetailDirs" Grid.Column="1" Text="—" FontFamily="Segoe UI"
-                                               FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,14">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <TextBlock Text="% del padre:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
-                                    <TextBlock Name="txtDiskDetailPct" Grid.Column="1" Text="—" FontFamily="Segoe UI"
-                                               FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_C07AFF}"/>
-                                </Grid>
-                                <Rectangle Height="1" Fill="{DynamicResource TB_3A4468}" Margin="0,0,0,12"/>
-                                <TextBlock Text="TOP 10 ARCHIVOS MÁS GRANDES" FontFamily="Segoe UI" FontSize="9"
-                                           FontWeight="SemiBold" Foreground="{DynamicResource TB_6B7A9E}" Margin="0,0,0,8"/>
-                                <ItemsControl Name="icTopFiles">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Margin="0,0,0,6">
-                                                <TextBlock Text="{Binding FileName}" FontFamily="Segoe UI" FontSize="10"
-                                                           Foreground="{DynamicResource TB_B0BACC}" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Text="{Binding FileSize}" FontFamily="Segoe UI" FontSize="10"
-                                                           FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-
-                    <!-- Barra de estado del escaneo -->
-                    <Border Grid.Row="3" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,1,0,0" Padding="10,6">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Name="txtDiskScanStatus" Text="Listo"
-                                       FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center"/>
-                            <!-- [B3] Exportar CSV + Informe HTML -->
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Name="btnDedup" Content="🔍  Duplicados"
-                                        Style="{StaticResource BtnGhost}" Height="22" FontSize="10"
-                                        Margin="0,0,6,0" IsEnabled="False"
-                                        ToolTip="Busca archivos duplicados por SHA256 (&gt;10 MB) en el escaneo actual"/>
-                                <Button Name="btnExportCsv" Content="📄  Exportar CSV"
-                                        Style="{StaticResource BtnGhost}" Height="22" FontSize="10"
-                                        Margin="0,0,6,0" IsEnabled="False" ToolTip="Exportar resultados a CSV"/>
-                                <Button Name="btnDiskReport" Content="🌐  Informe HTML"
-                                        Style="{StaticResource BtnGhost}" Height="22" FontSize="10"
-                                        Margin="0,0,6,0" IsEnabled="False"
-                                        ToolTip="Genera informe HTML visual del escaneo en .\output\"/>
-                            </StackPanel>
-                            <ProgressBar Name="pbDiskScan" Grid.Column="2" Width="150" Height="6"
-                                         Minimum="0" Maximum="100" Value="0" IsIndeterminate="False"
-                                         VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
-                </Grid>
-                </TabItem>
-
-
-                <!-- ── [B4] Pestaña Historial de Escaneos ── -->
-                <TabItem Name="tabHistorial" Header="🕒  Historial">
-                <Grid Background="{DynamicResource TB_131625}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Toolbar fila 1: nombre + guardar -->
-                    <Border Grid.Row="0" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,0,1" Padding="10,7">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Fila 1: campo nombre + botón guardar -->
-                            <Grid Grid.Row="0" Margin="0,0,0,6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Nombre:" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource TB_7880A0}" FontSize="11" Margin="0,0,8,0"
-                                           FontFamily="JetBrains Mono"/>
-                                <TextBox Name="txtSnapshotName" Grid.Column="1"
-                                         Background="{DynamicResource TB_0D0F1A}" Foreground="{DynamicResource TB_E8ECF4}"
-                                         BorderBrush="{DynamicResource TB_2A3448}" BorderThickness="1"
-                                         CaretBrush="{DynamicResource TB_5BA3FF}" SelectionBrush="{DynamicResource TB_1A3A5C}"
-                                         FontSize="12" Padding="8,5"
-                                         FontFamily="JetBrains Mono, Consolas"
-                                         IsEnabled="False"/>
-                                <Button Name="btnSnapshotSave" Grid.Column="2" Content="💾  Guardar"
-                                        Style="{StaticResource BtnSecondary}"
-                                        Margin="6,0,0,0" Padding="12,5"
-                                        Cursor="Hand" FontSize="12" IsEnabled="False"/>
-                            </Grid>
-
-                            <!-- Fila 2: acciones sobre snapshots existentes -->
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <CheckBox Name="chkSnapshotSelectAll" Grid.Column="0"
-                                          Content="Todo" Foreground="{DynamicResource TB_7880A0}" FontSize="11"
-                                          VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock Grid.Column="1" Name="txtSnapshotSelCount"
-                                           Text="Snapshots guardados" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource TB_7880A0}" FontSize="11" FontFamily="JetBrains Mono"/>
-                                <Button Name="btnSnapshotCompare" Grid.Column="2" Content="📊  Comparar"
-                                        Style="{StaticResource BtnPrimary}"
-                                        Margin="0,0,6,0" Padding="10,4"
-                                        Cursor="Hand" FontSize="11" IsEnabled="False"
-                                        ToolTip="Compara los snapshots marcados entre sí o contra el escaneo actual"/>
-                                <Button Name="btnSnapshotDelete" Grid.Column="3" Content="🗑  Eliminar"
-                                        Style="{StaticResource BtnDanger}"
-                                        Padding="10,4"
-                                        Cursor="Hand" FontSize="11" IsEnabled="False"
-                                        ToolTip="Elimina todos los snapshots marcados"/>
-                            </Grid>
-                        </Grid>
-                    </Border>
-
-                    <!-- Lista de snapshots + panel de detalle/comparación -->
-                    <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="320"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Lista de snapshots con checkboxes -->
-                        <Border Grid.Column="0" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,1,0" Background="{DynamicResource TB_0D0F1A}">
-                            <ListBox Name="lbSnapshots" Background="Transparent" BorderThickness="0"
-                                     SelectionMode="Extended" FontSize="12"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Padding="8,6" Background="Transparent">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <!-- CheckBox que bindea a IsChecked del item -->
-                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                                          VerticalAlignment="Center" Margin="0,0,8,0"
-                                                          Focusable="False"/>
-                                                <StackPanel Grid.Column="1">
-                                                    <TextBlock Text="{Binding Label}"
-                                                               FontWeight="SemiBold" Foreground="{DynamicResource TB_E8ECF4}" FontSize="12"
-                                                               TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Text="{Binding DateStr}"
-                                                               Foreground="{DynamicResource TB_5BA3FF}" FontSize="10" Margin="0,2,0,0"
-                                                               FontFamily="JetBrains Mono"/>
-                                                    <TextBlock Text="{Binding SummaryStr}"
-                                                               Foreground="{DynamicResource TB_7880A0}" FontSize="10" Margin="0,2,0,0"
-                                                               FontFamily="JetBrains Mono"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                                <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem">
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                        <Setter Property="Padding" Value="0"/>
-                                        <Setter Property="Background" Value="Transparent"/>
-                                        <Setter Property="Foreground" Value="{DynamicResource TB_E8ECF4}"/>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource TB_1A2F4A}"/>
-                                            </Trigger>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource TB_181D2E}"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ListBox.ItemContainerStyle>
-                            </ListBox>
-                        </Border>
-
-                        <!-- Panel detalle / comparación -->
-                        <Grid Grid.Column="1" Background="{DynamicResource TB_0D0F1A}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Header con info del snapshot seleccionado -->
-                            <Border Grid.Row="0" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,0,1" Padding="14,10">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Name="txtSnapshotDetailTitle" Text="Selecciona un snapshot"
-                                               Foreground="{DynamicResource TB_7880A0}" FontSize="13" FontWeight="SemiBold"/>
-                                    <TextBlock Name="txtSnapshotDetailMeta" Text="" Margin="12,0,0,0"
-                                               Foreground="{DynamicResource TB_5BA3FF}" FontSize="11" FontFamily="JetBrains Mono"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Lista de carpetas del snapshot / comparación -->
-                            <ListBox Name="lbSnapshotDetail" Grid.Row="1"
-                                     Background="Transparent" BorderThickness="0"
-                                     FontSize="12" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="10,4">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="90"/>
-                                                <ColumnDefinition Width="70"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding FolderName}"
-                                                       Foreground="{DynamicResource TB_E8ECF4}" TextTrimming="CharacterEllipsis"
-                                                       ToolTip="{Binding FullPath}"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding SizeStr}"
-                                                       Foreground="{Binding SizeColor}" FontFamily="JetBrains Mono"
-                                                       HorizontalAlignment="Right" FontSize="11"/>
-                                            <TextBlock Grid.Column="2" Text="{Binding DeltaStr}"
-                                                       Foreground="{Binding DeltaColor}" FontFamily="JetBrains Mono"
-                                                       HorizontalAlignment="Right" FontSize="11"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                                <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem">
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                        <Setter Property="Padding" Value="0"/>
-                                        <Setter Property="Background" Value="Transparent"/>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource TB_131625}"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </ListBox.ItemContainerStyle>
-                            </ListBox>
-                        </Grid>
-                    </Grid>
-
-                    <!-- Status bar -->
-                    <Border Grid.Row="2" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,1,0,0" Padding="10,5">
-                        <TextBlock Name="txtSnapshotStatus" Text="Sin snapshots guardados."
-                                   Foreground="{DynamicResource TB_7880A0}" FontSize="11" FontFamily="JetBrains Mono"/>
-                    </Border>
-
-                </Grid>
-                </TabItem>
-
-                <!-- ── Pestaña Tareas en Segundo Plano ── -->
-            </TabControl>
-
-            <!-- ═══ CONSOLA ════════════════════════════════════════════ -->
-            <Border Name="OutputPanel" Grid.Row="3" CornerRadius="10" Background="{DynamicResource TB_1A2035}"
-                    BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1" Margin="0,0,0,10">
-                <Grid Margin="1">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Barra de título de la consola -->
-                    <Border Grid.Row="0" CornerRadius="10,10,0,0" Background="{DynamicResource TB_1A1E2F}"
-                            BorderBrush="{DynamicResource TB_252B40}" BorderThickness="0,0,0,1" Padding="10,6">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <!-- Botones de ventana funcionales -->
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                <!-- Rojo: Cerrar/ocultar output -->
-                                <Button Name="btnOutputClose" Width="13" Height="13" Margin="0,0,7,0"
-                                        Cursor="Hand" ToolTip="Ocultar output"
-                                        BorderThickness="0">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Ellipse x:Name="el" Width="13" Height="13" Fill="{DynamicResource TB_FF6B84}"/>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="el" Property="Fill" Value="{DynamicResource TB_CC2244}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                                <!-- Amarillo: Minimizar output -->
-                                <Button Name="btnOutputMinimize" Width="13" Height="13" Margin="0,0,7,0"
-                                        Cursor="Hand" ToolTip="Minimizar output"
-                                        Background="{DynamicResource TB_F5A623}" BorderThickness="0">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Ellipse x:Name="el" Width="13" Height="13" Fill="{DynamicResource TB_F5A623}"/>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="el" Property="Fill" Value="{DynamicResource TB_D4850A}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                                <!-- Verde: Expandir output -->
-                                <Button Name="btnOutputExpand" Width="13" Height="13" Margin="0,0,14,0"
-                                        Cursor="Hand" ToolTip="Expandir output"
-                                        Background="{DynamicResource TB_4AE896}" BorderThickness="0">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Ellipse x:Name="el" Width="13" Height="13" Fill="{DynamicResource TB_4AE896}"/>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="el" Property="Fill" Value="{DynamicResource TB_28C874}"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                            </StackPanel>
-                            <!-- Etiquetas centradas -->
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="OUTPUT" FontFamily="Segoe UI" FontSize="9" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TB_8B96B8}" VerticalAlignment="Center"/>
-                                <TextBlock Name="TaskText" FontFamily="Segoe UI" FontSize="10"
-                                           Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center" Margin="14,0,0,0"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- Texto de salida -->
-                    <TextBox Name="ConsoleOutput" Grid.Row="1"
-                             IsReadOnly="True"
-                             VerticalScrollBarVisibility="Auto"
-                             HorizontalScrollBarVisibility="Disabled"
-                             FontFamily="Cascadia Code, Consolas, Courier New"
-                             FontSize="10.5"
-                             Background="Transparent"
-                             Foreground="{DynamicResource TB_5AE88A}"
-                             BorderThickness="0"
-                             Padding="14,10"
-                             TextWrapping="Wrap"
-                             SelectionBrush="{DynamicResource TB_3D8EFF}"/>
-
-                    <!-- Barra de progreso + porcentaje -->
-                    <Grid Grid.Row="2" Margin="14,6,14,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <ProgressBar Name="ProgressBar" Grid.Column="0" Height="6"
-                                     Minimum="0" Maximum="100" Value="0"
-                                     VerticalAlignment="Center"/>
-                        <TextBlock Name="ProgressText" Grid.Column="1"
-                                   Text="0%" FontFamily="Segoe UI" FontSize="10"
-                                   FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}"
-                                   VerticalAlignment="Center" Margin="12,0,0,0" Width="36"/>
-                    </Grid>
-                </Grid>
-            </Border>
-
-            <!-- ═══ FOOTER / BOTONES ══════════════════════════════════ -->
-            <Grid Grid.Row="4">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Reinicio automático -->
-                <Border Grid.Column="0" CornerRadius="8" Background="{DynamicResource TB_1A1E2F}"
-                        BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1" Padding="12,0" Margin="0,0,8,0">
-                    <CheckBox Name="chkAutoRestart" VerticalAlignment="Center">
-                        <CheckBox.Content>
-                            <TextBlock Text="Reiniciar al finalizar" FontFamily="Segoe UI"
-                                       FontSize="11" Foreground="{DynamicResource TB_9BA4C0}"/>
-                        </CheckBox.Content>
-                    </CheckBox>
-                </Border>
-
-                <!-- Spacer -->
-                <Rectangle Grid.Column="1"/>
-
-                <Button Name="btnShowOutput"   Grid.Column="2" Style="{StaticResource BtnGhost}"
-                        Content="🖥 Output" MinWidth="90" Visibility="Collapsed"
-                        ToolTip="Mostrar panel de output"/>
-                <Button Name="btnSelectAll"    Grid.Column="3" Style="{StaticResource BtnGhost}"
-                        Content="Seleccionar todo" MinWidth="130"/>
-                <Button Name="btnDryRun"       Grid.Column="4" Style="{StaticResource BtnCyan}"
-                        Content="Analizar" MinWidth="90"
-                        ToolTip="Dry Run — reportar sin ejecutar cambios"/>
-                <Button Name="btnStart"        Grid.Column="5" Style="{StaticResource BtnPrimary}"
-                        Content="▶  Iniciar optimización" MinWidth="160" FontWeight="Bold"/>
-                <Button Name="btnCancel"       Grid.Column="6" Style="{StaticResource BtnAmber}"
-                        Content="Cancelar" MinWidth="90" IsEnabled="False"/>
-                <Button Name="btnSaveLog"      Grid.Column="7" Style="{StaticResource BtnGhost}"
-                        Content="Guardar log" MinWidth="100"/>
-                <Button Name="btnExit"         Grid.Column="8" Style="{StaticResource BtnDanger}"
-                        Content="Salir" MinWidth="80"/>
-            </Grid>
-
-        </Grid>
-    </Grid>
-</Window>
-"@
+$xaml = [XamlLoader]::Load($script:XamlFolder, "MainWindow")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Cargar XAML y obtener controles
@@ -2114,7 +380,6 @@ Set-SplashProgress 65 "Construyendo interfaz gráfica..."
 $reader = [System.Xml.XmlNodeReader]::new([xml]$xaml)
 $window = [Windows.Markup.XamlReader]::Load($reader)
 Set-SplashProgress 85 "Enlazando controles..."
-# [RAM-05] Inicializar RunspacePool centralizado en background
 Initialize-RunspacePool
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2286,12 +551,13 @@ function Show-ThemedDialog {
         "success"  { "#4AE896" }
         "question" { "#9B7EFF" }
     }
+    # accentBg: usa claves de tema para que sea compatible con temas claros y oscuros
     $accentBg = switch ($Type) {
-        "info"     { "#0D1E35" }
-        "warning"  { "#2B1E0A" }
-        "error"    { "#2B0D12" }
-        "success"  { "#0D2B1A" }
-        "question" { "#1A0D35" }
+        "info"     { Get-TC 'DryRunBg'       '#0D1E35' }
+        "warning"  { Get-TC 'BgStatusWarn'   '#2B1E0A' }
+        "error"    { Get-TC 'BgStatusErr'    '#2B0D12' }
+        "success"  { Get-TC 'BgStatusOk'     '#0D2B1A' }
+        "question" { Get-TC 'BgStatusWarn' '#2A2010' }
     }
 
     # Escapar caracteres especiales XML para evitar romper el XAML
@@ -2300,15 +566,16 @@ function Show-ThemedDialog {
 
     $btnOkXaml = if ($Buttons -eq "OK") {
         "<Button Name=`"btnOK`" Content=`"Aceptar`" Width=`"100`" Height=`"34`" Margin=`"0`"
-                 Background=`"$accentColor`" Foreground=`"#0D0F1A`" BorderThickness=`"0`"
+                 Background=`"$accentColor`" Foreground=`"$(Get-TC 'BgDeep' '#0D0F1A')`" BorderThickness=`"0`"
                  FontWeight=`"Bold`" FontSize=`"12`" Cursor=`"Hand`" IsDefault=`"True`"/>"
     } else {
         "<StackPanel Orientation=`"Horizontal`" HorizontalAlignment=`"Right`" Margin=`"0`">
             <Button Name=`"btnNo`"  Content=`"No`"  Width=`"90`" Height=`"34`" Margin=`"0,0,8,0`"
-                    Background=`"#1A1E2F`" Foreground=`"#7880A0`" BorderBrush=`"#252B40`" BorderThickness=`"1`"
+                    Background=`"$(Get-TC 'BtnSecondaryBg' '#1A1E2F')`" Foreground=`"$(Get-TC 'TextMuted' '#7880A0')`"
+                    BorderBrush=`"$(Get-TC 'BorderSubtle' '#252B40')`" BorderThickness=`"1`"
                     FontSize=`"12`" Cursor=`"Hand`" IsCancel=`"True`"/>
             <Button Name=`"btnYes`" Content=`"Sí`"  Width=`"90`" Height=`"34`"
-                    Background=`"$accentColor`" Foreground=`"#0D0F1A`" BorderThickness=`"0`"
+                    Background=`"$accentColor`" Foreground=`"$(Get-TC 'BgDeep' '#0D0F1A')`" BorderThickness=`"0`"
                     FontWeight=`"Bold`" FontSize=`"12`" Cursor=`"Hand`" IsDefault=`"True`"/>
         </StackPanel>"
     }
@@ -2321,7 +588,7 @@ function Show-ThemedDialog {
         ResizeMode="NoResize" WindowStyle="None"
         AllowsTransparency="True" Background="Transparent"
         Topmost="True">
-    <Border Background="$(Get-TC 'HdrBg' '#131625')" CornerRadius="12"
+    <Border Background="$(Get-TC 'BgCardDark' '#131625')" CornerRadius="12"
             BorderBrush="$accentColor" BorderThickness="1">
         <Border.Effect>
             <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.6" Color="$(Get-TC 'ConsoleBg' '#000000')"/>
@@ -2406,7 +673,7 @@ function Show-ThemedInput {
         ResizeMode="NoResize" WindowStyle="None"
         AllowsTransparency="True" Background="Transparent"
         Topmost="True">
-    <Border Background="$(Get-TC 'HdrBg' '#131625')" CornerRadius="12"
+    <Border Background="$(Get-TC 'BgCardDark' '#131625')" CornerRadius="12"
             BorderBrush="$(Get-TC 'AccentBlue' '#5BA3FF')" BorderThickness="1">
         <Border.Effect>
             <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.6" Color="$(Get-TC 'ConsoleBg' '#000000')"/>
@@ -2455,7 +722,7 @@ function Show-ThemedInput {
             <Border Grid.Row="3" Padding="22,0,22,18">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Name="btnCancel" Content="Cancelar" Width="100" Height="34" Margin="0,0,8,0"
-                            Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" Foreground="$(Get-TC 'TextMuted' '#7880A0')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="1"
+                            Background="$(Get-TC 'BgInput' '#1A1E2F')" Foreground="$(Get-TC 'TextMuted' '#7880A0')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1"
                             FontSize="12" Cursor="Hand" IsCancel="True"/>
                     <Button Name="btnOK" Content="Aceptar" Width="100" Height="34"
                             Background="$(Get-TC 'AccentBlue' '#5BA3FF')" Foreground="$(Get-TC 'BgDeep' '#0D0F1A')" BorderThickness="0"
@@ -2934,10 +1201,10 @@ function Apply-ComboBoxDarkTheme {
     param([System.Windows.Controls.ComboBox]$ComboBox)
     $ComboBox.ApplyTemplate() | Out-Null
     $bc = [System.Windows.Media.BrushConverter]::new()
-    $darkBg     = $bc.ConvertFromString((Get-TC 'SplashBarBg' '#1A1E2F'))
-    $darkBorder = $bc.ConvertFromString((Get-TC 'Border' '#3A4468'))
+    $darkBg     = $bc.ConvertFromString((Get-TC 'BgInput' '#1A1E2F'))
+    $darkBorder = $bc.ConvertFromString((Get-TC 'BorderSubtle' '#3A4468'))
     $lightFg    = $bc.ConvertFromString((Get-TC 'TextPrimary' '#E8ECF4'))
-    $hoverBg    = $bc.ConvertFromString((Get-TC 'ItemHover' '#1E3A5C'))
+    $hoverBg    = $bc.ConvertFromString((Get-TC 'ComboHover' '#1E3A5C'))
 
     # -- Set ComboBox foreground for selected text display --
     $ComboBox.Foreground = $lightFg
@@ -2970,10 +1237,10 @@ function Apply-ComboBoxDarkTheme {
         try {
             $cb = $sender
             $bc2 = [System.Windows.Media.BrushConverter]::new()
-            $popBg     = $bc2.ConvertFromString((Get-TC 'SplashBarBg' '#1A1E2F'))
-            $popBorder = $bc2.ConvertFromString((Get-TC 'Border' '#3A4468'))
+            $popBg     = $bc2.ConvertFromString((Get-TC 'BgInput' '#1A1E2F'))
+            $popBorder = $bc2.ConvertFromString((Get-TC 'BorderSubtle' '#3A4468'))
             $popFg     = $bc2.ConvertFromString((Get-TC 'TextPrimary' '#E8ECF4'))
-            $popHover  = $bc2.ConvertFromString((Get-TC 'ItemHover' '#1E3A5C'))
+            $popHover  = $bc2.ConvertFromString((Get-TC 'ComboHover' '#1E3A5C'))
 
             $popup = $cb.Template.FindName("PART_Popup", $cb)
             if ($popup -and $popup.Child) {
@@ -3020,12 +1287,10 @@ $window.Add_Loaded({
     # [C3] Restaurar configuracion guardada (tema, idioma, preferencias)
     Load-Settings
 
-    # [v3.1] Aplicar idioma guardado desde settings.json
     try {
         Load-Language $script:CurrentLang
     } catch {}
 
-    # [v3.1] Aplicar tema guardado desde settings.json
     if ($script:CurrentTheme -ne "default") {
         try {
             Apply-ThemeWithProgress -ThemeName $script:CurrentTheme
@@ -3038,6 +1303,9 @@ $window.Add_Loaded({
         $allCombos = Get-VisualChildren $window | Where-Object { $_ -is [System.Windows.Controls.ComboBox] }
         foreach ($cb in $allCombos) { Apply-ComboBoxDarkTheme $cb }
     } catch {}
+
+    # Aplicar colores de tema a los botones nombrados
+    try { Apply-ButtonTheme } catch {}
 
     $chartTimer.Start()
     Update-SystemInfo        # primera carga inmediata
@@ -3053,7 +1321,7 @@ $txtPerfStatus    = $window.FindName("txtPerfStatus")
 $chkAutoRefresh      = $window.FindName("chkAutoRefresh")
 $cmbRefreshInterval  = $window.FindName("cmbRefreshInterval")
 $script:AutoRefreshTimer = $null
-$script:AppClosing       = $false   # [FIX] Guardia: impide ticks de rendimiento durante el cierre
+$script:AppClosing       = $false
 # Aplicar tema oscuro al ComboBox también en su evento Loaded individual
 if ($null -ne $cmbRefreshInterval) {
     $cmbRefreshInterval.Add_Loaded({ Apply-ComboBoxDarkTheme $cmbRefreshInterval })
@@ -3077,7 +1345,6 @@ function Format-Bytes {
     return "$Bytes B"
 }
 
-# [FIX-NET] Funciones de red a ámbito de script (estaban anidadas dentro de Update-PerformanceTab
 # causando fallo de resolución de nombre "OUL" al invocarse desde el dispatcher WPF)
 function Format-Rate {
     param([double]$bps)
@@ -3100,10 +1367,9 @@ function Get-LinkBps {
 }
 
 function Update-PerformanceTab {
-    if ($script:AppClosing) { return }   # [FIX] No ejecutar si la app está cerrando
+    if ($script:AppClosing) { return }
     $txtPerfStatus.Text = "Recopilando datos…"
 
-    # [FIX-A3] Asegurar módulos disponibles (necesario si PowerShell no los importa automáticamente)
     try { Import-Module Storage    -ErrorAction SilentlyContinue } catch {}
     try { Import-Module NetAdapter -ErrorAction SilentlyContinue } catch {}
     try { Import-Module NetTCPIP   -ErrorAction SilentlyContinue } catch {}
@@ -3187,29 +1453,37 @@ function Update-PerformanceTab {
             try { $rel = Get-StorageReliabilityCounter -PhysicalDisk $disk -ErrorAction Stop } catch {}
 
             $health = $disk.HealthStatus
-            $bg = switch ($health) { "Healthy" { "#182A1E" } "Warning" { "#2A2010" } default { "#2A1018" } }
-            $fg = switch ($health) { "Healthy" { "#4AE896" } "Warning" { "#FFB547" } default { "#FF6B84" } }
+            $bg = switch ($health) {
+                "Healthy" { Get-TC 'BgStatusOk'   '#182A1E' }
+                "Warning" { Get-TC 'BgStatusWarn'  '#2A2010' }
+                default   { Get-TC 'BgStatusErr'   '#2A1018' }
+            }
+            $fg = switch ($health) {
+                "Healthy" { Get-TC 'FgStatusOk'   '#4AE896' }
+                "Warning" { Get-TC 'FgStatusWarn'  '#FFB547' }
+                default   { Get-TC 'FgStatusErr'   '#FF6B84' }
+            }
 
             $attrs = [System.Collections.Generic.List[object]]::new()
             $sz = if ($disk.Size -ge 1GB) { "{0:N1} GB" -f ($disk.Size / 1GB) } else { "{0:N0} MB" -f ($disk.Size / 1MB) }
-            $attrs.Add([PSCustomObject]@{ Name="Tipo";    Value=$disk.MediaType; ValueColor="#B0BACC" })
-            $attrs.Add([PSCustomObject]@{ Name="Tamaño";  Value=$sz;             ValueColor="#5BA3FF" })
-            $attrs.Add([PSCustomObject]@{ Name="Bus";     Value=$disk.BusType;   ValueColor="#B0BACC" })
+            $attrs.Add([PSCustomObject]@{ Name="Tipo";    Value=$disk.MediaType; ValueColor=(Get-TC 'TextSecondary' '#B0BACC') })
+            $attrs.Add([PSCustomObject]@{ Name="Tamaño";  Value=$sz;             ValueColor=(Get-TC 'AccentBlue'    '#5BA3FF') })
+            $attrs.Add([PSCustomObject]@{ Name="Bus";     Value=$disk.BusType;   ValueColor=(Get-TC 'TextSecondary' '#B0BACC') })
             if ($rel) {
                 if ($null -ne $rel.PowerOnHours) {
-                    $attrs.Add([PSCustomObject]@{ Name="Horas enc."; Value="$($rel.PowerOnHours) h"; ValueColor="#FFB547" })
+                    $attrs.Add([PSCustomObject]@{ Name="Horas enc."; Value="$($rel.PowerOnHours) h"; ValueColor=(Get-TC 'AccentAmber' '#FFB547') })
                 }
                 if ($null -ne $rel.Temperature) {
                     $tc = $rel.Temperature
-                    $tc2 = if ($tc -ge 55) { "#FF6B84" } elseif ($tc -ge 45) { "#FFB547" } else { "#4AE896" }
+                    $tc2 = if ($tc -ge 55) { Get-TC 'FgStatusErr' '#FF6B84' } elseif ($tc -ge 45) { Get-TC 'FgStatusWarn' '#FFB547' } else { Get-TC 'FgStatusOk' '#4AE896' }
                     $attrs.Add([PSCustomObject]@{ Name="Temperatura"; Value="${tc}°C"; ValueColor=$tc2 })
                 }
                 if ($null -ne $rel.ReadErrorsTotal) {
                     $attrs.Add([PSCustomObject]@{ Name="Errores lect."; Value=$rel.ReadErrorsTotal
-                        ValueColor=if($rel.ReadErrorsTotal -gt 0){"#FF6B84"}else{"#4AE896"} })
+                        ValueColor=if($rel.ReadErrorsTotal -gt 0){ Get-TC 'FgStatusErr' '#FF6B84' }else{ Get-TC 'FgStatusOk' '#4AE896' } })
                 }
                 if ($null -ne $rel.Wear) {
-                    $wc = if ($rel.Wear -ge 80) { "#FF6B84" } elseif ($rel.Wear -ge 50) { "#FFB547" } else { "#4AE896" }
+                    $wc = if ($rel.Wear -ge 80) { Get-TC 'FgStatusErr' '#FF6B84' } elseif ($rel.Wear -ge 50) { Get-TC 'FgStatusWarn' '#FFB547' } else { Get-TC 'FgStatusOk' '#4AE896' }
                     $attrs.Add([PSCustomObject]@{ Name="Desgaste"; Value="$($rel.Wear)%"; ValueColor=$wc })
                 }
             }
@@ -3220,7 +1494,7 @@ function Update-PerformanceTab {
         $icSmartDisks.ItemsSource = $smartItems
     } catch {
         $icSmartDisks.ItemsSource = @([PSCustomObject]@{
-            DiskName="Error al leer SMART"; Status="N/A"; StatusBg="#2A1018"; StatusFg="#FF6B84"; Attributes=@()
+            DiskName="Error al leer SMART"; Status="N/A"; StatusBg=(Get-TC 'BgStatusErr' '#2A1018'); StatusFg=(Get-TC 'FgStatusErr' '#FF6B84'); Attributes=@()
         })
     }
 
@@ -3368,33 +1642,29 @@ function Update-PerformanceTab {
 $btnRefreshPerf.Add_Click({ Update-PerformanceTab })
 
 # [A3] Auto-refresco de Rendimiento ───────────────────────────────────────────
-$chkAutoRefresh.Add_Checked({
+# Handler único compartido — evita Add_Tick duplicado si se recrea el timer
+$script:AutoRefreshTick = { Update-PerformanceTab }.GetNewClosure()
+
+function Start-AutoRefreshTimer {
     $secs = 5
-    $sel = $cmbRefreshInterval.SelectedItem
+    $sel  = $cmbRefreshInterval.SelectedItem
     if ($sel -and $sel.Tag) { $secs = [int]$sel.Tag }
-    $script:AutoRefreshTimer = New-Object System.Windows.Threading.DispatcherTimer
+    $script:AutoRefreshTimer          = New-Object System.Windows.Threading.DispatcherTimer
     $script:AutoRefreshTimer.Interval = [TimeSpan]::FromSeconds($secs)
-    $script:AutoRefreshTimer.Add_Tick({ Update-PerformanceTab })
+    $script:AutoRefreshTimer.Add_Tick($script:AutoRefreshTick)
     $script:AutoRefreshTimer.Start()
     $txtPerfStatus.Text = "  Auto-refresco cada $secs s activo"
-})
+}
+
+$chkAutoRefresh.Add_Checked({ Start-AutoRefreshTimer })
 $chkAutoRefresh.Add_Unchecked({
     if ($null -ne $script:AutoRefreshTimer) { $script:AutoRefreshTimer.Stop(); $script:AutoRefreshTimer = $null }
     $txtPerfStatus.Text = "  Auto-refresco desactivado"
 })
 $cmbRefreshInterval.Add_SelectionChanged({
     if ($chkAutoRefresh.IsChecked -eq $true) {
-        # [FIX] Detener y recrear el timer en lugar de reutilizar la instancia anterior
-        # (el timer puede ser $null si fue detenido por el Unchecked handler)
         if ($null -ne $script:AutoRefreshTimer) { $script:AutoRefreshTimer.Stop(); $script:AutoRefreshTimer = $null }
-        $secs = 5
-        $sel = $cmbRefreshInterval.SelectedItem
-        if ($sel -and $sel.Tag) { $secs = [int]$sel.Tag }
-        $script:AutoRefreshTimer = New-Object System.Windows.Threading.DispatcherTimer
-        $script:AutoRefreshTimer.Interval = [TimeSpan]::FromSeconds($secs)
-        $script:AutoRefreshTimer.Add_Tick({ Update-PerformanceTab })
-        $script:AutoRefreshTimer.Start()
-        $txtPerfStatus.Text = "  Auto-refresco cada $secs s activo"
+        Start-AutoRefreshTimer
     }
 })
 
@@ -3414,14 +1684,11 @@ $txtDiskDetailFiles = $window.FindName("txtDiskDetailFiles")
 $txtDiskDetailDirs  = $window.FindName("txtDiskDetailDirs")
 $txtDiskDetailPct   = $window.FindName("txtDiskDetailPct")
 $icTopFiles         = $window.FindName("icTopFiles")
-# [B1] Filtro
 $txtDiskFilter      = $window.FindName("txtDiskFilter")
 $btnDiskFilterClear = $window.FindName("btnDiskFilterClear")
-# [B3] Exportar CSV + Informe HTML + [B5] Deduplicación SHA256
 $btnExportCsv       = $window.FindName("btnExportCsv")
 $btnDiskReport      = $window.FindName("btnDiskReport")
 $btnDedup           = $window.FindName("btnDedup")
-# [B2] Context menu items (inside ContextMenu of lbDiskTree)
 $ctxMenu        = $lbDiskTree.ContextMenu
 $ctxOpen        = $ctxMenu.Items | Where-Object { $_.Name -eq "ctxOpen"      }
 $ctxCopy        = $ctxMenu.Items | Where-Object { $_.Name -eq "ctxCopy"      }
@@ -3573,9 +1840,13 @@ function Start-DiskScan {
         return
     }
 
-    # Señalizar parada al runspace anterior si hubiera uno corriendo
+    # Señalizar parada al runspace anterior y esperar a que confirme la parada
+    # WaitOne(500) bloquea máximo 500ms hasta que el handle complete — evita
+    # que Reset() se ejecute con el hilo de escaneo anterior todavía activo.
     [ScanCtl211]::Stop = $true
-    Start-Sleep -Milliseconds 150
+    if ($null -ne $script:DiskScanAsync -and -not $script:DiskScanAsync.IsCompleted) {
+        $script:DiskScanAsync.AsyncWaitHandle.WaitOne(500) | Out-Null
+    }
     [ScanCtl211]::Reset()
 
     $script:CollapsedPaths.Clear()
@@ -3590,8 +1861,8 @@ function Start-DiskScan {
         $btnSnapshotSave.IsEnabled = $false
         $txtSnapshotName.IsEnabled = $false
         $txtSnapshotName.Text      = ""
-    }  # [B4]
-    if ($null -ne $btnDedup) { $btnDedup.IsEnabled = $false }  # [B5]
+    }
+    if ($null -ne $btnDedup) { $btnDedup.IsEnabled = $false }
     $pbDiskScan.IsIndeterminate = $true
     $pbDiskScan.Value = 0
 
@@ -3635,7 +1906,6 @@ function Start-DiskScan {
     $rs.ApartmentState = "STA"; $rs.Open()
     $ps = [System.Management.Automation.PowerShell]::Create()
     $ps.Runspace = $rs
-    # [FIX-A1] Inyectar el assembly unificado (DiskItem+ScanControl+ParallelScanner)
     # en el nuevo runspace para que los tipos C# sean resolubles desde el hilo de fondo
     $sharedAsmPath = [ScanCtl211].Assembly.Location
     if ($sharedAsmPath -and (Test-Path $sharedAsmPath)) {
@@ -3647,7 +1917,6 @@ function Start-DiskScan {
     # Set DefaultRunspace so C# code can resolve PS types if needed
     $rs.SessionStateProxy.SetVariable("ErrorActionPreference", "SilentlyContinue")
     $script:DiskScanRunspace = $rs
-    # [FIX-CLOSURE] Guardar en scope de script para que el timer pueda acceder
     $script:DiskScanPS    = $ps
     $script:DiskScanAsync = $ps.BeginInvoke()
     Register-Task -Id "diskscan" -Name "Escaneo: $RootPath" -Icon "💾" -IconBg (Get-TC 'BgStatusInfo' '#1A2F4A') | Out-Null
@@ -3834,7 +2103,6 @@ function Start-DiskScan {
 
         # ¿Terminó el runspace?
         if ($null -ne $script:DiskScanAsync -and $script:DiskScanAsync.IsCompleted) {
-            # [FIX-B2] Drenar TODA la cola antes de parar
             $drainMsg = $null
             while (($null -ne $script:ScanQueue) -and $script:ScanQueue.TryDequeue([ref]$drainMsg)) {
                 $dk       = [string]$drainMsg[0]
@@ -3937,17 +2205,16 @@ $script:DiskUiTimer.Stop()
             $script:LiveList.TrimExcess()
             # Liberar el LiveItems index map (ya no se necesita hasta el próximo scan)
             $script:LiveItems.Clear()
-            # GC agresivo: LOH compaction + EmptyWorkingSet
             Invoke-AggressiveGC
 
             $pbDiskScan.IsIndeterminate = $false
             $pbDiskScan.Value = 100
             $btnDiskScan.IsEnabled = $true
             $btnDiskStop.IsEnabled = $false
-            $btnExportCsv.IsEnabled    = $true  # [B3]
+            $btnExportCsv.IsEnabled    = $true
             $btnDiskReport.IsEnabled   = $true  # Informe HTML
-            $btnDedup.IsEnabled        = $true  # [B5] Deduplicación SHA256
-            $btnSnapshotSave.IsEnabled    = $true   # [B4] Habilitar guardar snapshot al finalizar
+            $btnDedup.IsEnabled        = $true
+            $btnSnapshotSave.IsEnabled    = $true
             $txtSnapshotName.IsEnabled    = $true
             $txtSnapshotName.Text         = "Escaneo $(Get-Date -Format 'dd/MM/yyyy HH:mm')"
             $txtSnapshotName.SelectAll()
@@ -3961,7 +2228,6 @@ $script:DiskUiTimer.Stop()
     })
 $script:DiskUiTimer.Start()
 }
-
 
 $btnDiskBrowse.Add_Click({
     $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
@@ -4004,7 +2270,9 @@ function Save-Settings {
         }
         $json = $cfg | ConvertTo-Json
         [System.IO.File]::WriteAllText($script:SettingsPath, $json, [System.Text.Encoding]::UTF8)
-    } catch {}
+    } catch {
+        Write-Log "[WARN] No se pudo guardar settings.json: $_" -Level "WARN" -NoUI
+    }
 }
 
 function Load-Settings {
@@ -4023,7 +2291,6 @@ function Load-Settings {
             }
             # Auto-refresh on/off (set last so timer uses correct interval)
             if ($cfg.AutoRefresh -eq $true) { $chkAutoRefresh.IsChecked = $true }
-            # [v3.1] Restaurar tema e idioma guardados
             if ($cfg.Theme -and (Test-Path (Join-Path $script:ThemesDir "$($cfg.Theme).theme"))) {
                 $script:CurrentTheme = $cfg.Theme
             }
@@ -4155,8 +2422,8 @@ $script:ThemeColorMap = @{
     "1A2040" = @("BgInput", -4, -2, 11)
     "1A2540" = @("CtxHover", -4, -5, -8)
     "1A2F4A" = @("BgStatusInfo", 0, 0, 0)
-    "1A3A5C" = @("ComboSelected", -4, 10, -4)
-    "1A4A35" = @("BgStatusInfo", 0, 27, -21)
+    "1A3A5C" = @("BgStatusInfo", 0, 11, 18)
+    "1A4A35" = @("BgStatusOk", 2, 32, 23)
     "1A6B3E" = @("BgStatusInfo", 0, 60, -12)
     "1E2235" = @("BgInput", 0, 0, 0)
     "1E3058" = @("ComboSelected", 0, 0, -8)
@@ -4167,7 +2434,7 @@ $script:ThemeColorMap = @{
     "253060" = @("ComboSelected", 7, 0, 0)
     "28C874" = @("AccentCyan", -34, -32, -34)
     "2A1018" = @("BgStatusErr", 0, 0, 0)
-    "2A1A4A" = @("CtxHover", 12, -16, 2)
+    "2A1A4A" = @("PurpleBlobBg", 18, -3, 28)
     "2A2010" = @("BgStatusWarn", 0, 0, 0)
     "2A2F48" = @("BorderSubtle", 0, 0, 0)
     "2A3048" = @("BorderSubtle", 0, 1, 0)
@@ -4178,7 +2445,7 @@ $script:ThemeColorMap = @{
     "2E3650" = @("BorderSubtle", 4, 7, 8)
     "2EDFBF" = @("AccentCyan", -28, -9, 41)
     "2FD980" = @("AccentCyan", -27, -15, -22)
-    "3A2010" = @("BtnAmberBg", 12, 0, 0)
+    "3A2010" = @("BgStatusWarn", 16, 0, 0)
     "3A4060" = @("BorderHover", 0, 0, 0)
     "3A4468" = @("BorderHover", 0, 4, 8)
     "3D5080" = @("BorderHover", 3, 16, 32)
@@ -4210,7 +2477,75 @@ $script:ThemeColorMap = @{
     "FF6B84" = @("AccentRed", 0, 0, 0)
     "FFB547" = @("AccentAmber", 0, 0, 0)
     "FFFFFF" = @("BtnPrimaryFg", 0, 0, 0)
+    "1A4A8A" = @("BtnPrimaryBg", 0, 0, 0)
+    "0D2E24" = @("BtnCyanBg", 0, 0, 0)
+    "2E2010" = @("BtnAmberBg", 0, 0, 0)
+    "2E1018" = @("BtnDangerBg", 0, 0, 0)
+    "6B7494" = @("TextMuted", 0, 0, 0)
 }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Apply-ButtonTheme — pinta programáticamente los botones nombrados de la
+# ventana principal usando las claves del tema activo. Complementa el sistema
+# TB_RRGGBB (DynamicResource) para botones con colores asignados directamente.
+# ─────────────────────────────────────────────────────────────────────────────
+function Apply-ButtonTheme {
+    $bc = [System.Windows.Media.BrushConverter]::new()
+
+    # Helper: clave de tema → SolidColorBrush
+    function Local:Brush([string]$key, [string]$fallback) {
+        $bc.ConvertFromString((Get-TC $key $fallback))
+    }
+
+    # ── Paleta por tipo de botón ──────────────────────────────────────────────
+    $palette = @{
+        "Primary"   = @{ Bg = (Brush 'BtnPrimaryBg'   '#1A4A8A'); Fg = (Brush 'BtnPrimaryFg'   '#FFFFFF'); Border = (Brush 'BtnPrimaryBorder' '#5BA3FF') }
+        "Cyan"      = @{ Bg = (Brush 'BtnCyanBg'      '#0D2E24'); Fg = (Brush 'BtnCyanFg'      '#4AE896'); Border = (Brush 'AccentCyan'       '#4AE896') }
+        "Amber"     = @{ Bg = (Brush 'BtnAmberBg'     '#2E2010'); Fg = (Brush 'BtnAmberFg'     '#FFB547'); Border = (Brush 'AccentAmber'      '#FFB547') }
+        "Danger"    = @{ Bg = (Brush 'BtnDangerBg'    '#2E1018'); Fg = (Brush 'BtnDangerFg'    '#FF6B84'); Border = (Brush 'AccentRed'        '#FF6B84') }
+        "Secondary" = @{ Bg = (Brush 'BtnSecondaryBg' '#1E2235'); Fg = (Brush 'BtnSecondaryFg' '#9BA4C0'); Border = (Brush 'BorderSubtle'     '#2A2F48') }
+        "Ghost"     = @{ Bg = (Brush 'BtnGhostBg'     '#1E2235'); Fg = (Brush 'BtnGhostFg'     '#6B7494'); Border = (Brush 'BtnGhostBorder'   '#2A2F48') }
+    }
+
+    # ── Mapa: nombre exacto del control → tipo ───────────────────────────────
+    $btnMap = @{
+        # ── Footer (barra inferior) ───────────────────────────────────────────
+        "btnStart"           = "Primary"    # ▶ Iniciar optimización
+        "btnDryRun"          = "Cyan"       # 🔍 Analizar
+        "btnCancel"          = "Amber"      # Cancelar
+        "btnSelectAll"       = "Secondary"  # Seleccionar todo
+        "btnSaveLog"         = "Secondary"  # Guardar log
+        "btnExit"            = "Danger"     # Salir
+        # ── Header (barra superior) ───────────────────────────────────────────
+        "btnShowTasks"       = "Ghost"      # ⚡ Tareas
+        "btnOptions"         = "Ghost"      # ⚙ Opciones
+        "btnAbout"           = "Ghost"      # ℹ About
+        "btnRefreshInfo"     = "Ghost"      # 🔄 Actualizar info del sistema
+        # ── Tab Rendimiento ───────────────────────────────────────────────────
+        "btnRefreshPerf"     = "Cyan"       # ↺ Actualizar
+        # ── Tab Explorador de Disco ───────────────────────────────────────────
+        "btnDiskScan"        = "Cyan"       # 🔍 Escanear
+        "btnDiskStop"        = "Amber"      # ⏹ Detener
+        "btnDiskBrowse"      = "Ghost"      # 📁 Browse (carpeta)
+        "btnDiskFilterClear" = "Ghost"      # ✕ Limpiar filtro
+        # ── Tab Historial / Snapshots ─────────────────────────────────────────
+        "btnSnapshotSave"    = "Secondary"  # 💾 Guardar
+        "btnSnapshotCompare" = "Cyan"       # 📊 Comparar
+        "btnSnapshotDelete"  = "Danger"     # 🗑 Eliminar
+    }
+
+    foreach ($name in $btnMap.Keys) {
+        try {
+            $ctrl = $window.FindName($name)
+            if ($null -eq $ctrl) { continue }
+            $p = $palette[$btnMap[$name]]
+            $ctrl.Background  = $p.Bg
+            $ctrl.Foreground  = $p.Fg
+            $ctrl.BorderBrush = $p.Border
+        } catch {}
+    }
+}
+
 function Apply-ThemeWithProgress {
     param([string]$ThemeName)
 
@@ -4240,7 +2575,7 @@ function Apply-ThemeWithProgress {
     $rootBorder.CornerRadius    = [System.Windows.CornerRadius]::new(12)
     $rootBorder.BorderBrush     = $bc.ConvertFromString((Get-TC 'AccentBlue' '#5BA3FF'))
     $rootBorder.BorderThickness = [System.Windows.Thickness]::new(1)
-    $rootBorder.Background      = $bc.ConvertFromString((Get-TC 'HdrBg' '#131625'))
+    $rootBorder.Background      = $bc.ConvertFromString((Get-TC 'BgCardDark' '#131625'))
 
     $shadow = New-Object System.Windows.Media.Effects.DropShadowEffect
     $shadow.BlurRadius = 24; $shadow.ShadowDepth = 0; $shadow.Opacity = 0.5
@@ -4261,7 +2596,7 @@ function Apply-ThemeWithProgress {
     $barBg = New-Object System.Windows.Controls.Border
     $barBg.Height          = 6
     $barBg.CornerRadius    = [System.Windows.CornerRadius]::new(3)
-    $barBg.Background      = $bc.ConvertFromString((Get-TC 'SplashBarBg' '#1A1E2F'))
+    $barBg.Background      = $bc.ConvertFromString((Get-TC 'BgInput' '#1A1E2F'))
 
     $barFill = New-Object System.Windows.Controls.Border
     $barFill.HorizontalAlignment = "Left"
@@ -4272,9 +2607,9 @@ function Apply-ThemeWithProgress {
     $grad.StartPoint = [System.Windows.Point]::new(0,0)
     $grad.EndPoint   = [System.Windows.Point]::new(1,0)
     $grad.GradientStops.Add([System.Windows.Media.GradientStop]::new(
-        [System.Windows.Media.ColorConverter]::ConvertFromString((Get-TC 'ProgressGrad1' '#5BA3FF')), 0))
+        [System.Windows.Media.ColorConverter]::ConvertFromString((Get-TC 'ProgressStart' '#5BA3FF')), 0))
     $grad.GradientStops.Add([System.Windows.Media.GradientStop]::new(
-        [System.Windows.Media.ColorConverter]::ConvertFromString((Get-TC 'ProgressGrad2' '#2EDFBF')), 1))
+        [System.Windows.Media.ColorConverter]::ConvertFromString((Get-TC 'ProgressEnd' '#2EDFBF')), 1))
     $barFill.Background = $grad
 
     $barBg.Child = $barFill
@@ -4284,59 +2619,30 @@ function Apply-ThemeWithProgress {
     $progWin.Content  = $rootBorder
 
     $progWin.Show()
-    [System.Windows.Forms.Application]::DoEvents()
+    $progWin.Dispatcher.Invoke([action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
 
-    # -- Parse theme in background runspace --
-    $sync = [hashtable]::Synchronized(@{ Done = $false; Colors = @{}; Error = "" })
-    $dllPath = Join-Path $PSScriptRoot "libs\SysOpt.ThemeEngine.dll"
+    # ThemeEngine::ParseThemeFile lee un fichero INI pequeño — operación síncrona <50ms.
+    # No se necesita runspace de fondo ni animación de espera.
+    $lbl.Text = T 'SplashLoadingTheme' 'Cargando tema...'
+    $barFill.Width = [math]::Round(392 * 20 / 100)
+    $progWin.Dispatcher.Invoke([action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
 
-    $bgPS = [PowerShell]::Create()
-    $bgRS = [System.Management.Automation.Runspaces.RunspaceFactory]::CreateRunspace()
-    $bgRS.Open()
-    $bgPS.Runspace = $bgRS
-
-    [void]$bgPS.AddScript({
-        param($ThemePath, $DllPath, $Sync)
-        try {
-            Add-Type -Path $DllPath
-            $colors = [ThemeEngine]::ParseThemeFile($ThemePath)
-            foreach ($k in $colors.Keys) { $Sync.Colors[$k] = $colors[$k] }
-        } catch {
-            $Sync.Error = $_.Exception.Message
-        }
-        $Sync.Done = $true
-    }).AddParameter("ThemePath", $themePath).AddParameter("DllPath", $dllPath).AddParameter("Sync", $sync)
-
-    $asyncHandle = $bgPS.BeginInvoke()
-
-    # Animation: parsing phase
-    $step = 0
-    while (-not $sync.Done) {
-        $step = [math]::Min($step + 3, 25)
-        $barFill.Width = [math]::Round(392 * $step / 100)
-        $lbl.Text = T 'SplashLoadingTheme' 'Cargando tema...'
-        [System.Windows.Forms.Application]::DoEvents()
-        Start-Sleep -Milliseconds 40
-    }
-
-    try { $bgPS.EndInvoke($asyncHandle) } catch {}
-    try { $bgPS.Dispose() } catch {}
-    try { $bgRS.Close(); $bgRS.Dispose() } catch {}
-
-    if ($sync.Error) {
+    $newColors = @{}
+    try {
+        $colors = [ThemeEngine]::ParseThemeFile($themePath)
+        foreach ($k in $colors.Keys) { $newColors[$k] = $colors[$k] }
+    } catch {
         $progWin.Close()
         Show-ThemedDialog -Title (T 'DlgError' 'Error') `
-            -Message "Error al cargar tema: $($sync.Error)" -Type "error"
+            -Message "Error al cargar tema: $($_.Exception.Message)" -Type "error"
         return
     }
-
-    $newColors = $sync.Colors
     if ($newColors.Count -eq 0) { $progWin.Close(); return }
 
     # -- PASS 1: Update TB_ DynamicResource brushes (auto-propagates to main XAML) --
     $lbl.Text = T 'SplashApplyingTheme' 'Aplicando colores...'
     $barFill.Width = [math]::Round(392 * 35 / 100)
-    [System.Windows.Forms.Application]::DoEvents()
+    $progWin.Dispatcher.Invoke([action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
 
     $mapKeys = $script:ThemeColorMap.Keys
     $totalKeys = @($mapKeys).Count
@@ -4361,14 +2667,14 @@ function Apply-ThemeWithProgress {
         if ($idx % 20 -eq 0) {
             $pct = 35 + [math]::Round(($idx / $totalKeys) * 30)
             $barFill.Width = [math]::Round(392 * $pct / 100)
-            [System.Windows.Forms.Application]::DoEvents()
+            $progWin.Dispatcher.Invoke([action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
         }
     }
 
     # -- PASS 2: Update GradientStops via visual tree walker --
     $barFill.Width = [math]::Round(392 * 70 / 100)
     $lbl.Text = T 'SplashApplyingTheme' 'Actualizando gradientes...'
-    [System.Windows.Forms.Application]::DoEvents()
+    $progWin.Dispatcher.Invoke([action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
 
     # Build old-to-new color map for gradients
     $gradientMap = @{}
@@ -4412,14 +2718,14 @@ function Apply-ThemeWithProgress {
         if ($ei % 300 -eq 0) {
             $pct = 70 + [math]::Round(($ei / [math]::Max(1, $allElements.Count)) * 20)
             $barFill.Width = [math]::Round(392 * [math]::Min(95, $pct) / 100)
-            [System.Windows.Forms.Application]::DoEvents()
+            $progWin.Dispatcher.Invoke([action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
         }
     }
 
     # -- PASS 3: Update script-level state --
     $barFill.Width = [math]::Round(392 * 95 / 100)
     $lbl.Text = T 'SplashApplyingTheme' 'Finalizando...'
-    [System.Windows.Forms.Application]::DoEvents()
+    $progWin.Dispatcher.Invoke([action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
 
     $script:CurrentTheme = $ThemeName
     $script:CurrentThemeColors = @{}
@@ -4438,14 +2744,29 @@ function Apply-ThemeWithProgress {
         }
     } catch {}
 
+    # -- PASS 4: Repaint named buttons that use direct colors (not DynamicResource) --
+    try { Apply-ButtonTheme } catch {}
+
+    # -- PASS 5: Refresh tasks panel so IconBg/StatusBg recalculate with new theme --
+    try { Refresh-TasksPanel } catch {}
+
+    # -- PASS 6: Re-build system info (SMART badges) with new theme colors --
+    try { Update-SystemInfo } catch {}
+
     # Save settings
     try { Save-Settings } catch {}
 
     $barFill.Width = 392
     $lbl.Text = T 'SplashThemeApplied' 'Tema aplicado!'
-    [System.Windows.Forms.Application]::DoEvents()
-    Start-Sleep -Milliseconds 400
-    $progWin.Close()
+    # DispatcherTimer de un solo disparo — evita Sleep en UI thread
+    $closeTimer = New-Object System.Windows.Threading.DispatcherTimer
+    $closeTimer.Interval = [TimeSpan]::FromMilliseconds(400)
+    $capturedWin = $progWin
+    $closeTimer.Add_Tick({
+        $closeTimer.Stop()
+        $capturedWin.Close()
+    }.GetNewClosure())
+    $closeTimer.Start()
 }
 
 
@@ -4607,7 +2928,6 @@ function Show-OptionsWindow {
     }
 }
 
-# [B4] HISTORIAL DE ESCANEOS — Snapshots JSON en .\snapshots\ (relativo al script)
 # ─────────────────────────────────────────────────────────────────────────────
 $script:SnapshotDir = Join-Path $script:AppDir "snapshots"
 $script:LogsDir     = Join-Path $script:AppDir "logs"
@@ -4687,7 +3007,7 @@ function Show-ExportProgressDialog {
 
     # Border raíz
     $rootBorder = New-Object System.Windows.Controls.Border
-    $rootBorder.Background   = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'HdrBg' '#131625'))
+    $rootBorder.Background   = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'BgCardDark' '#131625'))
     $rootBorder.BorderBrush  = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'AccentBlue' '#5BA3FF'))
     $rootBorder.BorderThickness = [System.Windows.Thickness]::new(1)
     $rootBorder.CornerRadius = [System.Windows.CornerRadius]::new(12)
@@ -4733,7 +3053,7 @@ function Show-ExportProgressDialog {
 
     # — Barra de progreso —
     $barTrack = New-Object System.Windows.Controls.Border
-    $barTrack.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'SplashBarBg' '#1A1E2F'))
+    $barTrack.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'BgInput' '#1A1E2F'))
     $barTrack.CornerRadius = [System.Windows.CornerRadius]::new(6)
     $barTrack.Height = 14; $barTrack.Margin = [System.Windows.Thickness]::new(0,0,0,8)
     $barGrid = New-Object System.Windows.Controls.Grid
@@ -4779,9 +3099,9 @@ function Show-ExportProgressDialog {
     $btn = New-Object System.Windows.Controls.Button
     $btn.Content = [string]([char]0x2193) + "  Poner en segundo plano"
     $btn.Height = 32
-    $btn.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'SplashBarBg' '#1A1E2F'))
+    $btn.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'BgInput' '#1A1E2F'))
     $btn.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'TextMuted' '#7880A0'))
-    $btn.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'Border' '#2A3050'))
+    $btn.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'BorderSubtle' '#2A3050'))
     $btn.BorderThickness = [System.Windows.Thickness]::new(1)
     $btn.FontSize = 11.5
     $btn.FontFamily = [System.Windows.Media.FontFamily]::new("Segoe UI")
@@ -4849,7 +3169,7 @@ function Load-SnapshotList {
     $jsonFiles = @()
     if (Test-Path $snapDir) {
         $jsonFiles = @(Get-ChildItem -Path $snapDir -Filter "*.json" -ErrorAction SilentlyContinue |
-                       Sort-Object LastWriteTime -Descending)
+                       Sort-Object LastWriteTime)
     }
 
     if ($jsonFiles.Count -eq 0) {
@@ -4884,9 +3204,6 @@ function Load-SnapshotList {
             else { "$b B" }
         }
         # ── [RAM-04] JsonTextReader: leer solo metadatos sin cargar Entries ──
-        # Analiza el JSON line-by-line. Al encontrar la propiedad "Entries" salta
-        # todo el array contando elementos con depth-tracking sin deserializarlos.
-        # RAM proporcional a metadatos, no a número de entradas.
         function Read-SnapshotMeta([string]$fp) {
             $meta = @{ Label=""; RootPath=""; Date=""; EntryCount=0; TotalBytes=0L; RootCount=0 }
             $fs = $null; $jr = $null
@@ -4989,7 +3306,6 @@ function Load-SnapshotList {
         } catch { $State.Error = $_.Exception.Message; $State.Done = $true }
     }
 
-    # [RAM-05] Usar RunspacePool en lugar de runspace individual
     $ctx = New-PooledPS
     $ps = $ctx.PS
     [void]$ps.AddScript($bgLoad)
@@ -5050,7 +3366,6 @@ function Load-SnapshotList {
             $n = $ordered.Count
             $txtSnapshotStatus.Text = if ($n -eq 0) { "Sin snapshots guardados." } else { "$n snapshot(s) disponibles." }
             Update-SnapshotCheckState
-            # [RAM-06] GC agresivo post-carga de historial
             Invoke-AggressiveGC
             if ($st.Error -ne "") {
                 $txtSnapshotStatus.Text = "Error al cargar: $($st.Error)"
@@ -5074,13 +3389,18 @@ function Get-SnapshotEntriesAsync {
         [scriptblock]$OnError
     )
 
-    $script:ExportState.Phase     = "Leyendo archivo..."
-    $script:ExportState.Progress  = 0
-    $script:ExportState.ItemsDone = 0
-    $script:ExportState.ItemsTotal= 0
-    $script:ExportState.Done      = $false
-    $script:ExportState.Error     = ""
-    $script:ExportState.Result    = $null
+    # (carga snapshot B) pise el estado de la primera (snapshot A) antes de que
+    # su DispatcherTimer haya terminado. $script:ExportState era compartido y se
+    # reiniciaba aquí, corrompiendo la condición de parada del timer anterior.
+    $localExportState = [hashtable]::Synchronized(@{
+        Phase      = "Leyendo archivo..."
+        Progress   = 0
+        ItemsDone  = 0
+        ItemsTotal = 0
+        Done       = $false
+        Error      = ""
+        Result     = $null
+    })
 
     # Generar ID único para esta tarea (puede haber varias en cadena: A luego B)
     $script:TaskIdSeq++
@@ -5088,13 +3408,6 @@ function Get-SnapshotEntriesAsync {
     Register-Task -Id $entTaskId -Name $OperationTitle -Icon "📂" -IconBg (Get-TC 'BgInput' '#1A2A3A') | Out-Null
 
     # ── [FIFO-02] FIFO streaming load via JsonTextReader + ConcurrentQueue ───
-    # JsonTextReader analiza el JSON token a token (streaming).
-    # Cada entrada se encola en ConcurrentQueue en cuanto se completa su objeto
-    # — el productor no espera a tener todas las entradas.
-    # El hilo UI drena la queue en el tick del DispatcherTimer → UI nunca bloquea.
-    # RAM extra = solo los objetos en tránsito en la queue + metadatos del reader.
-    # NUNCA se materializa ReadAllText (copia del JSON) ni ConvertFrom-Json en RAM.
-    # ─────────────────────────────────────────────────────────────────────────
     $entState = [hashtable]::Synchronized(@{
         Queue    = [System.Collections.Concurrent.ConcurrentQueue[object]]::new()
         FeedDone = $false
@@ -5104,7 +3417,6 @@ function Get-SnapshotEntriesAsync {
 
     $bgEnt = {
         param($EntState, $ExportState, $FilePath)
-        # [FIFO-02] Usar ConvertFrom-Json nativo de PowerShell — no requiere Newtonsoft.
         # ConvertFrom-Json es un cmdlet interno (System.Management.Automation) y esta
         # disponible en todos los runspaces sin cargar assemblies externos.
         # Deserializamos el JSON completo y encolamos los entries uno a uno (FIFO),
@@ -5113,7 +3425,8 @@ function Get-SnapshotEntriesAsync {
             $ExportState.Phase = "Leyendo archivo..."; $ExportState.Progress = 10
             $raw  = [System.IO.File]::ReadAllText($FilePath, [System.Text.Encoding]::UTF8)
             $ExportState.Phase = "Deserializando...";  $ExportState.Progress = 30
-            $data = $raw | ConvertFrom-Json
+            try   { $data = $raw | ConvertFrom-Json }
+            catch { throw "JSON inválido en '$FilePath': $_" }
             $raw  = $null   # liberar el string JSON inmediatamente tras parsear
 
             $entries = $data.Entries
@@ -5122,7 +3435,6 @@ function Get-SnapshotEntriesAsync {
             $ExportState.ItemsTotal = $total
             $ExportState.Phase = "Encolando entradas..."; $ExportState.Progress = 50
 
-            # [FIFO] Encolar entry a entry
             $i = 0
             foreach ($e in $entries) {
                 $EntState.Queue.Enqueue(@{
@@ -5152,13 +3464,11 @@ function Get-SnapshotEntriesAsync {
         }
     }
 
-
-    # [RAM-05] Usar RunspacePool
     $ctxEnt = New-PooledPS
     $ps = $ctxEnt.PS
     [void]$ps.AddScript($bgEnt)
     [void]$ps.AddParameter("EntState",    $entState)
-    [void]$ps.AddParameter("ExportState", $script:ExportState)
+    [void]$ps.AddParameter("ExportState", $localExportState)
     [void]$ps.AddParameter("FilePath",    $FilePath)
     $async = $ps.BeginInvoke()
 
@@ -5169,44 +3479,51 @@ function Get-SnapshotEntriesAsync {
     if ($null -ne $script:_entTimer) { try { $script:_entTimer.Stop() } catch {} }
     $t = New-Object System.Windows.Threading.DispatcherTimer
     $t.Interval = [TimeSpan]::FromMilliseconds(150)
-    $script:_entTimer      = $t
-    $script:_entProg       = $prog
-    $script:_entPs         = $ps
-    $script:_entCtx        = $ctxEnt
-    $script:_entAsync      = $async
-    $script:_entOnComplete = $OnComplete
-    $script:_entOnError    = $OnError
-    $script:_entState      = $entState
-    $script:_entAccum      = [System.Collections.Generic.List[object]]::new()
-    $script:_entTaskId     = $entTaskId
+    # [FIX-RACE] NO guardar en $script:_ent* — capturar todo en variables locales
+    # que el closure del tick vea a través del scope de la función, no del script.
+    $script:_entTimer      = $t   # solo para poder detenerlo desde afuera si fuera necesario
 
-    $t.Add_Tick({
-        $st  = $script:ExportState
-        $pg  = $script:_entProg
-        $pct = [int]$st.Progress
-        $entSt = $script:_entState
+    $localProg       = $prog
+    $localPs         = $ps
+    $localCtx        = $ctxEnt
+    $localAsync      = $async
+    $localOnComplete = $OnComplete
+    $localOnError    = $OnError
+    $localEntState   = $entState
+    $localAccum      = [System.Collections.Generic.List[object]]::new()
+    $localTaskId     = $entTaskId
+    $localTimer      = $t
+
+    # ($localExportState, $localEntState, $localAccum, etc.) en el scriptblock.
+    # Sin esto, PowerShell resuelve esas variables en el scope del script al ejecutar
+    # el tick, donde valen $null — causando "You cannot call a method on a null-valued
+    # expression" en $entSt.Queue.TryDequeue().
+    $tickBlock = {
+        $st    = $localExportState
+        $pg    = $localProg
+        $pct   = [int]$st.Progress
+        $entSt = $localEntState
 
         # [FIFO] Drenar queue en el tick del UI — procesa lotes sin bloquear
-        $item = $null
+        $item    = $null
         $drained = 0
-        if ($null -ne $script:_entAccum) {
+        if ($null -ne $entSt -and $null -ne $entSt.Queue) {
             while ($drained -lt 500 -and $entSt.Queue.TryDequeue([ref]$item)) {
-                $script:_entAccum.Add($item)
+                $localAccum.Add($item)
                 $item = $null
                 $drained++
             }
         }
 
-        $cntStr = "$(if ($null -ne $script:_entAccum) { $script:_entAccum.Count } else { 0 }) entradas leídas"
+        $cntStr = "$($localAccum.Count) entradas leídas"
         Update-ProgressDialog $pg $pct $st.Phase $cntStr
-        Update-Task -Id $script:_entTaskId -Pct $pct -Detail $cntStr
+        Update-Task -Id $localTaskId -Pct $pct -Detail $cntStr
 
         if ($st.Done -and $entSt.FeedDone -and $entSt.Queue.IsEmpty) {
-            $script:_entTimer.Stop()
-            Close-ProgressDialog $script:_entProg
-            try { $script:_entPs.EndInvoke($script:_entAsync) | Out-Null } catch {}
-            Dispose-PooledPS $script:_entCtx
-            # [FIFO] GC agresivo post-carga — liberar RAM del runspace y del lector
+            $localTimer.Stop()
+            Close-ProgressDialog $localProg
+            try { $localPs.EndInvoke($localAsync) | Out-Null } catch {}
+            Dispose-PooledPS $localCtx
             [System.GC]::Collect(2, [System.GCCollectionMode]::Forced, $true, $true)
             [System.GC]::WaitForPendingFinalizers()
             try {
@@ -5216,17 +3533,16 @@ function Get-SnapshotEntriesAsync {
             } catch {}
 
             if ($st.Error -ne "") {
-                Complete-Task -Id $script:_entTaskId -IsError -Detail $st.Error
-                if ($null -ne $script:_entOnError) { & $script:_entOnError $st.Error }
+                Complete-Task -Id $localTaskId -IsError -Detail $st.Error
+                if ($null -ne $localOnError) { & $localOnError $st.Error }
             } else {
-                $nEnt = if ($null -ne $script:_entAccum) { $script:_entAccum.Count } else { 0 }
-                Complete-Task -Id $script:_entTaskId -Detail "$nEnt entradas cargadas"
-                # Entregar la lista acumulada al callback — ya completa y ordenable
-                if ($null -ne $script:_entOnComplete) { & $script:_entOnComplete $script:_entAccum }
+                $nEnt = $localAccum.Count
+                Complete-Task -Id $localTaskId -Detail "$nEnt entradas cargadas"
+                if ($null -ne $localOnComplete) { & $localOnComplete $localAccum }
             }
-            $script:_entAccum = $null   # liberar acumulador tras entregar
         }
-    })
+    }.GetNewClosure()
+    $t.Add_Tick($tickBlock)
     $t.Start()
 }
 
@@ -5245,11 +3561,6 @@ $btnSnapshotSave.Add_Click({
     $script:ExportState.Done      = $false; $script:ExportState.Error = ""; $script:ExportState.Result = $null
 
     # ── [FIFO-01] FIFO streaming save via ConcurrentQueue ────────────────────
-    # El hilo UI llena la queue item a item (FIFO) y señaliza FeedDone.
-    # El background drena la queue escribiendo directamente con JsonTextWriter
-    # en disco — NUNCA se materializa el JSON completo en RAM.
-    # RAM extra = solo el lote en tránsito en la queue, no toda la colección.
-    # ─────────────────────────────────────────────────────────────────────────
     $saveState = [hashtable]::Synchronized(@{
         Queue    = [System.Collections.Concurrent.ConcurrentQueue[object]]::new()
         FeedDone = $false          # UI señaliza que terminó de encolar
@@ -5272,8 +3583,6 @@ $btnSnapshotSave.Add_Click({
             $fp = [System.IO.Path]::Combine($SnapshotDir, "snapshot_$(Get-Date -Format 'yyyyMMdd_HHmmss').json")
 
             # [FIFO] Abrir StreamWriter con buffer 64KB — escribe JSON manualmente token a token
-            # Sin Newtonsoft: los valores de entry son tipos primitivos conocidos (string/long/int).
-            # El único escape necesario es \" en strings (rutas/nombres de archivo).
             $fs = [System.IO.File]::Open($fp, [System.IO.FileMode]::Create,
                   [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
             $sw = [System.IO.StreamWriter]::new($fs, [System.Text.Encoding]::UTF8, 65536)
@@ -5653,7 +3962,7 @@ function Show-TasksWindow {
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'Border' '#252B40')"
+        <Border Grid.Row="0" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')"
                 BorderThickness="0,0,0,1" Padding="14,10">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -5670,8 +3979,8 @@ function Show-TasksWindow {
                         Content="🧹  Limpiar completadas"
                         Height="24" FontSize="10" VerticalAlignment="Center"
                         Padding="10,0" Cursor="Hand"
-                        Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" Foreground="$(Get-TC 'TextMuted' '#7880A0')"
-                        BorderBrush="$(Get-TC 'Border' '#2A3050')" BorderThickness="1"
+                        Background="$(Get-TC 'BgInput' '#1A1E2F')" Foreground="$(Get-TC 'TextMuted' '#7880A0')"
+                        BorderBrush="$(Get-TC 'BorderSubtle' '#2A3050')" BorderThickness="1"
                         FontFamily="Segoe UI"
                         ToolTip="Elimina las tareas ya completadas o fallidas"/>
             </Grid>
@@ -5693,7 +4002,7 @@ function Show-TasksWindow {
             </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'Border' '#252B40')"
+                    <Border Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')"
                             BorderThickness="1" CornerRadius="8" Padding="14,10">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -5717,7 +4026,7 @@ function Show-TasksWindow {
                                            Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')" Margin="0,0,0,4"
                                            TextTrimming="CharacterEllipsis"/>
                                 <!-- Barra de progreso responsive: ScaleTransform sobre Border interior -->
-                                <Border Height="5" CornerRadius="3" Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" Margin="0,0,0,4"
+                                <Border Height="5" CornerRadius="3" Background="$(Get-TC 'BgInput' '#1A1E2F')" Margin="0,0,0,4"
                                         ClipToBounds="True">
                                     <Border Name="BarFill" CornerRadius="3"
                                             Background="{Binding BarColor}"
@@ -5749,7 +4058,7 @@ function Show-TasksWindow {
         </ListBox>
 
         <!-- Statusbar -->
-        <Border Grid.Row="2" Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'Border' '#252B40')"
+        <Border Grid.Row="2" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')"
                 BorderThickness="0,1,0,0" Padding="14,6">
             <TextBlock Name="txtTasksStatus" FontFamily="JetBrains Mono" FontSize="10"
                        Foreground="$(Get-TC 'TextMuted' '#4A5270')" Text="Pool: 0 activa(s) · 0 completada(s)"/>
@@ -5767,10 +4076,10 @@ function Show-TasksWindow {
     $btnClear                    = $tw.FindName("btnTasksClearDone")
 
     $btnClear.Add_Click({
-        # [FIX] Null-guard: TaskPool puede ser null si la app se está cerrando
+
         $pool = $script:TaskPool
         if ($null -eq $pool) { return }
-        # [FIX] Iterar snapshot de Keys para evitar race entre enumeración y TryRemove
+
         $snapshot = @($pool.Keys)
         foreach ($k in $snapshot) {
             $t = $null
@@ -5795,13 +4104,12 @@ function Show-TasksWindow {
     $tw.Show()
 }
 
-
 # Mapas de presentación por estado
 $script:TaskStatusMap = @{
-    running   = @{ Text = T 'StatusRunning' 'En curso';   Bg = (Get-TC 'StatusRunningBg' '#152F4A'); Fg = (Get-TC 'StatusRunningFg' '#5BA3FF') }
-    done      = @{ Text = T 'StatusDone' 'Completada';    Bg = (Get-TC 'StatusDoneBg' '#182A1E');    Fg = (Get-TC 'StatusDoneFg' '#4AE896') }
-    error     = @{ Text = T 'StatusError' 'Error';        Bg = (Get-TC 'StatusErrorBg' '#2A1018');   Fg = (Get-TC 'StatusErrorFg' '#FF6B84') }
-    cancelled = @{ Text = T 'StatusCancel' 'Cancelada';   Bg = (Get-TC 'StatusCancelBg' '#2A2010');  Fg = (Get-TC 'StatusCancelFg' '#FFB547') }
+    running   = @{ Text = T 'StatusRunning' 'En curso';   Bg = (Get-TC 'BgStatusInfo' '#1A2F4A'); Fg = (Get-TC 'FgStatusInfo' '#5BA3FF') }
+    done      = @{ Text = T 'StatusDone' 'Completada';    Bg = (Get-TC 'BgStatusOk' '#182A1E');    Fg = (Get-TC 'FgStatusOk' '#4AE896') }
+    error     = @{ Text = T 'StatusError' 'Error';        Bg = (Get-TC 'BgStatusErr' '#2A1018');   Fg = (Get-TC 'FgStatusErr' '#FF6B84') }
+    cancelled = @{ Text = T 'StatusCancel' 'Cancelada';   Bg = (Get-TC 'BgStatusWarn' '#2A2010');  Fg = (Get-TC 'FgStatusWarn' '#FFB547') }
 }
 $script:TaskIconMap = @{
     running   = "⚙"
@@ -5815,9 +4123,8 @@ function Refresh-TasksPanel {
     $lbTasks          = $script:lbTasksWin
     $txtTasksSubtitle = $script:txtTasksSubtitleWin
     $txtTasksStatus   = $script:txtTasksStatusWin
-    # [FIX-BUG3] Todas las referencias pueden ser null si la ventana fue cerrada entre ticks
     if ($null -eq $lbTasks) { return }
-    # [FIX] ConcurrentDictionary.Values puede contener nulls si TryRemove corre en paralelo
+
     $tasks  = @($script:TaskPool.Values | Where-Object { $null -ne $_ } | Sort-Object { $_.StartTime } -Descending)
     $active = @($tasks | Where-Object { $_.Status -eq "running" })
     $done   = @($tasks | Where-Object { $_.Status -ne "running" })
@@ -5844,15 +4151,15 @@ function Refresh-TasksPanel {
             "cancelled" { Get-TC 'AccentAmber' '#FFB547' }
             default     { Get-TC 'AccentBlue' '#5BA3FF' }
         }
-        $pctColor = try { $bc_.ConvertFromString($pctColorHex) } catch { $bc_.ConvertFromString('#5BA3FF') }
+        $pctColor = try { $bc_.ConvertFromString($pctColorHex) } catch { $bc_.ConvertFromString((Get-TC 'AccentBlue' '#5BA3FF')) }
         $barColor = $pctColor
         $iconBgHex = switch ($t.Status) {
             "done"      { Get-TC 'BgStatusOk' '#182A1E' }
             "error"     { Get-TC 'BgStatusErr' '#2A1018' }
-            "cancelled" { Get-TC 'BgStatusCancelBg' '#2A2010' }
+            "cancelled" { Get-TC 'BgStatusWarn' '#2A2010' }
             default     { $t.IconBg }
         }
-        $iconBg = try { $bc_.ConvertFromString($iconBgHex) } catch { $bc_.ConvertFromString('#1A2040') }
+        $iconBg = try { $bc_.ConvertFromString($iconBgHex) } catch { $bc_.ConvertFromString((Get-TC 'BgInput' '#1A2040')) }
         $icon = if ($t.Status -eq "running") { $t.Icon } else { $script:TaskIconMap[$t.Status] }
 
         $barFill  = [math]::Max(1, $pct)   # mínimo 1* para evitar columna cero
@@ -5860,8 +4167,8 @@ function Refresh-TasksPanel {
         # BarPx: ancho en px proporcional al porcentaje. La columna central (~280px disponibles)
         $barPx = [double]($pct * 2.8)   # 100% → 280px, 0% → 0px
 
-        $statusBg = try { $bc_.ConvertFromString($sm.Bg) } catch { $bc_.ConvertFromString('#152F4A') }
-        $statusFg = try { $bc_.ConvertFromString($sm.Fg) } catch { $bc_.ConvertFromString('#5BA3FF') }
+        $statusBg = try { $bc_.ConvertFromString($sm.Bg) } catch { $bc_.ConvertFromString((Get-TC 'BgStatusInfo' '#152F4A')) }
+        $statusFg = try { $bc_.ConvertFromString($sm.Fg) } catch { $bc_.ConvertFromString((Get-TC 'AccentBlue' '#5BA3FF')) }
         $items.Add([PSCustomObject]@{
             Id          = $t.Id
             Name        = $t.Name
@@ -5917,7 +4224,6 @@ function Apply-DiskFilter {
     if ($null -eq $script:AllScannedItems -or $script:AllScannedItems.Count -eq 0) { return }
     if ($null -eq $script:LiveList) { return }
 
-    # [FIX] No tocar LiveList mientras el escaneo está activo — el timer del scanner
     # la gestiona exclusivamente. Guardar el texto y aplicar solo cuando termine.
     if ($null -ne $script:DiskScanAsync) { return }
 
@@ -5946,7 +4252,6 @@ $btnDiskFilterClear.Add_Click({
 })
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [B2] MENÚ CONTEXTUAL DEL EXPLORADOR DE DISCO
 # ─────────────────────────────────────────────────────────────────────────────
 $ctxMenu.Add_Opened({
     $sel = $lbDiskTree.SelectedItem
@@ -6010,7 +4315,6 @@ $ctxScanFolder.Add_Click({
 })
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [B3] EXPORTAR RESULTADOS A CSV
 # ─────────────────────────────────────────────────────────────────────────────
 $btnExportCsv.Add_Click({
     if ($null -eq $script:AllScannedItems -or $script:AllScannedItems.Count -eq 0) {
@@ -6046,7 +4350,6 @@ $btnExportCsv.Add_Click({
     $bgCsvScript = {
         param($State, $CsvPath)
         try {
-            # [RAM-03] Leer directamente desde la referencia compartida
             $Items = $State.DataRef
             $State.Phase    = "Ordenando datos..."
             $State.Progress = 5
@@ -6059,7 +4362,6 @@ $btnExportCsv.Add_Click({
             $State.Progress = 10
             $total = $Items.Count
             $State.ItemsTotal = $total
-            # [RAM-02] StreamWriter con buffer 64KB
             $sw = [System.IO.StreamWriter]::new($CsvPath, $false, [System.Text.Encoding]::UTF8, 65536)
             try {
                 $sw.WriteLine('"Ruta","Tamaño","Bytes","Archivos","Carpetas","% del total","Tipo"')
@@ -6093,7 +4395,6 @@ $btnExportCsv.Add_Click({
         }
     }
 
-    # [RAM-05] Usar RunspacePool
     $ctxCsv = New-PooledPS
     $ps4 = $ctxCsv.PS
     [void]$ps4.AddScript($bgCsvScript)
@@ -6198,7 +4499,6 @@ $btnDiskReport.Add_Click({
             else { "$bytes B" }
         }
 
-        # [RAM-03] Leer directamente desde la referencia compartida — sin clonar
         $DataSnapshot = $State.DataRef
 
         try {
@@ -6286,7 +4586,6 @@ $btnDiskReport.Add_Click({
 
             $State.Phase = "Generando tabla de carpetas..."; $State.Progress = 25
             $State.ItemsTotal = $validItems.Count
-            # [RAM-02b] StreamWriter a archivo temporal para las filas HTML
             # El StringBuilder ya no crece ilimitado en memoria
             $tmpRowsFile = [System.IO.Path]::GetTempFileName()
             $swRows = [System.IO.StreamWriter]::new($tmpRowsFile, $false, [System.Text.Encoding]::UTF8, 65536)
@@ -6359,7 +4658,6 @@ $btnDiskReport.Add_Click({
         }
     }
 
-    # [RAM-05] Usar RunspacePool
     $ctxHtml = New-PooledPS
     $ps2 = $ctxHtml.PS
     [void]$ps2.AddScript($bgExportScript)
@@ -6416,7 +4714,6 @@ $btnDiskReport.Add_Click({
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [B5] Deduplicación SHA256 — busca archivos duplicados (>10 MB) en el escaneo
 # El hash se calcula en un runspace background para no bloquear la UI.
 # Los resultados se muestran en una ventana dedicada con grupos por hash.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -6520,7 +4817,6 @@ $btnDedup.Add_Click({
     $ctx.PS.AddScript($bgDedupScript).AddParameter("State", $script:DedupState).AddParameter("RootPath", $rootPath) | Out-Null
     $dedupAsync = $ctx.PS.BeginInvoke()
 
-    # [FIX-BUG2] Guardar en script: para que Add_Closed pueda pararlo si la app se cierra
     $dedupTimer = New-Object System.Windows.Threading.DispatcherTimer
     $script:_dedupTimer = $dedupTimer
     $dedupTimer.Interval = [TimeSpan]::FromMilliseconds(400)
@@ -6561,99 +4857,7 @@ $btnDedup.Add_Click({
         Write-Log "[B5] Deduplicación: $($groups.Count) grupos, $fmtW recuperables." -Level "INFO"
 
         # ── Ventana de resultados de deduplicación ──────────────────────────
-        $dedupXaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Archivos Duplicados — SysOpt" Width="860" Height="620"
-        WindowStartupLocation="CenterOwner" Background="#0D0F1A"
-        WindowStyle="SingleBorderWindow">
-  <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto"/>
-      <RowDefinition Height="*"/>
-      <RowDefinition Height="Auto"/>
-      <RowDefinition Height="Auto"/>
-    </Grid.RowDefinitions>
-
-    <!-- Header -->
-    <Border Grid.Row="0" Background="#131625" BorderBrush="#252B40" BorderThickness="0,0,0,1" Padding="16,12">
-      <StackPanel>
-        <TextBlock FontFamily="Segoe UI" FontSize="15" FontWeight="Bold" Foreground="#E8ECF4">
-          <Run Text="🔍  Archivos Duplicados"/><Run Foreground="#FF6B84" Text="  [B5 SHA256]"/>
-        </TextBlock>
-        <TextBlock Name="txtDedupSummary" FontFamily="Segoe UI" FontSize="11" Foreground="#7880A0" Margin="0,4,0,0"/>
-      </StackPanel>
-    </Border>
-
-    <!-- Lista de grupos -->
-    <ListBox Name="lbDedupGroups" Grid.Row="1" Background="#0D0F1A" BorderThickness="0"
-             Foreground="#E8ECF4" Margin="8,8,8,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-      <ListBox.ItemContainerStyle>
-        <Style TargetType="ListBoxItem">
-          <Setter Property="Background" Value="Transparent"/>
-          <Setter Property="Padding" Value="0"/>
-          <Setter Property="Margin" Value="0,0,0,6"/>
-          <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-        </Style>
-      </ListBox.ItemContainerStyle>
-      <ListBox.ItemTemplate>
-        <DataTemplate>
-          <Border Background="#131625" BorderBrush="#252B40" BorderThickness="1"
-                  CornerRadius="6" Padding="12,10">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-              </Grid.ColumnDefinitions>
-              <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                  <TextBlock FontFamily="JetBrains Mono" FontSize="11" Foreground="#5BA3FF"
-                             Text="{Binding Hash}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                  <Border Background="#1A2030" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
-                    <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="#FFB547"
-                               Text="{Binding Count, StringFormat='{}{0} copias'}"/>
-                  </Border>
-                  <Border Background="#1A2030" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
-                    <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="#9BA4C0"
-                               Text="{Binding SizeStr, StringFormat='Tamaño: {0}'}"/>
-                  </Border>
-                  <Border Background="#2A1018" CornerRadius="4" Padding="6,2">
-                    <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="#FF6B84"
-                               Text="{Binding WasteStr, StringFormat='Recuperable: {0}'}"/>
-                  </Border>
-                </StackPanel>
-                <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="#7880A0"
-                           Text="{Binding Files}" TextWrapping="Wrap"/>
-              </StackPanel>
-              <Button Grid.Column="1" Content="🗑" Tag="{Binding FullHash}"
-                      Name="btnDedupDelete"
-                      Width="28" Height="28" Margin="8,0,0,0" VerticalAlignment="Top"
-                      Background="#2A1018" Foreground="#FF6B84"
-                      BorderBrush="#4A2A2A" BorderThickness="1" Cursor="Hand"
-                      FontSize="13" ToolTip="Eliminar copias (conserva la primera)"/>
-            </Grid>
-          </Border>
-        </DataTemplate>
-      </ListBox.ItemTemplate>
-    </ListBox>
-
-    <!-- Statusbar -->
-    <TextBlock Name="txtDedupStatus" Grid.Row="2" FontFamily="Segoe UI" FontSize="10"
-               Foreground="#7880A0" Margin="16,6,16,0"/>
-
-    <!-- Footer -->
-    <Border Grid.Row="3" Background="#131625" BorderBrush="#252B40" BorderThickness="0,1,0,0"
-            Padding="16,10" Margin="0,8,0,0">
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-        <Button Name="btnDedupClose" Content="Cerrar" Width="100" Height="30"
-                Background="#1A2040" BorderBrush="#3D8EFF" BorderThickness="1"
-                Foreground="#5BA3FF" FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold"
-                Cursor="Hand"/>
-      </StackPanel>
-    </Border>
-  </Grid>
-</Window>
-"@
+        $dedupXaml = [XamlLoader]::Load($script:XamlFolder, "DedupWindow")
         try {
             $dr   = [System.Xml.XmlNodeReader]::new([xml]$dedupXaml)
             $dWin = [Windows.Markup.XamlReader]::Load($dr)
@@ -6762,12 +4966,12 @@ $lbDiskTree.Add_SelectionChanged({
                     Select-Object -First 10
             } catch { @() }
         }
-        # [RAM-05] Usar RunspacePool para top-files
         $ctxTop = New-PooledPS
         $psTop = $ctxTop.PS
         [void]$psTop.AddScript($topBg).AddParameter("p", $selPath)
         $asyncTop = $psTop.BeginInvoke()
-        $topTimer = New-Object System.Windows.Threading.DispatcherTimer
+        $script:_topTimer = New-Object System.Windows.Threading.DispatcherTimer
+        $topTimer = $script:_topTimer
         $topTimer.Interval = [TimeSpan]::FromMilliseconds(200)
         $script:_topCtx = $ctxTop
         $topTimer.Add_Tick({
@@ -6814,14 +5018,14 @@ function Show-FolderScanner {
             <Setter Property="Padding"       Value="10,5"/>
         </Style>
         <Style TargetType="ContextMenu">
-            <Setter Property="Background"      Value="$(Get-TC 'SplashBarBg' '#1A1E2F')"/>
-            <Setter Property="BorderBrush"     Value="$(Get-TC 'Border' '#3A4468')"/>
+            <Setter Property="Background"      Value="$(Get-TC 'BgInput' '#1A1E2F')"/>
+            <Setter Property="BorderBrush"     Value="$(Get-TC 'BorderSubtle' '#3A4468')"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding"         Value="4"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" BorderBrush="$(Get-TC 'Border' '#3A4468')" BorderThickness="1" CornerRadius="8" Padding="4,4">
+                        <Border Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" CornerRadius="8" Padding="4,4">
                             <ItemsPresenter/>
                         </Border>
                     </ControlTemplate>
@@ -6873,7 +5077,7 @@ function Show-FolderScanner {
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">
-                        <Border CornerRadius="3" Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="1" Height="5">
+                        <Border CornerRadius="3" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Height="5">
                             <Border x:Name="PART_Track">
                                 <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="3">
                                     <Border.Background>
@@ -6901,7 +5105,7 @@ function Show-FolderScanner {
         </Grid.RowDefinitions>
 
         <!-- Cabecera -->
-        <Border Grid.Row="0" CornerRadius="10" Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="1" Padding="16,12" Margin="0,0,0,10">
+        <Border Grid.Row="0" CornerRadius="10" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Padding="16,12" Margin="0,0,0,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -6916,13 +5120,13 @@ function Show-FolderScanner {
                     <TextBlock Name="fsPathLabel" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border CornerRadius="6" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'Border' '#3A4468')" BorderThickness="1" Padding="10,5" Margin="0,0,8,0">
+                    <Border CornerRadius="6" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" Padding="10,5" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Total: " FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"/>
                             <TextBlock Name="fsTotalSize" Text="—" FontSize="11" FontWeight="Bold" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')"/>
                         </StackPanel>
                     </Border>
-                    <Border CornerRadius="6" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'Border' '#3A4468')" BorderThickness="1" Padding="10,5">
+                    <Border CornerRadius="6" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" Padding="10,5">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Archivos: " FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"/>
                             <TextBlock Name="fsFileCount" Text="—" FontSize="11" FontWeight="Bold" Foreground="$(Get-TC 'AccentGreen' '#4AE896')"/>
@@ -6933,7 +5137,7 @@ function Show-FolderScanner {
         </Border>
 
         <!-- Barra de búsqueda/filtro + ordenación -->
-        <Border Grid.Row="1" CornerRadius="8" Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="1" Padding="10,7" Margin="0,0,0,8">
+        <Border Grid.Row="1" CornerRadius="8" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Padding="10,7" Margin="0,0,0,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -6942,7 +5146,7 @@ function Show-FolderScanner {
                 </Grid.ColumnDefinitions>
                 <TextBox Name="fsFilter" Grid.Column="0"
                          Background="$(Get-TC 'BgDeep' '#0D0F1A')" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')"
-                         BorderBrush="$(Get-TC 'Border' '#3A4468')" BorderThickness="1"
+                         BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1"
                          FontFamily="Segoe UI" FontSize="11" Padding="8,5"
                          VerticalContentAlignment="Center"
                          CaretBrush="$(Get-TC 'AccentBlue' '#5BA3FF')" SelectionBrush="$(Get-TC 'BtnSecondaryFg' '#3D8EFF')"/>
@@ -6951,22 +5155,22 @@ function Show-FolderScanner {
                            VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0"/>
                 <TextBlock Grid.Column="1" Text="Ordenar:" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" VerticalAlignment="Center" Margin="10,0,6,0"/>
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Name="fsSortSize"  Content="Tamaño ↓" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'Border' '#3A4468')" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Margin="0,0,4,0" FontSize="10"/>
-                    <Button Name="fsSortName"  Content="Nombre"   Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" BorderBrush="$(Get-TC 'Border' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,4,0" FontSize="10"/>
-                    <Button Name="fsSortExt"   Content="Extensión" Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" BorderBrush="$(Get-TC 'Border' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" FontSize="10"/>
+                    <Button Name="fsSortSize"  Content="Tamaño ↓" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Margin="0,0,4,0" FontSize="10"/>
+                    <Button Name="fsSortName"  Content="Nombre"   Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,4,0" FontSize="10"/>
+                    <Button Name="fsSortExt"   Content="Extensión" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" FontSize="10"/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Lista de archivos -->
-        <Border Grid.Row="2" CornerRadius="10" Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="1">
+        <Border Grid.Row="2" CornerRadius="10" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <!-- Cabecera de columnas -->
-                <Border Grid.Row="0" Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="0,0,0,1" Padding="0,0,0,0">
+                <Border Grid.Row="0" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,0,0,1" Padding="0,0,0,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="30"/>
@@ -7066,7 +5270,7 @@ function Show-FolderScanner {
         </Border>
 
         <!-- Barra de progreso del escaneo -->
-        <Border Grid.Row="3" CornerRadius="8" Background="$(Get-TC 'SplashBarBg' '#1A1E2F')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="1" Padding="12,8" Margin="0,8,0,0">
+        <Border Grid.Row="3" CornerRadius="8" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Padding="12,8" Margin="0,8,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -7193,9 +5397,6 @@ function Show-FolderScanner {
     }
 
     # ── Escaneo streaming con ConcurrentQueue (nunca bloquea la UI) ──
-    # EnumerateFiles es lazy: el runspace emite archivo a archivo a la queue.
-    # El DispatcherTimer drena la queue en lotes de 200 por tick → UI siempre fluida.
-    # Al terminar: GC + EmptyWorkingSet libera la RAM del runspace.
     $script:fsScanQueue  = [System.Collections.Concurrent.ConcurrentQueue[object]]::new()
     $script:fsScanDone   = $false
     $script:fsTotalBytes = [long]0
@@ -7234,7 +5435,8 @@ function Show-FolderScanner {
     $availMB = [Math]::Round((Invoke-CimQuery -ClassName Win32_OperatingSystem -SilentOnFail).FreePhysicalMemory / 1024)
     $BATCH = if ($availMB -lt 2048) { 50 } elseif ($availMB -lt 4096) { 150 } else { 300 }
 
-    $scanTimer = New-Object System.Windows.Threading.DispatcherTimer
+    $script:_scanTimer = New-Object System.Windows.Threading.DispatcherTimer
+    $scanTimer = $script:_scanTimer
     # Intervalo adaptativo: más lento si hay poca RAM libre
     $scanIntervalMs = if ($availMB -lt 2048) { 250 } elseif ($availMB -lt 4096) { 180 } else { 120 }
     $scanTimer.Interval = [TimeSpan]::FromMilliseconds($scanIntervalMs)
@@ -7315,35 +5517,36 @@ function Show-FolderScanner {
         Refresh-FsList
     })
 
+    $bc_ = [System.Windows.Media.BrushConverter]::new()
     # ── Botones de ordenación ──
     $fsSortSize.Add_Click({
         $script:fsSortMode = "size"
-        $fsSortSize.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#132040")
-        $fsSortSize.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#5BA3FF")
-        $fsSortName.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#1A1E2F")
-        $fsSortName.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#9BA4C0")
-        $fsSortExt.Background  = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#1A1E2F")
-        $fsSortExt.Foreground  = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#9BA4C0")
+        $fsSortSize.Background = ($bc_.ConvertFromString((Get-TC 'ComboSelected' '#132040')))
+        $fsSortSize.Foreground = ($bc_.ConvertFromString((Get-TC 'AccentBlue'    '#5BA3FF')))
+        $fsSortName.Background = ($bc_.ConvertFromString((Get-TC 'BgInput'       '#1A1E2F')))
+        $fsSortName.Foreground = ($bc_.ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0')))
+        $fsSortExt.Background  = ($bc_.ConvertFromString((Get-TC 'BgInput'       '#1A1E2F')))
+        $fsSortExt.Foreground  = ($bc_.ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0')))
         Refresh-FsList
     })
     $fsSortName.Add_Click({
         $script:fsSortMode = "name"
-        $fsSortName.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#132040")
-        $fsSortName.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#5BA3FF")
-        $fsSortSize.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#1A1E2F")
-        $fsSortSize.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#9BA4C0")
-        $fsSortExt.Background  = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#1A1E2F")
-        $fsSortExt.Foreground  = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#9BA4C0")
+        $fsSortName.Background = ($bc_.ConvertFromString((Get-TC 'ComboSelected' '#132040')))
+        $fsSortName.Foreground = ($bc_.ConvertFromString((Get-TC 'AccentBlue'    '#5BA3FF')))
+        $fsSortSize.Background = ($bc_.ConvertFromString((Get-TC 'BgInput'       '#1A1E2F')))
+        $fsSortSize.Foreground = ($bc_.ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0')))
+        $fsSortExt.Background  = ($bc_.ConvertFromString((Get-TC 'BgInput'       '#1A1E2F')))
+        $fsSortExt.Foreground  = ($bc_.ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0')))
         Refresh-FsList
     })
     $fsSortExt.Add_Click({
         $script:fsSortMode = "ext"
-        $fsSortExt.Background  = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#132040")
-        $fsSortExt.Foreground  = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#5BA3FF")
-        $fsSortSize.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#1A1E2F")
-        $fsSortSize.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#9BA4C0")
-        $fsSortName.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#1A1E2F")
-        $fsSortName.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#9BA4C0")
+        $fsSortExt.Background  = ($bc_.ConvertFromString((Get-TC 'ComboSelected' '#132040')))
+        $fsSortExt.Foreground  = ($bc_.ConvertFromString((Get-TC 'AccentBlue'    '#5BA3FF')))
+        $fsSortSize.Background = ($bc_.ConvertFromString((Get-TC 'BgInput'       '#1A1E2F')))
+        $fsSortSize.Foreground = ($bc_.ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0')))
+        $fsSortName.Background = ($bc_.ConvertFromString((Get-TC 'BgInput'       '#1A1E2F')))
+        $fsSortName.Foreground = ($bc_.ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0')))
         Refresh-FsList
     })
 
@@ -7450,18 +5653,18 @@ function Show-StartupManager {
         <Style TargetType="DataGrid">
             <Setter Property="Background"            Value="$(Get-TC 'BgDeep' '#0D0F1A')"/>
             <Setter Property="Foreground"            Value="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
-            <Setter Property="BorderBrush"           Value="$(Get-TC 'Border' '#252B40')"/>
+            <Setter Property="BorderBrush"           Value="$(Get-TC 'BorderSubtle' '#252B40')"/>
             <Setter Property="BorderThickness"       Value="0"/>
-            <Setter Property="RowBackground"         Value="$(Get-TC 'HdrBg' '#131625')"/>
+            <Setter Property="RowBackground"         Value="$(Get-TC 'BgCardDark' '#131625')"/>
             <Setter Property="AlternatingRowBackground" Value="$(Get-TC 'BgDeep' '#0F1220')"/>
-            <Setter Property="HorizontalGridLinesBrush" Value="$(Get-TC 'SplashBarBg' '#1A1E2F')"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="$(Get-TC 'BgInput' '#1A1E2F')"/>
             <Setter Property="VerticalGridLinesBrush"   Value="Transparent"/>
             <Setter Property="ColumnHeaderHeight"    Value="34"/>
         </Style>
         <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background"   Value="$(Get-TC 'SplashBarBg' '#1A1E2F')"/>
+            <Setter Property="Background"   Value="$(Get-TC 'BgInput' '#1A1E2F')"/>
             <Setter Property="Foreground"   Value="$(Get-TC 'TextMuted' '#7880A0')"/>
-            <Setter Property="BorderBrush"  Value="$(Get-TC 'Border' '#252B40')"/>
+            <Setter Property="BorderBrush"  Value="$(Get-TC 'BorderSubtle' '#252B40')"/>
             <Setter Property="BorderThickness" Value="0,0,1,1"/>
             <Setter Property="Padding"      Value="10,0"/>
             <Setter Property="FontSize"     Value="10"/>
@@ -7501,7 +5704,7 @@ function Show-StartupManager {
         </Style>
     </Window.Resources>
 
-    <Border Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="1" CornerRadius="10">
+    <Border Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" CornerRadius="10">
         <Border.Effect>
             <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.7" Color="$(Get-TC 'ConsoleBg' '#000000')"/>
         </Border.Effect>
@@ -7515,7 +5718,7 @@ function Show-StartupManager {
 
             <!-- Barra de título arrastrable -->
             <Border Grid.Row="0" Background="$(Get-TC 'BgDeep' '#0D0F1A')" CornerRadius="10,10,0,0"
-                    BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="0,0,0,1"
+                    BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,0,0,1"
                     Name="titleBar">
                 <Grid Margin="18,0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -7579,7 +5782,7 @@ function Show-StartupManager {
             </DataGrid>
 
             <!-- Footer con status y botones -->
-            <Border Grid.Row="3" Background="$(Get-TC 'BgDeep' '#0D0F1A')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="0,1,0,0"
+            <Border Grid.Row="3" Background="$(Get-TC 'BgDeep' '#0D0F1A')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,1,0,0"
                     CornerRadius="0,0,10,10" Padding="18,10">
                 <Grid>
                     <TextBlock Name="StartupStatus" VerticalAlignment="Center"
@@ -7681,7 +5884,7 @@ function Show-DiagnosticReport {
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Informe de Diagnóstico del Sistema" Height="680" Width="860"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
-        Background="$(Get-TC 'HdrBg' '#131625')">
+        Background="$(Get-TC 'BgCardDark' '#131625')">
     <Window.Resources>
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Segoe UI"/>
@@ -7732,7 +5935,7 @@ function Show-DiagnosticReport {
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="0,0,0,1" Padding="24,16">
+        <Border Grid.Row="0" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,0,0,1" Padding="24,16">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -7772,7 +5975,7 @@ function Show-DiagnosticReport {
         </ScrollViewer>
 
         <!-- Footer -->
-        <Border Grid.Row="2" Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="0,1,0,0" Padding="24,12">
+        <Border Grid.Row="2" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,1,0,0" Padding="24,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -7788,7 +5991,7 @@ function Show-DiagnosticReport {
                         Foreground="$(Get-TC 'AccentBlue' '#7BA8E0')" FontFamily="Segoe UI" FontSize="11" FontWeight="SemiBold"
                         Padding="14,7" Margin="8,0" Cursor="Hand" Height="34"/>
                 <Button Name="btnCloseDiag" Grid.Column="2" Content="Cerrar"
-                        Background="$(Get-TC 'CtxHover' '#1A2540')" BorderBrush="$(Get-TC 'Border' '#252B40')" BorderThickness="1"
+                        Background="$(Get-TC 'CtxHover' '#1A2540')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1"
                         Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" FontFamily="Segoe UI" FontSize="11"
                         Padding="18,7" Cursor="Hand" Height="34"/>
             </Grid>
@@ -7873,7 +6076,7 @@ function Show-DiagnosticReport {
             $det.FontFamily = New-Object System.Windows.Media.FontFamily("Segoe UI")
             $det.FontSize   = 10
             $det.Foreground = New-Object System.Windows.Media.SolidColorBrush(
-                [System.Windows.Media.ColorConverter]::ConvertFromString("#9BA4C0"))
+                [System.Windows.Media.ColorConverter]::ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0')))
             $det.TextWrapping = "Wrap"
             [void]$sp.Children.Add($det)
         }
@@ -7886,7 +6089,7 @@ function Show-DiagnosticReport {
             $act.FontFamily = New-Object System.Windows.Media.FontFamily("Segoe UI")
             $act.FontSize   = 9
             $act.Foreground = New-Object System.Windows.Media.SolidColorBrush(
-                [System.Windows.Media.ColorConverter]::ConvertFromString("#5BA3FF"))
+                [System.Windows.Media.ColorConverter]::ConvertFromString((Get-TC 'AccentBlue' '#5BA3FF')))
             $act.VerticalAlignment = "Center"
             $act.TextAlignment = "Right"
             $act.Width = 160
@@ -8088,6 +6291,13 @@ function Show-DiagnosticReport {
 # SCRIPT DE OPTIMIZACIÓN — se ejecuta en runspace separado
 # ═════════════════════════════════════════════════════════════════════════════
 $OptimizationScript = {
+    # param() DEBE ser la primera instrucción ejecutable del script block
+    # $DiagReportRef se inyecta via SessionStateProxy.SetVariable (no como argumento posicional)
+    param(
+        $window, $ConsoleOutput, $ProgressBar, $StatusText,
+        $ProgressText, $TaskText, $options, $CancelToken
+    )
+
     function Invoke-CimQuery {
         param([string]$ClassName, [string]$Filter = "", [string[]]$Property = @(), [switch]$SilentOnFail)
         $params = @{ ClassName = $ClassName; ErrorAction = if ($SilentOnFail) { "SilentlyContinue" } else { "Stop" } }
@@ -8095,12 +6305,6 @@ $OptimizationScript = {
         if ($Property -and $Property.Count -gt 0) { $params.Property = $Property }
         return (Get-CimInstance @params)
     }
-
-    param(
-        $window, $ConsoleOutput, $ProgressBar, $StatusText,
-        $ProgressText, $TaskText, $options, $CancelToken,
-        [ref]$DiagReportRef
-    )
 
     # ── Diccionario de resultados del análisis (dry-run) ─────────────────────
     $diagData = @{
@@ -8166,7 +6370,6 @@ $OptimizationScript = {
     }
 
     # ── [M1] Función unificada de limpieza de carpetas temporales ────────────
-    # [B13] Elimina la duplicación total entre TempFiles y UserTemp
     function Invoke-CleanTempPaths {
         param(
             [string[]]$Paths,
@@ -8238,6 +6441,7 @@ $OptimizationScript = {
     $totalTasks = $taskList.Count
     $dryRun     = $options['DryRun'] -eq $true
 
+
     if ($totalTasks -eq 0) {
         Write-Console "No hay tareas seleccionadas."
         Update-Status "Sin tareas seleccionadas"
@@ -8299,7 +6503,6 @@ $OptimizationScript = {
                     $partition = Get-Partition -DriveLetter $dl -ErrorAction Stop
                     $disk      = Get-Disk -Number $partition.DiskNumber -ErrorAction Stop
 
-                    # [B5] Detección robusta por DeviceID, no por FriendlyName
                     $mediaType = $disk.MediaType
                     try {
                         $physDisk = Get-PhysicalDisk | Where-Object { $_.DeviceId -eq $disk.Number } | Select-Object -First 1
@@ -8507,7 +6710,6 @@ $OptimizationScript = {
             Write-Console "  [DRY RUN] Se programaría CHKDSK en el próximo reinicio"
         } else {
             try {
-                # [B9] Orden correcto: dirty set PRIMERO, luego chkntfs /x para 
                 #      excluir el chequeo automático de arranque limpio pero
                 #      forzar via volumen sucio. En realidad el flujo correcto
                 #      es marcar dirty y NO excluir con /x, así CHKDSK sí corre.
@@ -8551,7 +6753,6 @@ $OptimizationScript = {
             if ($dryRun) {
                 Write-Console "  [DRY RUN] Se vaciaría el Working Set de todos los procesos accesibles"
             } else {
-                # [B1] Liberación real via EmptyWorkingSet por cada proceso
                 $count = 0
                 foreach ($proc in (Get-Process -ErrorAction SilentlyContinue)) {
                     try {
@@ -8666,7 +6867,7 @@ $OptimizationScript = {
                 Clear-DnsClientCache -ErrorAction Stop
                 Write-Console "  ✓ Clear-DnsClientCache ejecutado"
                 Update-SubProgress $base 60 $taskWeight
-                # [FIX] Capturar ipconfig con encoding correcto (cp850 en Windows español)
+
                 $psi = New-Object System.Diagnostics.ProcessStartInfo
                 $psi.FileName               = "cmd.exe"
                 $psi.Arguments              = "/c chcp 65001 >nul 2>&1 & ipconfig /flushdns"
@@ -8702,7 +6903,6 @@ $OptimizationScript = {
         Write-Console "10. LIMPIANDO CACHÉ DE NAVEGADORES$dryRunLabel"
         Write-Console "═══════════════════════════════════════════════════════════"
 
-        # [B6] Rutas completas para todos los navegadores
         $browsers = @{
             "Chrome" = @(
                 "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Cache",
@@ -8734,7 +6934,6 @@ $OptimizationScript = {
                 "$env:APPDATA\Opera Software\Opera GX Stable\Code Cache",
                 "$env:APPDATA\Opera Software\Opera GX Stable\GPUCache"
             )
-            # [B7] Firefox: cache + cache2 (legacy y moderno)
             "Firefox" = @("$env:LOCALAPPDATA\Mozilla\Firefox\Profiles")
         }
 
@@ -9064,7 +7263,6 @@ $OptimizationScript = {
 
     $endTime  = Get-Date
     $duration = $endTime - $startTime
-    # [B12] Formato que soporta más de 24h sin colapsar
     $durStr = "{0:D2}d {1:D2}h {2:D2}m {3:D2}s" -f $duration.Days, $duration.Hours, $duration.Minutes, $duration.Seconds
 
     $footerTitle = if ($dryRun) {
@@ -9108,8 +7306,6 @@ $OptimizationScript = {
 # [N1] Botón de actualizar info del sistema
 $btnRefreshInfo.Add_Click({ Update-SystemInfo })
 
-# [B10] Seleccionar Todo — refleja el estado real de TODOS los checkboxes
-# [B4]  chkAutoRestart incluido en el toggle para coherencia
 $script:AllOptCheckboxes = @(
     $chkOptimizeDisks, $chkRecycleBin, $chkTempFiles, $chkUserTemp,
     $chkWUCache, $chkChkdsk, $chkClearMemory, $chkCloseProcesses,
@@ -9126,7 +7322,6 @@ $script:AllCheckboxes = @(
 )
 
 $btnSelectAll.Add_Click({
-    # [B10] Comprobar estado real (todos marcados = deseleccionar, si alguno no = seleccionar)
     $allChecked = $script:AllOptCheckboxes | ForEach-Object { $_.IsChecked } | Where-Object { -not $_ }
     $targetState = ($allChecked.Count -gt 0)   # hay alguno desmarcado → vamos a marcar todos
 
@@ -9139,7 +7334,6 @@ $btnSelectAll.Add_Click({
 function Start-Optimization {
     param([bool]$DryRunOverride = $false)
 
-    # [B2] Validar dependencia BackupRegistry → CleanRegistry
     if ($chkCleanRegistry.IsChecked -and -not $chkBackupRegistry.IsChecked -and -not $DryRunOverride) {
         $warn = Show-ThemedDialog -Title "Sin backup del registro" `
             -Message "Has activado 'Limpiar registro' sin 'Crear backup'.`n`nLimpiar el registro SIN backup puede ser peligroso.`n`n¿Deseas continuar igualmente SIN hacer backup?" `
@@ -9147,7 +7341,6 @@ function Start-Optimization {
         if (-not $warn) { return }
     }
 
-    # [B11] Advertir si la consola tiene contenido previo
     if (-not [string]::IsNullOrWhiteSpace($ConsoleOutput.Text)) {
         $clearWarn = Show-ThemedDialog -Title "Limpiar consola" `
             -Message "La consola tiene contenido de una ejecución anterior.`n`n¿Deseas limpiarla y comenzar una nueva sesión?`n(Si quieres conservar el log, pulsa No y guárdalo primero)" `
@@ -9229,15 +7422,20 @@ function Start-Optimization {
         'AutoRestart'    = $chkAutoRestart.IsChecked
     }
 
+
     $runspace = [runspacefactory]::CreateRunspace()
     $runspace.ApartmentState = "STA"
     $runspace.ThreadOptions  = "ReuseThread"
     $runspace.Open()
 
     # Variable compartida para recibir el informe de diagnóstico del runspace
+    # FIX: inyectar via SessionStateProxy en lugar de pasar como [ref] en AddArgument.
+    # Pasar [ref] como argumento posicional rompe el binding de TODOS los params del script.
     $script:DiagReportData   = $null
     $script:LastRunWasDryRun = $isDryRun
     $diagReportRef = [ref]$script:DiagReportData
+    $script:DiagReportRef    = $diagReportRef
+    $runspace.SessionStateProxy.SetVariable('DiagReportRef', $diagReportRef)
 
     $powershell = [powershell]::Create()
     $powershell.Runspace = $runspace
@@ -9249,8 +7447,7 @@ function Start-Optimization {
     $powershell.AddArgument($ProgressText)
     $powershell.AddArgument($TaskText)
     $powershell.AddArgument($options)
-    $powershell.AddArgument($script:CancelSource.Token)
-    $powershell.AddArgument($diagReportRef) | Out-Null
+    $powershell.AddArgument($script:CancelSource.Token) | Out-Null
 
     $handle = $powershell.BeginInvoke()
 
@@ -9266,8 +7463,8 @@ function Start-Optimization {
     $script:UI_ProgressText  = $ProgressText
     $script:UI_TaskText      = $TaskText
     $script:UI_StatusText    = $StatusText
+    $script:UI_ConsoleOutput = $ConsoleOutput
 
-    # [B8] Timer con try/catch — no bloquea si el runspace muere con excepción
     $timer = New-Object System.Windows.Threading.DispatcherTimer
     $timer.Interval = [TimeSpan]::FromMilliseconds(500)
     $script:ActiveTimer = $timer
@@ -9285,7 +7482,24 @@ function Start-Optimization {
         if ($completed) {
             $script:ActiveTimer.Stop()
 
-            try { $script:ActivePowershell.EndInvoke($script:ActiveHandle) } catch { }
+            try {
+                $script:ActivePowershell.EndInvoke($script:ActiveHandle)
+            } catch {
+                $errMsg = $_.Exception.Message
+                $inner  = if ($_.Exception.InnerException) { " | Inner: $($_.Exception.InnerException.Message)" } else { "" }
+                Write-Log "[RUNSPACE] Error: $errMsg$inner" -Level "ERROR" -NoUI
+                $window.Dispatcher.Invoke([action]{
+                    $script:UI_ConsoleOutput.AppendText("[ERROR RUNSPACE] $errMsg$inner`n")
+                    $script:UI_ConsoleOutput.ScrollToEnd()
+                })
+            }
+            # Capturar errores del stream (errores no-terminantes del runspace)
+            if ($script:ActivePowershell.Streams.Error.Count -gt 0) {
+                foreach ($streamErr in $script:ActivePowershell.Streams.Error) {
+                    $se = "[RUNSPACE] Stream error: $($streamErr.ToString()) | Script: $($streamErr.InvocationInfo.ScriptName) línea $($streamErr.InvocationInfo.ScriptLineNumber)"
+                    Write-Log $se -Level "ERROR" -NoUI
+                }
+            }
             try { $script:ActivePowershell.Dispose()  } catch { }
             try { $script:ActiveRunspace.Close()      } catch { }
             try { $script:ActiveRunspace.Dispose()    } catch { }
@@ -9310,9 +7524,15 @@ function Start-Optimization {
             # Actualizar info del sistema al finalizar
             Update-SystemInfo
 
+            # FIX: leer datos del análisis desde PSReference (el runspace actualiza .Value,
+            # no $script:DiagReportData directamente — bug de [ref] cross-runspace)
+            if ($null -ne $script:DiagReportRef -and $null -ne $script:DiagReportRef.Value) {
+                $script:DiagReportData = $script:DiagReportRef.Value
+            }
+
             if ($script:WasCancelled) {
                 Show-ThemedDialog -Title "Proceso cancelado" `
-                    -Message "La optimización fue cancelada por el usuario." -Type "warning"
+                    -Message "La optimizacion fue cancelada por el usuario." -Type "warning"
             } elseif ($script:LastRunWasDryRun -and $null -ne $script:DiagReportData) {
                 # Modo análisis completado → mostrar informe de diagnóstico
                 Show-DiagnosticReport -Report $script:DiagReportData
@@ -9391,7 +7611,7 @@ $btnExit.Add_Click({
 
 # Liberar mutex al cerrar por la X
 $window.Add_Closed({
-    $script:AppClosing = $true   # [FIX] Señalizar cierre antes de todo para que Update-PerformanceTab no dispare
+    $script:AppClosing = $true
     # [BF3] Limpiar estado cacheado para evitar errores al reiniciar
     try { $script:AppMutex.ReleaseMutex() } catch { }
     try { $chartTimer.Stop() } catch { }
@@ -9408,6 +7628,9 @@ $window.Add_Closed({
     try { if ($null -ne $script:_loadTimer)    { $script:_loadTimer.Stop();    $script:_loadTimer    = $null } } catch {}
     try { if ($null -ne $script:_entTimer)     { $script:_entTimer.Stop();     $script:_entTimer     = $null } } catch {}
     try { if ($null -ne $script:_saveTimer)    { $script:_saveTimer.Stop();    $script:_saveTimer    = $null } } catch {}
+    try { if ($null -ne $script:_topTimer)     { $script:_topTimer.Stop();     $script:_topTimer     = $null } } catch {}
+    try { if ($null -ne $script:_scanTimer)    { $script:_scanTimer.Stop();    $script:_scanTimer    = $null } } catch {}
+    try { if ($null -ne $script:ActiveTimer)   { $script:ActiveTimer.Stop();   $script:ActiveTimer   = $null } } catch {}
     # [C3] Guardar configuración al cerrar
     try { Save-Settings } catch {}
     # [LOG] Cerrar logger
@@ -9450,7 +7673,6 @@ $window.Add_Closed({
     if ($null -ne $script:AllScannedItems){ try { $script:AllScannedItems.Clear() } catch {}; $script:AllScannedItems = $null }
     if ($null -ne $script:LiveIndexMap)   { try { $script:LiveIndexMap.Clear()   } catch {}; $script:LiveIndexMap   = $null }
 
-    # [RAM-05] Cerrar RunspacePool centralizado
     if ($null -ne $script:RunspacePool) {
         try { $script:RunspacePool.Close()   } catch {}
         try { $script:RunspacePool.Dispose() } catch {}
@@ -9464,12 +7686,8 @@ $window.Add_Closed({
         $script:CancelSource = $null
     }
 
-    # Detener el mutex del proceso de optimización si existe
-    if ($null -ne $script:OptRunspace) {
-        try { $script:OptRunspace.Close()   } catch {}
-        try { $script:OptRunspace.Dispose() } catch {}
-        $script:OptRunspace = $null
-    }
+    # Nota: el runspace de optimización se limpia vía $script:ActiveRunspace (arriba)
+    # $script:OptRunspace no se usa — eliminado para evitar confusión
 })
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -9514,10 +7732,10 @@ function Show-AboutWindow {
                 </StackPanel>
 
                 <!-- Separador -->
-                <Rectangle Height="1" Fill="$(Get-TC 'Border' '#252B40')" Margin="0,0,0,16"/>
+                <Rectangle Height="1" Fill="$(Get-TC 'BorderSubtle' '#252B40')" Margin="0,0,0,16"/>
 
                 <!-- v3.0.0 (Dev) DLL externos + Arquitectura modular -->
-                <Border CornerRadius="8" Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'AccentPurple' '#9B7EFF')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
+                <Border CornerRadius="8" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'AccentPurple' '#9B7EFF')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <Border CornerRadius="4" Background="#1A9B7EFF" Padding="6,2" Margin="0,0,8,0">
@@ -9538,7 +7756,7 @@ function Show-AboutWindow {
                 </Border>
 
                 <!-- v2.5.0 Estabilidad + Deduplicación + TaskPool -->
-                <Border CornerRadius="8" Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'AccentGreen' '#4AE896')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
+                <Border CornerRadius="8" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'AccentGreen' '#4AE896')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <Border CornerRadius="4" Background="#1A4AE896" Padding="6,2" Margin="0,0,8,0">
@@ -9560,7 +7778,7 @@ function Show-AboutWindow {
                 </Border>
 
                 <!-- v2.4.0 FIFO Streaming -->
-                <Border CornerRadius="8" Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'BtnSecondaryFg' '#3D8EFF')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
+                <Border CornerRadius="8" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BtnSecondaryFg' '#3D8EFF')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <Border CornerRadius="4" Background="#1F5BA3FF" Padding="6,2" Margin="0,0,8,0">
@@ -9580,7 +7798,7 @@ function Show-AboutWindow {
                 </Border>
 
                 <!-- v2.3.0 RAM + Snapshots -->
-                <Border CornerRadius="8" Background="$(Get-TC 'HdrBg' '#131625')" BorderBrush="$(Get-TC 'AccentPurple' '#9B7EFF')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
+                <Border CornerRadius="8" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'AccentPurple' '#9B7EFF')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <Border CornerRadius="4" Background="#1A9B7EFF" Padding="6,2" Margin="0,0,8,0">
@@ -9602,7 +7820,7 @@ function Show-AboutWindow {
                 </Border>
 
                 <!-- Footer -->
-                <Rectangle Height="1" Fill="$(Get-TC 'Border' '#252B40')" Margin="0,4,0,12"/>
+                <Rectangle Height="1" Fill="$(Get-TC 'BorderSubtle' '#252B40')" Margin="0,4,0,12"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="$(Get-TC 'BorderHover' '#4A5068')" Text="2026 © Danew Malavita | "/>
                     <TextBlock FontFamily="Segoe UI" FontSize="10">
@@ -9687,7 +7905,6 @@ if ($null -ne $btnOptions) {
 }
 
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Mensaje de bienvenida simplificado en consola (novedades → botón ℹ)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -9701,9 +7918,5 @@ Write-ConsoleMain "  o '🔍 Analizar' para ver qué se liberaría sin cambios."
 Write-ConsoleMain ""
 Write-ConsoleMain "💡 Ver novedades de la versión: botón  ℹ  en la barra superior."
 Write-ConsoleMain ""
-
-# [v3.1] Tema e idioma se aplican en Add_Loaded despues de Load-Settings
-
-
 
 $window.ShowDialog() | Out-Null
