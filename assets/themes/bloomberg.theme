@@ -1,0 +1,99 @@
+# SysOpt Theme — bloomberg.theme
+# Tema inspirado en Bloomberg Terminal — v1.0
+# Negro puro, naranja Bloomberg, datos en tiempo real
+
+[meta]
+Name        = Bloomberg Terminal
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #000000
+BgCard                = #0A0A0A
+BgInput               = #141414
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #222222
+BorderActive          = #FF6600
+BorderHover           = #444444
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #0099CC
+AccentCyan            = #00CCFF
+AccentAmber           = #FF6600
+AccentRed             = #FF2200
+AccentGreen           = #00CC44
+AccentPurple          = #9944CC
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #FF6600
+TextSecondary         = #CC5500
+TextMuted             = #553300
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #CC4400
+ProgressEnd           = #FF6600
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #331400
+BtnPrimaryFg          = #FF6600
+BtnPrimaryBorder      = #FF6600
+BtnPrimaryHover       = #FF6600
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #141414
+BtnSecondaryFg        = #CC5500
+BtnSecondaryBorder    = #222222
+BtnSecondaryHover     = #222222
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #001A26
+BtnCyanFg             = #00CCFF
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #1A0A00
+BtnAmberFg            = #FF6600
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #220000
+BtnDangerFg           = #FF2200
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #0A0A0A
+BtnGhostBorder        = #222222
+BtnGhostFg            = #553300
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #141414
+HdrBtnBorder          = #222222
+HdrBtnHover           = #222222
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #080800
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #1A0A00
+ComboSelected         = #331400
+ComboSelectedFg       = #FF6600
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #1A0800
+CtxSepFill            = #222222
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #141414
+DetailBorder          = #222222
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #0A0A0A
+TabHoverBg            = #141414
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #000000
+PurpleBlobBg          = #0A0010
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #000000
+ConsoleFg             = #FF6600
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #0A0A0A
+ScrollBarThumb        = #553300
+ScrollBarThumbHover   = #FF6600
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #00CC44
+StatusWarning         = #FF6600
+StatusError           = #FF2200
+StatusInfo            = #00CCFF
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #001A00
+BgStatusWarn          = #1A0A00
+BgStatusErr           = #220000
+BgStatusInfo          = #001A26
+FgStatusOk            = #00CC44
+FgStatusWarn          = #FF6600
+FgStatusErr           = #FF2200
+FgStatusInfo          = #00CCFF

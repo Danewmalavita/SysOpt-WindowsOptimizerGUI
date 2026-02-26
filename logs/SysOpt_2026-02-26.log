@@ -1,0 +1,179 @@
+﻿════════════════════════════════════════════════════════════
+  SysOpt v3.2.0  —  Sesión iniciada: 2026-02-26 12:29:02
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[12:29:02][INFO] ── Auditoría de ensamblados ──────────────────────────────
+[12:29:02][INFO] [DLL] SysOpt.MemoryHelper.dll      v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.MemoryHelper.dll
+[12:29:02][INFO] [DLL] SysOpt.DiskEngine.dll        v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.DiskEngine.dll
+[12:29:02][INFO] [DLL] SysOpt.Core.dll              v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.Core.dll
+[12:29:02][INFO] [DLL] SysOpt.ThemeEngine.dll       v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.ThemeEngine.dll
+[12:29:02][INFO] [DLL] SysOpt.WseTrim.dll           v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.WseTrim.dll
+[12:29:02][INFO] ── Fin auditoría ─────────────────────────────────────────
+[12:29:02][INFO] [LANG] Cargando idioma: es-es
+[12:29:03][INFO] [WMI] CimSession creada (timeout=5s)
+[12:29:14][INFO] ── Configuracion de arranque ─────────────────────────────
+[12:29:14][INFO] [APP] Version        : v3.2.0
+[12:29:14][INFO] [APP] Tema activo     : wallstreet
+[12:29:14][INFO] [APP] Idioma activo   : es-es
+[12:29:14][INFO] [APP] Settings path   : C:\Users\Administrator\AppData\Roaming\SysOpt\settings.json
+[12:29:14][INFO] [APP] Settings existe : SI
+[12:29:14][INFO] [APP] Disco scan path : C:\
+[12:29:14][INFO] [APP] Auto-refresh    : OFF  intervalo=5 s
+[12:29:14][INFO] [ENV] PowerShell      : v5.1.22621.6345  (64-bit)
+[12:29:14][INFO] [ENV] Admin           : SI
+[12:29:14][INFO] [ENV] PID             : 5040
+[12:29:14][INFO] [ENV] Script root     : C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV
+[12:29:14][INFO] [ENV] Working dir     : C:\Windows\system32
+[12:29:15][INFO] [SYS] OS              : Microsoft Windows 11 Enterprise  (Build 22631)
+[12:29:15][INFO] [SYS] RAM             : 15.7 GB total  |  3.1 GB libre  |  80% usado
+[12:29:15][INFO] [SYS] Ultimo boot     : 2/18/2026 9:27:55 AM
+[12:29:16][INFO] [SYS] CPU             : 12th Gen Intel(R) Core(TM) i7-1255U  (10 cores / 12 hilos)
+[12:29:16][INFO] [SYS] CPU carga       : 0%  @1700 MHz
+[12:29:16][INFO] [SYS] Disco C:        : 476 GB total  |  369 GB libre  |  22% usado
+[12:29:16][INFO] ── Fin contexto de arranque ──────────────────────────────
+[12:29:22][INFO] [SCAN] Iniciando escaneo de disco: C:\
+[12:29:22][INFO] [TASK] Iniciada: Escaneo: C:\
+[12:29:25][INFO] [DBG][CTX-TASKS] ContextMenuOpening | src=Border | steps=4 | Border=True | CM.Tag= | CM.Res=6 | CM.Items=4 | TB_inTW=True | TB_inCM=False | MI0.Fg=#FF000000
+[12:29:35][INFO] [DBG][CTX-TASKS] ContextMenuOpening | src=TextBlock | steps=3 | Border=True | CM.Tag= | CM.Res=6 | CM.Items=4 | TB_inTW=True | TB_inCM=False | MI0.Fg=#FF000000
+[12:29:37][INFO] [DBG][CTX-TASKS] ContextMenuOpening | src=TextBlock | steps=3 | Border=True | CM.Tag= | CM.Res=6 | CM.Items=4 | TB_inTW=True | TB_inCM=False | MI0.Fg=#FF000000
+[12:29:44][INFO] [DBG][CTX-TASKS] ContextMenuOpening | src=TextBlock | steps=3 | Border=True | CM.Tag= | CM.Res=6 | CM.Items=4 | TB_inTW=True | TB_inCM=False | MI0.Fg=#FF000000
+[12:30:05][INFO] [TASK] Completada (done): Escaneo: C:\
+[12:30:57][INFO] Sesión cerrada por el usuario.
+[12:34:27][INFO] DLL cargada: MemoryHelper
+[12:34:27][INFO] DLL cargada: DiskEngine
+[12:34:27][INFO] DLL cargada: Core
+[12:34:27][INFO] DLL cargada: ThemeEngine
+[12:34:27][INFO] DLL cargada: WseTrim
+[12:34:27][INFO] RunspacePool abierto (1-3 runspaces)
+
+════════════════════════════════════════════════════════════
+  SysOpt v3.2.0  —  Sesión iniciada: 2026-02-26 12:34:27
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[12:34:27][INFO] ── Auditoría de ensamblados ──────────────────────────────
+[12:34:27][INFO] [DLL] SysOpt.MemoryHelper.dll      v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.MemoryHelper.dll
+[12:34:27][INFO] [DLL] SysOpt.DiskEngine.dll        v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.DiskEngine.dll
+[12:34:27][INFO] [DLL] SysOpt.Core.dll              v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.Core.dll
+[12:34:27][INFO] [DLL] SysOpt.ThemeEngine.dll       v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.ThemeEngine.dll
+[12:34:27][INFO] [DLL] SysOpt.WseTrim.dll           v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.WseTrim.dll
+[12:34:27][INFO] ── Fin auditoría ─────────────────────────────────────────
+[12:34:28][INFO] [LANG] Cargando idioma: es-es
+[12:34:28][INFO] [WMI] CimSession creada (timeout=5s)
+[12:34:39][INFO] ── Configuracion de arranque ─────────────────────────────
+[12:34:39][INFO] [APP] Version        : v3.2.0
+[12:34:39][INFO] [APP] Tema activo     : wallstreet
+[12:34:39][INFO] [APP] Idioma activo   : es-es
+[12:34:39][INFO] [APP] Settings path   : C:\Users\Administrator\AppData\Roaming\SysOpt\settings.json
+[12:34:39][INFO] [APP] Settings existe : SI
+[12:34:39][INFO] [APP] Disco scan path : C:\
+[12:34:39][INFO] [APP] Auto-refresh    : OFF  intervalo=5 s
+[12:34:39][INFO] [ENV] PowerShell      : v5.1.22621.6345  (64-bit)
+[12:34:39][INFO] [ENV] Admin           : SI
+[12:34:39][INFO] [ENV] PID             : 5040
+[12:34:39][INFO] [ENV] Script root     : C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV
+[12:34:39][INFO] [ENV] Working dir     : C:\Windows\system32
+[12:34:39][INFO] [SYS] OS              : Microsoft Windows 11 Enterprise  (Build 22631)
+[12:34:39][INFO] [SYS] RAM             : 15.7 GB total  |  2.5 GB libre  |  84% usado
+[12:34:39][INFO] [SYS] Ultimo boot     : 2/18/2026 9:27:55 AM
+[12:34:40][INFO] [SYS] CPU             : 12th Gen Intel(R) Core(TM) i7-1255U  (10 cores / 12 hilos)
+[12:34:40][INFO] [SYS] CPU carga       : 4%  @1700 MHz
+[12:34:40][INFO] [SYS] Disco C:        : 476 GB total  |  368 GB libre  |  23% usado
+[12:34:41][INFO] ── Fin contexto de arranque ──────────────────────────────
+[12:36:43][INFO] [CFG] Idioma cambiado:  → es-es
+[12:36:43][INFO] [LANG] Cargando idioma: es-es
+[12:36:43][INFO] [CFG] Tema cambiado:  → icecream
+[12:36:58][INFO] [CFG] Idioma cambiado:  → es-es
+[12:36:58][INFO] [LANG] Cargando idioma: es-es
+[12:36:58][INFO] [CFG] Tema cambiado:  → votorantim2
+[12:37:04][INFO] [TASK] Iniciada: Cargando historial de snapshots
+[12:37:08][INFO] [TASK] Completada (done): Cargando historial de snapshots
+[12:37:15][INFO] [SCAN] Iniciando escaneo de disco: C:\
+[12:37:15][INFO] [TASK] Iniciada: Escaneo: C:\
+[12:37:23][INFO] Sesión cerrada por el usuario.
+[12:37:32][INFO] DLL cargada: MemoryHelper
+[12:37:32][INFO] DLL cargada: DiskEngine
+[12:37:32][INFO] DLL cargada: Core
+[12:37:32][INFO] DLL cargada: ThemeEngine
+[12:37:32][INFO] DLL cargada: WseTrim
+[12:37:32][INFO] RunspacePool abierto (1-3 runspaces)
+
+════════════════════════════════════════════════════════════
+  SysOpt v3.2.0  —  Sesión iniciada: 2026-02-26 12:37:32
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[12:37:32][INFO] ── Auditoría de ensamblados ──────────────────────────────
+[12:37:32][INFO] [DLL] SysOpt.MemoryHelper.dll      v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.MemoryHelper.dll
+[12:37:32][INFO] [DLL] SysOpt.DiskEngine.dll        v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.DiskEngine.dll
+[12:37:32][INFO] [DLL] SysOpt.Core.dll              v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.Core.dll
+[12:37:32][INFO] [DLL] SysOpt.ThemeEngine.dll       v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.ThemeEngine.dll
+[12:37:32][INFO] [DLL] SysOpt.WseTrim.dll           v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.WseTrim.dll
+[12:37:32][INFO] ── Fin auditoría ─────────────────────────────────────────
+[12:37:32][INFO] [LANG] Cargando idioma: es-es
+[12:37:32][INFO] [WMI] CimSession creada (timeout=5s)
+[12:37:44][INFO] ── Configuracion de arranque ─────────────────────────────
+[12:37:44][INFO] [APP] Version        : v3.2.0
+[12:37:44][INFO] [APP] Tema activo     : votorantim2
+[12:37:44][INFO] [APP] Idioma activo   : es-es
+[12:37:44][INFO] [APP] Settings path   : C:\Users\Administrator\AppData\Roaming\SysOpt\settings.json
+[12:37:44][INFO] [APP] Settings existe : SI
+[12:37:44][INFO] [APP] Disco scan path : C:\
+[12:37:44][INFO] [APP] Auto-refresh    : OFF  intervalo=5 s
+[12:37:44][INFO] [ENV] PowerShell      : v5.1.22621.6345  (64-bit)
+[12:37:44][INFO] [ENV] Admin           : SI
+[12:37:44][INFO] [ENV] PID             : 5040
+[12:37:44][INFO] [ENV] Script root     : C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV
+[12:37:44][INFO] [ENV] Working dir     : C:\Windows\system32
+[12:37:44][INFO] [SYS] OS              : Microsoft Windows 11 Enterprise  (Build 22631)
+[12:37:44][INFO] [SYS] RAM             : 15.7 GB total  |  2.3 GB libre  |  85% usado
+[12:37:44][INFO] [SYS] Ultimo boot     : 2/18/2026 9:27:55 AM
+[12:37:45][INFO] [SYS] CPU             : 12th Gen Intel(R) Core(TM) i7-1255U  (10 cores / 12 hilos)
+[12:37:45][INFO] [SYS] CPU carga       : 0%  @1700 MHz
+[12:37:45][INFO] [SYS] Disco C:        : 476 GB total  |  366.9 GB libre  |  23% usado
+[12:37:45][INFO] ── Fin contexto de arranque ──────────────────────────────
+[12:39:56][INFO] Sesión cerrada por el usuario.
+[12:40:08][INFO] DLL cargada: MemoryHelper
+[12:40:08][INFO] DLL cargada: DiskEngine
+[12:40:08][INFO] DLL cargada: Core
+[12:40:08][INFO] DLL cargada: ThemeEngine
+[12:40:08][INFO] DLL cargada: WseTrim
+[12:40:08][INFO] RunspacePool abierto (1-3 runspaces)
+
+════════════════════════════════════════════════════════════
+  SysOpt v3.2.0  —  Sesión iniciada: 2026-02-26 12:40:08
+  Usuario: Administrator  |  Host: CP25CBRR3T3L
+════════════════════════════════════════════════════════════
+[12:40:08][INFO] ── Auditoría de ensamblados ──────────────────────────────
+[12:40:08][INFO] [DLL] SysOpt.MemoryHelper.dll      v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.MemoryHelper.dll
+[12:40:08][INFO] [DLL] SysOpt.DiskEngine.dll        v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.DiskEngine.dll
+[12:40:08][INFO] [DLL] SysOpt.Core.dll              v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.Core.dll
+[12:40:08][INFO] [DLL] SysOpt.ThemeEngine.dll       v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.ThemeEngine.dll
+[12:40:08][INFO] [DLL] SysOpt.WseTrim.dll           v3.2.0.0  [OK]  C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV\libs\SysOpt.WseTrim.dll
+[12:40:08][INFO] ── Fin auditoría ─────────────────────────────────────────
+[12:40:08][INFO] [LANG] Cargando idioma: es-es
+[12:40:09][INFO] [WMI] CimSession creada (timeout=5s)
+[12:40:20][INFO] ── Configuracion de arranque ─────────────────────────────
+[12:40:20][INFO] [APP] Version        : v3.2.0
+[12:40:20][INFO] [APP] Tema activo     : votorantim2
+[12:40:20][INFO] [APP] Idioma activo   : es-es
+[12:40:20][INFO] [APP] Settings path   : C:\Users\Administrator\AppData\Roaming\SysOpt\settings.json
+[12:40:20][INFO] [APP] Settings existe : SI
+[12:40:20][INFO] [APP] Disco scan path : C:\
+[12:40:20][INFO] [APP] Auto-refresh    : OFF  intervalo=5 s
+[12:40:20][INFO] [ENV] PowerShell      : v5.1.22621.6345  (64-bit)
+[12:40:20][INFO] [ENV] Admin           : SI
+[12:40:20][INFO] [ENV] PID             : 5040
+[12:40:20][INFO] [ENV] Script root     : C:\Users\e_dgarrote\Downloads\SysOpt\SysOpt-WindowsOptimizerGUI-3.1.0-DEV
+[12:40:20][INFO] [ENV] Working dir     : C:\Windows\system32
+[12:40:21][INFO] [SYS] OS              : Microsoft Windows 11 Enterprise  (Build 22631)
+[12:40:21][INFO] [SYS] RAM             : 15.7 GB total  |  2.7 GB libre  |  83% usado
+[12:40:21][INFO] [SYS] Ultimo boot     : 2/18/2026 9:27:55 AM
+[12:40:22][INFO] [SYS] CPU             : 12th Gen Intel(R) Core(TM) i7-1255U  (10 cores / 12 hilos)
+[12:40:22][INFO] [SYS] CPU carga       : 1%  @1700 MHz
+[12:40:22][INFO] [SYS] Disco C:        : 476 GB total  |  366.9 GB libre  |  23% usado
+[12:40:22][INFO] ── Fin contexto de arranque ──────────────────────────────
+[12:40:34][INFO] [SCAN] Iniciando escaneo de disco: C:\
+[12:40:34][INFO] [TASK] Iniciada: Escaneo: C:\
+[12:41:17][INFO] [TASK] Completada (done): Escaneo: C:\
+[12:41:39][INFO] [SCAN] Iniciando escaneo de disco: C:\
+[12:41:39][INFO] [TASK] Iniciada: Escaneo: C:\
+[12:42:20][INFO] Sesión cerrada por el usuario.

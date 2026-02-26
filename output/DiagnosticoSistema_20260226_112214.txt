@@ -1,0 +1,26 @@
+﻿INFORME DE DIAGNÓSTICO DEL SISTEMA — SysOpt v1.0
+Fecha: 26/02/2026 11:21:46
+
+=== ALMACENAMIENTO ===
+[OK] Archivos temporales: 50.7 MB
+[OK] Papelera vacía
+[INFO] WU Cache: 0.2 MB
+
+=== MEMORIA Y RENDIMIENTO ===
+[AVISO] RAM: 78% en uso — liberar recomendado
+[OK] Disco C: 21% ocupado
+
+=== RED Y NAVEGADORES ===
+[OK] DNS: 10 entradas
+[OK] Caché navegadores: 0 MB
+
+=== REGISTRO DE WINDOWS ===
+[OK] Registro limpio
+
+=== REGISTROS DE EVENTOS ===
+[OK] Event Logs: 21.2 MB
+
+=== RESUMEN ===
+Puntuación: 90 / 100
+Críticos: 0  |  Avisos: 1
+Estado: Sistema en buen estado

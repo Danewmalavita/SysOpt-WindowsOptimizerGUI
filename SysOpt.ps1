@@ -9,10 +9,24 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Metadatos de versión — mostrados en el About (Show-AboutWindow)
 # ─────────────────────────────────────────────────────────────────────────────
-$script:AppVersion = "3.1.0"
+$script:AppVersion = "3.2.0"
 $script:AppNotes   = @{
     RequiresAdmin = $true
     Cambios = [ordered]@{
+        "v3.2.0" = @{
+            Titulo = "CTK + DAL + Agent hooks en SysOpt.Core.dll"
+            Items  = @(
+                "[CTK] ScanTokenManager — CancellationToken global, reemplaza flag ScanCtl211.Stop",
+                "[CTK] RequestNew() + Cancel() + Dispose() en Add_Closed — cancelación limpia de runspaces",
+                "[DAL] SystemDataCollector — GetCpuSnapshot/GetRamSnapshot/GetDiskSnapshot/GetNetworkSnapshot/GetGpuSnapshot/GetPortSnapshot",
+                "[DAL] GetFullSnapshot() — SystemSnapshot completo serializable para modo agente",
+                "[DAL] Modelos puros: CpuSnapshot, RamSnapshot, DiskSnapshot, NetworkSnapshot, GpuSnapshot, PortSnapshot",
+                "[AGENT] AgentBus + IAgentTransport + AgentThresholds — hooks preparados, standalone safe",
+                "[DLL] compile-dlls.ps1 renovado — auto-descubre todos los .cs de .\libs\ con referencias correctas",
+                "[DLL] WseTrim cargado al inicio (junto al resto) en lugar de bajo demanda",
+                "[DLL] Load-SysOptDll helper unificado — un punto de carga para las 5 DLLs"
+            )
+        }
         "v3.1.0" = @{
             Titulo = "Temas visuales + Internacionalización + DLLs modulares"
             Items  = @(
@@ -68,7 +82,6 @@ Add-Type -AssemblyName Microsoft.VisualBasic
 Add-Type -AssemblyName WindowsBase
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ─────────────────────────────────────────────────────────────────────────────
 $splashXaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -116,82 +129,98 @@ function Set-SplashProgress([int]$Pct, [string]$Msg = "") {
 }
 Set-SplashProgress 10 "Cargando ensamblados .NET..."
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Win32 API para liberar Working Set de procesos (liberación real de RAM)
-# ─────────────────────────────────────────────────────────────────────────────
-# [DLL] MemoryHelper -- libs\SysOpt.MemoryHelper.dll
+# =============================================================================
+# CARGA DE DLL EXTERNAS  —  todas en .\libs\  relativas a PSScriptRoot
+# Orden: MemoryHelper → DiskEngine → Core (CTK+DAL+i18n) → ThemeEngine → WseTrim
+# compile-dlls.ps1 en .\libs\ recompila todas si modificas los .cs
+# =============================================================================
 
-if (-not ([System.Management.Automation.PSTypeName]'MemoryHelper').Type) {
+function script:Load-SysOptDll {
+    param(
+        [string]$DllPath,
+        [string]$GuardType,    # tipo C# que confirma que el DLL ya está cargado
+        [string]$Label,
+        [switch]$Hard          # si presente, falla con throw en lugar de warn
+    )
 
-    $script:_dll = Join-Path $PSScriptRoot "libs\SysOpt.MemoryHelper.dll"
-
-    if (-not (Test-Path $script:_dll)) {
-
-        throw "SysOpt: libs\SysOpt.MemoryHelper.dll no encontrado. Copia la carpeta libs\ junto a SysOpt.ps1."
-
+    # ── Ruta 1: SysOptFallbacks disponible → delegar completamente ───────────────
+    if (([System.Management.Automation.PSTypeName]"SysOptFallbacks").Type) {
+        try {
+            [SysOptFallbacks]::LoadDll($DllPath, $GuardType, [bool]$Hard) | Out-Null
+            Write-Verbose "SysOpt: DLL cargada: $Label"
+            # Write-Log no existe aun en bootstrap; se registra en el log completo mas adelante
+            if (Get-Command Write-Log -ErrorAction SilentlyContinue) {
+                Write-Log "DLL cargada: $Label" -Level INFO
+            }
+        } catch {
+            $errMsg = "Error cargando $Label — $($_.Exception.Message)"
+            Write-Warning $errMsg
+            if (Get-Command Write-Log -ErrorAction SilentlyContinue) {
+                Write-Log $errMsg -Level ERROR
+            }
+            if ($Hard) { throw }
+        }
+        return
     }
 
-    Add-Type -Path $script:_dll -ErrorAction Stop
+    # ── Ruta 2: bootstrap (antes de que Core.dll esté disponible) ────────────
+    if (([System.Management.Automation.PSTypeName]$GuardType).Type) {
+        Write-Verbose "SysOpt: $Label ya cargado en esta sesion"
+        return
+    }
+    if (-not (Test-Path $DllPath)) {
+        $msg = "SysOpt: $DllPath no encontrado. Ejecuta compile-dlls.ps1 en .\libs\"
+        if ($Hard) { throw $msg } else { Write-Warning $msg; return }
+    }
+    try   { Add-Type -Path $DllPath -ErrorAction Stop }
+    catch { Write-Verbose "SysOpt: $Label — Add-Type: $($_.Exception.Message)" }
+}
 
-} # end MemoryHelper guard
+$script:_libsDir = Join-Path $PSScriptRoot "libs"
 
-# ─────────────────────────────────────────────────────────────────────────────
-# [FIX-v2.1.1] Guard triple: DiskItem_v211 + ScanCtl211 + PScanner211
-# Nombres unicos — nunca colisionan con v2.0 (DiskItem/ScanControl/ParallelScanner)
-# ni con v2.1. Add-Type SilentlyContinue + try/catch = nunca TYPE_ALREADY_EXISTS.
-# ─────────────────────────────────────────────────────────────────────────────
-# [DLL] DiskEngine -- libs\SysOpt.DiskEngine.dll
+# ── [DLL 1/5] MemoryHelper — Win32 P/Invoke para EmptyWorkingSet ─────────────
+Set-SplashProgress 15 "Cargando MemoryHelper..."
+Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.MemoryHelper.dll") `
+               -GuardType "MemoryHelper" -Label "MemoryHelper" -Hard
 
+# ── [DLL 2/5] DiskEngine — modelos y escaner paralelo del Explorador ──────────
 # Contiene: DiskItem_v211, DiskItemToggle_v230, ScanCtl211, PScanner211
+Set-SplashProgress 25 "Cargando DiskEngine..."
+Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.DiskEngine.dll") `
+               -GuardType "DiskItem_v211" -Label "DiskEngine" -Hard
 
-if (-not ([System.Management.Automation.PSTypeName]'DiskItem_v211').Type) {
+# ── [DLL 3/5] Core — LangEngine + XamlLoader + CTK + DAL + AgentBus ──────────
+# v3.2.0: añade ScanTokenManager, SystemDataCollector, modelos de datos y AgentBus
+Set-SplashProgress 40 "Cargando Core (CTK + DAL)..."
+Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.Core.dll") `
+               -GuardType "LangEngine" -Label "Core" -Hard
 
-    $script:_dll = Join-Path $PSScriptRoot "libs\SysOpt.DiskEngine.dll"
+# ── [DLL 4/5] ThemeEngine — parser de archivos .theme ────────────────────────
+Set-SplashProgress 55 "Cargando ThemeEngine..."
+Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.ThemeEngine.dll") `
+               -GuardType "ThemeEngine" -Label "ThemeEngine" -Hard
 
-    if (-not (Test-Path $script:_dll)) {
+# ── [DLL 5/5] WseTrim — SetProcessWorkingSetSize para trim de Working Set ─────
+# Se carga aqui (inicio) en lugar de bajo demanda para errores tempranos visibles
+Set-SplashProgress 65 "Cargando WseTrim..."
+Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.WseTrim.dll") `
+               -GuardType "WseTrim" -Label "WseTrim"
+# WseTrim es no-Hard: si falta el DLL la app sigue funcionando sin trim de WS
 
-        throw "SysOpt: libs\SysOpt.DiskEngine.dll no encontrado. Copia la carpeta libs\ junto a SysOpt.ps1."
-
-    }
-
-    try {
-
-        Add-Type -Path $script:_dll -ErrorAction Stop
-
-    } catch {
-
-        Write-Verbose "SysOpt: DiskEngine ya cargado en esta sesion"
-
-    }
-
-} # end guard: DiskItem_v211 / ScanCtl211 / PScanner211
-
-# ─────────────────────────────────────────────────────────────────────────────
-# [DLL] Core -- libs\SysOpt.Core.dll  (LangEngine + SettingsHelper + XamlLoader)
-# ─────────────────────────────────────────────────────────────────────────────
-if (-not ([System.Management.Automation.PSTypeName]'LangEngine').Type) {
-    $script:_dllCore = Join-Path $PSScriptRoot "libs\SysOpt.Core.dll"
-    if (-not (Test-Path $script:_dllCore)) {
-        throw "SysOpt: libs\SysOpt.Core.dll no encontrado. Ejecuta compile-dlls.ps1 en .\libs\"
-    }
-    try { Add-Type -Path $script:_dllCore -ErrorAction Stop }
-    catch { Write-Verbose "SysOpt: Core.dll ya cargado en esta sesion" }
+# ── Inicializar CTK global ────────────────────────────────────────────────────
+# ScanTokenManager reemplaza el flag booleano ScanCtl211.Stop para cancelacion
+# limpia de runspaces. El token se crea aqui; cada operacion llama RequestNew().
+if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
+    [ScanTokenManager]::RequestNew()
+    Write-Verbose "SysOpt: ScanTokenManager inicializado"
+} else {
+    Write-Warning "SysOpt: ScanTokenManager no disponible — CTK desactivado (Core.dll v3.1?)"
 }
 
 # Ruta centralizada a los XAML externos estáticos
 $script:XamlFolder = Join-Path $PSScriptRoot "assets\xaml"
 
-# ─────────────────────────────────────────────────────────────────────────────
-# [DLL] ThemeEngine -- libs\SysOpt.ThemeEngine.dll
-# ─────────────────────────────────────────────────────────────────────────────
-if (-not ([System.Management.Automation.PSTypeName]'ThemeEngine').Type) {
-    $script:_dllTheme = Join-Path $PSScriptRoot "libs\SysOpt.ThemeEngine.dll"
-    if (-not (Test-Path $script:_dllTheme)) {
-        throw "SysOpt: libs\SysOpt.ThemeEngine.dll no encontrado. Ejecuta compile-dlls.ps1 en .\libs\"
-    }
-    try { Add-Type -Path $script:_dllTheme -ErrorAction Stop }
-    catch { Write-Verbose "SysOpt: ThemeEngine.dll ya cargado en esta sesion" }
-}
+Set-SplashProgress 70 "Ensamblados cargados."
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [I18N] Variables globales de idioma y tema
@@ -215,6 +244,30 @@ function Get-TC {
         return $script:CurrentThemeColors[$Key]
     }
     return $Default
+}
+
+# ── Registro de ventanas flotantes que deben recibir el tema ─────────────────
+# Cualquier ventana flotante (Tasks, DedupWindow…) se añade aquí al abrirse y
+# se elimina al cerrarse. Apply-ThemeWithProgress itera la lista para
+# propagar los TB_* brushes a sus ResourceDictionary igual que al MainWindow.
+$script:ThemedWindows = [System.Collections.Generic.List[System.Windows.Window]]::new()
+
+# ── New-ThemedWindowResources ─────────────────────────────────────────────────
+# Genera un ResourceDictionary con todos los TB_* SolidColorBrushes del tema
+# actual clonados desde $window.Resources, listo para asignarse a una ventana
+# flotante y recibir actualizaciones posteriores de Apply-ThemeWithProgress.
+function New-ThemedWindowResources {
+    $rd = [System.Windows.ResourceDictionary]::new()
+    foreach ($key in $window.Resources.Keys) {
+        $keyStr = "$key"
+        if ($keyStr -like 'TB_*') {
+            $brush = $window.Resources[$key]
+            if ($brush -is [System.Windows.Media.SolidColorBrush]) {
+                $rd[$keyStr] = [System.Windows.Media.SolidColorBrush]::new($brush.Color)
+            }
+        }
+    }
+    return $rd
 }
 
 function Update-DynamicThemeValues {
@@ -266,7 +319,6 @@ function Update-DynamicThemeValues {
     }
 }
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Reutiliza runspaces entre operaciones async (exportar, cargar entries, top-files)
 # eliminando el overhead de arranque (~2-5 MB por runspace) y la carga de módulos.
@@ -281,9 +333,12 @@ function Initialize-RunspacePool {
         $pool.ApartmentState = [System.Threading.ApartmentState]::MTA
         $pool.Open()
         $script:RunspacePool = $pool
+        [SysOptFallbacks]::RunspacePoolAvailable = $true
+        Write-Log "RunspacePool abierto (1-3 runspaces)" -Level INFO
     } catch {
         Write-Verbose "SysOpt: RunspacePool init failed — will fallback to individual runspaces. $_"
         $script:RunspacePool = $null
+        [SysOptFallbacks]::RunspacePoolAvailable = $false
     }
 }
 
@@ -291,7 +346,7 @@ function Initialize-RunspacePool {
 function New-PooledPS {
     Initialize-RunspacePool
     $ps = [System.Management.Automation.PowerShell]::Create()
-    if ($null -ne $script:RunspacePool) {
+    if ([SysOptFallbacks]::RunspacePoolAvailable -and $null -ne $script:RunspacePool) {
         $ps.RunspacePool = $script:RunspacePool
         return @{ PS = $ps; RS = $null }
     } else {
@@ -308,7 +363,6 @@ function Dispose-PooledPS($ctx) {
     if ($null -ne $ctx.RS) { try { $ctx.RS.Close(); $ctx.RS.Dispose() } catch {} }
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
 # ─────────────────────────────────────────────────────────────────────────────
 function Invoke-AggressiveGC {
     try {
@@ -346,17 +400,8 @@ if (-not (Test-Administrator)) {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ─────────────────────────────────────────────────────────────────────────────
-$script:AppMutex = New-Object System.Threading.Mutex($false, "Global\OptimizadorSistemaGUI_v5")
-$mutexAcquired = $false
-try {
-    $mutexAcquired = $script:AppMutex.WaitOne(0)
-} catch [System.Threading.AbandonedMutexException] {
-    # El proceso anterior murió sin liberar — el mutex nos pertenece
-    $mutexAcquired = $true
-}
-
-if (-not $mutexAcquired) {
+[SysOptFallbacks]::InitMutex("Global\OptimizadorSistemaGUI_v5")
+if (-not [SysOptFallbacks]::AcquireMutex()) {
     [System.Windows.MessageBox]::Show(
         "Ya hay una instancia del Optimizador en ejecución.`n`nCierra la ventana existente antes de abrir una nueva.",
         "Ya en ejecución",
@@ -521,7 +566,6 @@ $btnOutputExpand.Add_Click({
     if ($script:OutputState -eq "expanded") { Set-OutputState "normal" } else { Set-OutputState "expanded" }
 })
 $btnShowOutput.Add_Click({ Set-OutputState "normal" })
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DIÁLOGOS TEMÁTICOS — reemplazan MessageBox y InputBox del sistema
@@ -813,89 +857,105 @@ $script:WasCancelled = $false
 # Niveles: INFO (por defecto), WARN, ERROR
 # Thread-safe: StreamWriter con mutex de nombre para acceso concurrente
 # ─────────────────────────────────────────────────────────────────────────────
-$script:LogWriter      = $null
-$script:LogMutex       = $null
-$script:LogCurrentDate = $null
+# ── [LOG] Logger delegado a LogEngine (SysOpt.Core.dll) ─────────────────────
+# LogEngine es thread-safe, soporta rotación diaria y mutex con nombre.
+# Write-Log e Initialize-Logger mantienen la misma firma pública para que
+# el resto del script no necesite cambios.
+# ─────────────────────────────────────────────────────────────────────────────
 
 function Initialize-Logger {
     try {
         $logsDir = Join-Path $script:AppDir "logs"
-        if (-not (Test-Path $logsDir)) { New-Item -ItemType Directory -Path $logsDir -Force | Out-Null }
-
-        $today   = (Get-Date).ToString("yyyy-MM-dd")
-        $logFile = Join-Path $logsDir "SysOpt_$today.log"
-
-        if ($null -ne $script:LogWriter) {
-            try { $script:LogWriter.Close(); $script:LogWriter.Dispose() } catch {}
-        }
-
-        $fs = [System.IO.File]::Open($logFile,
-              [System.IO.FileMode]::Append,
-              [System.IO.FileAccess]::Write,
-              [System.IO.FileShare]::ReadWrite)
-        $script:LogWriter      = [System.IO.StreamWriter]::new($fs, [System.Text.Encoding]::UTF8)
-        $script:LogWriter.AutoFlush = $true
-        $script:LogCurrentDate = $today
-
-        # Mutex con nombre para que runspaces puedan adquirirlo si necesitan loggear
-        if ($null -eq $script:LogMutex) {
-            $script:LogMutex = [System.Threading.Mutex]::new($false, "SysOpt_LogMutex_$PID")
-        }
-
-        # Cabecera de sesión en el log
-        $script:LogWriter.WriteLine("")
-        $script:LogWriter.WriteLine("════════════════════════════════════════════════════════════")
-        $script:LogWriter.WriteLine("  SysOpt v3.0.0 (Dev)  —  Sesión iniciada: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
-        $script:LogWriter.WriteLine("  Usuario: $env:USERNAME  |  Host: $env:COMPUTERNAME")
-        $script:LogWriter.WriteLine("════════════════════════════════════════════════════════════")
+        [LogEngine]::Initialize($logsDir)
+        [LogEngine]::Header("SysOpt", $script:AppVersion)
     } catch {
-        # El logger no debe romper el arranque — fallo silencioso
-        $script:LogWriter = $null
+        # LogEngine no disponible aún (carga inicial antes de DLLs) — silencioso
     }
 }
 
 function Write-Log {
     param(
         [string]$Message,
-        [ValidateSet("INFO","WARN","ERROR")][string]$Level = "INFO",
-        [switch]$NoUI    # si $true, solo va al archivo (para llamadas desde runspaces)
+        [ValidateSet("INFO","WARN","ERROR","UI")][string]$Level = "INFO",
+        [switch]$NoUI    # si $true, solo va al archivo (llamadas desde runspaces)
     )
     $timestamp = Get-Date -Format "HH:mm:ss"
-    $today     = (Get-Date).ToString("yyyy-MM-dd")
 
-    # ── Rotación diaria ──────────────────────────────────────────────────────
-    if ($script:LogCurrentDate -ne $today) { Initialize-Logger }
+    # ── Escribir al archivo vía LogEngine ───────────────────────────────────
+    try { [LogEngine]::Write($Message, $Level) } catch {}
 
-    # ── Escribir al archivo ──────────────────────────────────────────────────
-    if ($null -ne $script:LogWriter -and $null -ne $script:LogMutex) {
-        $acquired = $false
-        try {
-            $acquired = $script:LogMutex.WaitOne(200)
-            if ($acquired) {
-                $script:LogWriter.WriteLine("[$timestamp][$Level] $Message")
-            }
-        } catch {} finally {
-            if ($acquired) { try { $script:LogMutex.ReleaseMutex() } catch {} }
-        }
-    }
-
-    # ── Escribir a la consola UI (solo desde el hilo principal) ─────────────
-    if (-not $NoUI -and $null -ne $ConsoleOutput) {
-        try {
-            $ConsoleOutput.AppendText("[$timestamp] $Message`n")
-            $ConsoleOutput.ScrollToEnd()
-        } catch {}
+    # ── Consola UI (solo hilo principal) ────────────────────────────────────
+    if ($Level -eq "UI" -and $null -ne $ConsoleOutput) {
+        try { $ConsoleOutput.AppendText("$Message`n"); $ConsoleOutput.ScrollToEnd() } catch {}
+    } elseif (-not $NoUI -and $null -ne $ConsoleOutput) {
+        try { $ConsoleOutput.AppendText("[$timestamp] $Message`n"); $ConsoleOutput.ScrollToEnd() } catch {}
     }
 }
 
-# Write-ConsoleMain — alias de compatibilidad: todo el código existente sigue funcionando
+# Write-ConsoleMain — mensajes puramente visuales: van a la consola de pantalla pero NO
+# al archivo de log. Usa nivel "UI" para separar instrucciones decorativas de eventos reales.
 function Write-ConsoleMain {
     param([string]$Message)
-    Write-Log -Message $Message -Level "INFO"
+    Write-Log -Message $Message -Level "UI"
 }
 
 # Inicializar el logger en cuanto AppDir esté disponible
 Initialize-Logger
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [BOOT] Auditoría de DLL — registra en el log qué ensamblados están cargados,
+# desde qué ruta física y su versión. Detecta si alguna DLL esperada falta o
+# fue cargada desde una ruta distinta a .\libs\ (p.ej. GAC o sesión anterior).
+# ─────────────────────────────────────────────────────────────────────────────
+try {
+    $expectedDlls = @(
+        @{ Guard = 'MemoryHelper';       Dll = 'SysOpt.MemoryHelper.dll'  },
+        @{ Guard = 'DiskItem_v211';      Dll = 'SysOpt.DiskEngine.dll'    },
+        @{ Guard = 'LangEngine';         Dll = 'SysOpt.Core.dll'          },
+        @{ Guard = 'ScanTokenManager';   Dll = 'SysOpt.Core.dll'          },
+        @{ Guard = 'SystemDataCollector';Dll = 'SysOpt.Core.dll'          },
+        @{ Guard = 'ThemeEngine';        Dll = 'SysOpt.ThemeEngine.dll'   },
+        @{ Guard = 'WseTrim';            Dll = 'SysOpt.WseTrim.dll'       }
+    )
+
+    Write-Log "── Auditoría de ensamblados ──────────────────────────────" -Level "INFO" -NoUI
+    $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+
+    foreach ($entry in $expectedDlls) {
+        $type = ([System.Management.Automation.PSTypeName]$entry.Guard).Type
+        if ($null -ne $type) {
+            $asm      = $type.Assembly
+            $location = $asm.Location
+            $version  = $asm.GetName().Version.ToString()
+
+            # Verificar que la ruta coincide con .\libs\ esperado
+            $expectedPath = Join-Path $script:_libsDir $entry.Dll
+            $fromExpected = $location -and ([System.IO.Path]::GetFullPath($location) -eq [System.IO.Path]::GetFullPath($expectedPath))
+            $srcNote      = if ($fromExpected) { "OK" } elseif ($asm.GlobalAssemblyCache) { "GAC" } else { "RUTA DISTINTA" }
+
+            # Solo loggear cada DLL física una vez (Core.dll tiene 3 tipos guard)
+            if ($seen.Add($location)) {
+                Write-Log ("[DLL] {0,-28} v{1}  [{2}]  {3}" -f $entry.Dll, $version, $srcNote, $location) -Level "INFO" -NoUI
+            }
+        } else {
+            Write-Log ("[DLL] {0,-28} NO CARGADA — tipo '{1}' no encontrado" -f $entry.Dll, $entry.Guard) -Level "WARN" -NoUI
+        }
+    }
+
+    # Extra: listar cualquier SysOpt.*.dll cargado que no esté en la lista esperada
+    $allAsm = [System.AppDomain]::CurrentDomain.GetAssemblies() |
+        Where-Object { $_.GetName().Name -like 'SysOpt.*' }
+    foreach ($asm in $allAsm) {
+        $loc = $asm.Location
+        if ($loc -and -not $seen.Contains($loc)) {
+            Write-Log ("[DLL] {0,-28} v{1}  [EXTRA]  {2}" -f $asm.GetName().Name, $asm.GetName().Version, $loc) -Level "WARN" -NoUI
+        }
+    }
+
+    Write-Log "── Fin auditoría ─────────────────────────────────────────" -Level "INFO" -NoUI
+} catch {
+    Write-Log "[DLL] Error en auditoría de ensamblados: $($_.Exception.Message)" -Level "WARN" -NoUI
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [TASKPOOL] Registro centralizado de tareas async — alimenta la pestaña ⚡ Tareas
@@ -917,11 +977,16 @@ function Register-Task {
         Name       = $Name
         Icon       = $Icon
         IconBg     = $IconBg
-        Status     = "running"   # running | done | error | cancelled
+        Status     = "running"   # running | done | error | cancelled | paused
         Pct        = 0
         Detail     = ""
         StartTime  = [datetime]::Now
         EndTime    = $null
+        # ── Hooks de control (poblados por quien lanza la tarea) ─────────────
+        CancelFn   = $null       # ScriptBlock: cancela la tarea
+        PauseFn    = $null       # ScriptBlock: pausa  (solo diskscan)
+        ResumeFn   = $null       # ScriptBlock: reanuda (solo diskscan)
+        Paused     = $false
     })
     $script:TaskPool[$Id] = $task
     Write-Log "[TASK] Iniciada: $Name" -Level "INFO" -NoUI
@@ -1284,6 +1349,17 @@ $window.Add_Loaded({
         $splashWin.Close()
     } catch {}
 
+    # [C3-PRE] Copiar TB_* del Window al Application.Current.Resources
+    # Los ContextMenu en Popups heredan Application.Resources pero NO Window.Resources.
+    # Esto garantiza que cualquier CM (incluyendo DataTemplate) resuelva los brushes.
+    try {
+        foreach ($rk in @($window.Resources.Keys)) {
+            if ([string]$rk -like "TB_*") {
+                [System.Windows.Application]::Current.Resources[[string]$rk] = $window.Resources[$rk]
+            }
+        }
+    } catch {}
+
     # [C3] Restaurar configuracion guardada (tema, idioma, preferencias)
     Load-Settings
 
@@ -1310,6 +1386,106 @@ $window.Add_Loaded({
     $chartTimer.Start()
     Update-SystemInfo        # primera carga inmediata
     Update-PerformanceTab    # poblar pestana Rendimiento al arrancar
+
+    # ── [BOOT] Contexto de arranque — log detallado de configuracion y entorno ──
+    # Se ejecuta DESPUES de Load-Settings/Load-Language/Apply-Theme para reflejar
+    # el estado real con el que arranca la sesion. Solo va al archivo (-NoUI).
+    try {
+        # ── Aplicacion ────────────────────────────────────────────────────────
+        Write-Log "── Configuracion de arranque ─────────────────────────────" -Level "INFO" -NoUI
+        Write-Log ("[APP] Version        : v{0}" -f $script:AppVersion)                                         -Level "INFO" -NoUI
+        Write-Log ("[APP] Tema activo     : {0}" -f $script:CurrentTheme)                                       -Level "INFO" -NoUI
+        Write-Log ("[APP] Idioma activo   : {0}" -f $script:CurrentLang)                                        -Level "INFO" -NoUI
+        Write-Log ("[APP] Settings path   : {0}" -f $script:SettingsPath)                                       -Level "INFO" -NoUI
+        $settingsExist = Test-Path $script:SettingsPath
+        Write-Log ("[APP] Settings existe : {0}" -f $(if ($settingsExist) {"SI"} else {"NO — usando defaults"})) -Level "INFO" -NoUI
+
+        # Ruta de escaneo y auto-refresh desde los controles ya restaurados
+        try {
+            $scanPath    = if ($txtDiskScanPath -and $txtDiskScanPath.Text) { $txtDiskScanPath.Text } else { "(no definida)" }
+            $autoRefresh = if ($chkAutoRefresh -and $chkAutoRefresh.IsChecked) { "ON" } else { "OFF" }
+            $refreshSecs = if ($cmbRefreshInterval -and $cmbRefreshInterval.SelectedItem) { "$($cmbRefreshInterval.SelectedItem.Tag) s" } else { "(default)" }
+            Write-Log ("[APP] Disco scan path : {0}" -f $scanPath)    -Level "INFO" -NoUI
+            Write-Log ("[APP] Auto-refresh    : {0}  intervalo={1}" -f $autoRefresh, $refreshSecs) -Level "INFO" -NoUI
+        } catch {}
+
+        # ── Entorno de ejecucion ──────────────────────────────────────────────
+        Write-Log ("[ENV] PowerShell      : v{0}  ({1}-bit)" -f $PSVersionTable.PSVersion, $(if ([Environment]::Is64BitProcess) {"64"} else {"32"})) -Level "INFO" -NoUI
+        Write-Log ("[ENV] Admin           : {0}" -f $(if (([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {"SI"} else {"NO — funciones limitadas"})) -Level "INFO" -NoUI
+        Write-Log ("[ENV] PID             : {0}" -f $PID)                                               -Level "INFO" -NoUI
+        Write-Log ("[ENV] Script root     : {0}" -f $PSScriptRoot)                                      -Level "INFO" -NoUI
+        Write-Log ("[ENV] Working dir     : {0}" -f (Get-Location).Path)                                -Level "INFO" -NoUI
+
+        # ── Sistema operativo ─────────────────────────────────────────────────
+        try {
+            $osInfo = Invoke-CimQuery -ClassName Win32_OperatingSystem -SilentOnFail
+            if ($osInfo) {
+                $totalRamGB = [math]::Round($osInfo.TotalVisibleMemorySize / 1MB, 1)
+                $freeRamGB  = [math]::Round($osInfo.FreePhysicalMemory     / 1MB, 1)
+                $usedRamPct = [math]::Round((($totalRamGB - $freeRamGB) / [math]::Max($totalRamGB,1)) * 100)
+                Write-Log ("[SYS] OS              : {0}  (Build {1})" -f $osInfo.Caption.Trim(), $osInfo.BuildNumber)  -Level "INFO" -NoUI
+                Write-Log ("[SYS] RAM             : {0} GB total  |  {1} GB libre  |  {2}% usado" -f $totalRamGB, $freeRamGB, $usedRamPct) -Level "INFO" -NoUI
+                Write-Log ("[SYS] Ultimo boot     : {0}" -f $osInfo.LastBootUpTime)                              -Level "INFO" -NoUI
+            }
+        } catch {}
+
+        # ── CPU ───────────────────────────────────────────────────────────────
+        try {
+            $cpuInfo = Invoke-CimQuery -ClassName Win32_Processor -SilentOnFail | Select-Object -First 1
+            if ($cpuInfo) {
+                Write-Log ("[SYS] CPU             : {0}  ({1} cores / {2} hilos)" -f $cpuInfo.Name.Trim(), $cpuInfo.NumberOfCores, $cpuInfo.NumberOfLogicalProcessors) -Level "INFO" -NoUI
+                Write-Log ("[SYS] CPU carga       : {0}%  @{1} MHz" -f $cpuInfo.LoadPercentage, $cpuInfo.CurrentClockSpeed) -Level "INFO" -NoUI
+            }
+        } catch {}
+
+        # ── Disco C: ──────────────────────────────────────────────────────────
+        try {
+            $diskC = Invoke-CimQuery -ClassName Win32_LogicalDisk -Filter "DeviceID='C:'" -SilentOnFail | Select-Object -First 1
+            if ($diskC) {
+                $dTotalGB = [math]::Round($diskC.Size      / 1GB, 1)
+                $dFreeGB  = [math]::Round($diskC.FreeSpace / 1GB, 1)
+                $dUsedPct = [math]::Round((($dTotalGB - $dFreeGB) / [math]::Max($dTotalGB,1)) * 100)
+                Write-Log ("[SYS] Disco C:        : {0} GB total  |  {1} GB libre  |  {2}% usado" -f $dTotalGB, $dFreeGB, $dUsedPct) -Level "INFO" -NoUI
+            }
+        } catch {}
+
+        # ── Advertencias de arranque ──────────────────────────────────────────
+        # Detectar condiciones que pueden afectar al comportamiento de la app
+        try {
+            # RAM baja
+            $osInfo2 = Invoke-CimQuery -ClassName Win32_OperatingSystem -SilentOnFail
+            if ($osInfo2) {
+                $freeMB = [math]::Round($osInfo2.FreePhysicalMemory / 1KB)
+                if ($freeMB -lt 512) {
+                    Write-Log ("[WARN] RAM libre muy baja al arrancar: ${freeMB} MB — rendimiento puede verse afectado") -Level "WARN" -NoUI
+                }
+                # Disco C: casi lleno
+                $diskC2 = Invoke-CimQuery -ClassName Win32_LogicalDisk -Filter "DeviceID='C:'" -SilentOnFail | Select-Object -First 1
+                if ($diskC2) {
+                    $freeGBw = [math]::Round($diskC2.FreeSpace / 1GB, 1)
+                    if ($freeGBw -lt 5) {
+                        Write-Log ("[WARN] Disco C: con menos de 5 GB libres (${freeGBw} GB) — algunas operaciones pueden fallar") -Level "WARN" -NoUI
+                    }
+                }
+            }
+            # Tema no encontrado (se cargó settings.json pero el .theme ya no existe)
+            if ($script:CurrentTheme -ne "default") {
+                $themePath = Join-Path $script:ThemesDir "$($script:CurrentTheme).theme"
+                if (-not (Test-Path $themePath)) {
+                    Write-Log ("[WARN] Tema guardado '$($script:CurrentTheme)' no encontrado en assets	hemes\ — usando default") -Level "WARN" -NoUI
+                }
+            }
+            # Idioma no encontrado
+            $langPath = Join-Path $script:LangDir "$($script:CurrentLang).lang"
+            if (-not (Test-Path $langPath)) {
+                Write-Log ("[WARN] Idioma guardado '$($script:CurrentLang)' no encontrado en assets\lang\ — sin traducciones") -Level "WARN" -NoUI
+            }
+        } catch {}
+
+        Write-Log "── Fin contexto de arranque ──────────────────────────────" -Level "INFO" -NoUI
+    } catch {
+        Write-Log "[BOOT] Error al registrar contexto de arranque: $($_.Exception.Message)" -Level "WARN" -NoUI
+    }
 })
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1836,18 +2012,28 @@ function Start-DiskScan {
     param([string]$RootPath)
 
     if (-not (Test-Path $RootPath -ErrorAction SilentlyContinue)) {
+        Write-Log "[SCAN] Ruta no encontrada: $RootPath" -Level "WARN" -NoUI
         Show-ThemedDialog -Title "Ruta no encontrada" -Message "Ruta no encontrada: $RootPath" -Type "error"
         return
     }
+    Write-Log ("[SCAN] Iniciando escaneo de disco: {0}" -f $RootPath) -Level "INFO" -NoUI
 
     # Señalizar parada al runspace anterior y esperar a que confirme la parada
     # WaitOne(500) bloquea máximo 500ms hasta que el handle complete — evita
     # que Reset() se ejecute con el hilo de escaneo anterior todavía activo.
+    # [CTK] ScanTokenManager.Cancel() notifica el token; ScanCtl211.Stop mantiene
+    # compatibilidad con PScanner211 que todavía lee el flag booleano.
     [ScanCtl211]::Stop = $true
+    if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
+        [ScanTokenManager]::Cancel()
+    }
     if ($null -ne $script:DiskScanAsync -and -not $script:DiskScanAsync.IsCompleted) {
         $script:DiskScanAsync.AsyncWaitHandle.WaitOne(500) | Out-Null
     }
     [ScanCtl211]::Reset()
+    if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
+        [ScanTokenManager]::RequestNew()   # token limpio para el nuevo escaneo
+    }
 
     $script:CollapsedPaths.Clear()
     $script:CachedChildMap = $null      # Invalidar caché al iniciar nuevo escaneo
@@ -1869,6 +2055,9 @@ function Start-DiskScan {
     # Cola compartida: el hilo de fondo mete objetos, el timer de UI los consume
     $script:ScanQueue = [System.Collections.Concurrent.ConcurrentQueue[object[]]]::new()
 
+    # [PAUSE] Estado de pausa compartido entre hilo UI y runspace de escaneo
+    $script:ScanPauseState = [hashtable]::Synchronized(@{ Paused = $false })
+
     # [OPT] Usar List<object> en lugar de ObservableCollection para la UI.
     # ObservableCollection dispara CollectionChanged por cada Add() individual — con miles
     # de carpetas esto presiona enormemente el sistema de binding WPF y el GC.
@@ -1886,7 +2075,8 @@ function Start-DiskScan {
     #   [0]=Key [1]=ParentKey [2]=Name [3]=Size [4]=Files [5]=Dirs [6]=Done [7]=Depth
     $bgScript = {
         param([string]$Root,
-              [System.Collections.Concurrent.ConcurrentQueue[object[]]]$Q)
+              [System.Collections.Concurrent.ConcurrentQueue[object[]]]$Q,
+              [hashtable]$PauseState)
 
         try {
             $topDirs = try { [System.IO.Directory]::GetDirectories($Root) } catch { @() }
@@ -1895,6 +2085,11 @@ function Start-DiskScan {
             # Llamar al escáner C# paralelo para cada carpeta de primer nivel
             # Pasamos $Root como parentKey para que aparezcan bajo ::ROOT:: en la UI
             foreach ($d in $topDirs) {
+                if ([ScanCtl211]::Stop) { break }
+                # [PAUSE] Spinwait mientras la UI pida pausa (intervalo 100ms para no quemar CPU)
+                while ($PauseState.Paused -and -not [ScanCtl211]::Stop) {
+                    [System.Threading.Thread]::Sleep(100)
+                }
                 if ([ScanCtl211]::Stop) { break }
                 [PScanner211]::ScanDir($d, 0, '::ROOT::', $Q) | Out-Null
             }
@@ -1913,13 +2108,39 @@ function Start-DiskScan {
             "`$null = [System.Reflection.Assembly]::LoadFrom('$sharedAsmPath')"
         )
     }
-    [void]$ps.AddScript($bgScript).AddParameter("Root", $RootPath).AddParameter("Q", $script:ScanQueue)
+    [void]$ps.AddScript($bgScript).AddParameter("Root", $RootPath).AddParameter("Q", $script:ScanQueue).AddParameter("PauseState", $script:ScanPauseState)
     # Set DefaultRunspace so C# code can resolve PS types if needed
     $rs.SessionStateProxy.SetVariable("ErrorActionPreference", "SilentlyContinue")
     $script:DiskScanRunspace = $rs
     $script:DiskScanPS    = $ps
     $script:DiskScanAsync = $ps.BeginInvoke()
-    Register-Task -Id "diskscan" -Name "Escaneo: $RootPath" -Icon "💾" -IconBg (Get-TC 'BgStatusInfo' '#1A2F4A') | Out-Null
+
+    # ── Registrar tarea con hooks de control ─────────────────────────────────
+    $scanTask = Register-Task -Id "diskscan" -Name "Escaneo: $RootPath" -Icon "💾" -IconBg (Get-TC 'BgStatusInfo' '#1A2F4A')
+    $scanTask.CancelFn = {
+        [ScanCtl211]::Stop = $true
+        if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
+            [ScanTokenManager]::Cancel()
+        }
+        if ($null -ne $script:btnDiskStop) {
+            try { $script:btnDiskStop.IsEnabled = $false } catch {}
+        }
+        $script:txtDiskScanStatus.Text = "⏹ Cancelado desde panel de tareas…"
+    }
+    $scanTask.PauseFn = {
+        $script:ScanPauseState.Paused = $true
+        $script:txtDiskScanStatus.Text = "⏸ Escaneo pausado"
+        if ($null -ne $script:btnDiskStop) {
+            try { $script:btnDiskStop.Content = "▶  Reanudar" } catch {}
+        }
+    }
+    $scanTask.ResumeFn = {
+        $script:ScanPauseState.Paused = $false
+        $script:txtDiskScanStatus.Text = "Escaneando…"
+        if ($null -ne $script:btnDiskStop) {
+            try { $script:btnDiskStop.Content = "⏹  Detener" } catch {}
+        }
+    }
 
     # ── Timer UI: drena la cola y actualiza lista cada 300 ms ──────────────────
     # LiveIndexMap: clave→posición en LiveList para actualizaciones O(1)
@@ -2246,6 +2467,9 @@ $btnDiskScan.Add_Click({
 
 $btnDiskStop.Add_Click({
     [ScanCtl211]::Stop = $true
+    if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
+        [ScanTokenManager]::Cancel()   # [CTK] cancelación limpia via token
+    }
     $btnDiskStop.IsEnabled = $false
     $txtDiskScanStatus.Text = "⏹ Cancelando — espera a que termine la carpeta actual…"
 })
@@ -2302,15 +2526,16 @@ function Load-Settings {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-
-# ─────────────────────────────────────────────────────────────────────────────
-# ─────────────────────────────────────────────────────────────────────────────
 # [I18N] Cargar idioma y aplicar a toda la UI
 # ─────────────────────────────────────────────────────────────────────────────
 function Load-Language {
     param([string]$LangCode)
     $langPath = Join-Path $script:LangDir "$LangCode.lang"
-    if (-not (Test-Path $langPath)) { return }
+    if (-not (Test-Path $langPath)) {
+        Write-Log "[LANG] Archivo de idioma no encontrado: $LangCode  (path: $langPath)" -Level "WARN" -NoUI
+        return
+    }
+    Write-Log "[LANG] Cargando idioma: $LangCode" -Level "INFO" -NoUI
 
     try {
         $script:LangDict    = [LangEngine]::ParseLangFile($langPath)
@@ -2659,7 +2884,19 @@ function Apply-ThemeWithProgress {
                 $newG = [math]::Max(0, [math]::Min(255, [int]$baseColor.G + $dg))
                 $newB = [math]::Max(0, [math]::Min(255, [int]$baseColor.B + $db))
                 $finalColor = [System.Windows.Media.Color]::FromRgb($newR, $newG, $newB)
-                $window.Resources["TB_$hex"] = [System.Windows.Media.SolidColorBrush]::new($finalColor)
+                $brush = [System.Windows.Media.SolidColorBrush]::new($finalColor)
+                $window.Resources["TB_$hex"] = $brush
+                # Propagar a Application.Current.Resources para que
+                # cualquier Popup/ContextMenu del proceso lo resuelva
+                try { [System.Windows.Application]::Current.Resources["TB_$hex"] = $brush } catch {}
+                # Propagar a ventanas flotantes registradas (Tasks, Dedup, etc.)
+                foreach ($fw in @($script:ThemedWindows)) {
+                    try {
+                        if ($null -ne $fw -and $fw.IsLoaded) {
+                            $fw.Resources["TB_$hex"] = $brush
+                        }
+                    } catch {}
+                }
             } catch {}
         }
 
@@ -2768,7 +3005,6 @@ function Apply-ThemeWithProgress {
     }.GetNewClosure())
     $closeTimer.Start()
 }
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [OPTIONS] Ventana de Opciones — Tema e Idioma
@@ -2895,11 +3131,13 @@ function Show-OptionsWindow {
 
             # Aplicar idioma si cambió
             if ($selectedLang -ne $script:CurrentLang) {
+                Write-Log ("[CFG] Idioma cambiado: {0} → {1}" -f $script:CurrentLang, $selectedLang) -Level "INFO" -NoUI
                 Load-Language -LangCode $selectedLang
             }
 
             # Aplicar tema si cambió — con barra de progreso
             if ($selectedTheme -ne $script:CurrentTheme) {
+                Write-Log ("[CFG] Tema cambiado: {0} → {1}" -f $script:CurrentTheme, $selectedTheme) -Level "INFO" -NoUI
                 $optWin.Hide()
                 Apply-ThemeWithProgress -ThemeName $selectedTheme
                 $optWin.Show()
@@ -3952,8 +4190,78 @@ function Show-TasksWindow {
         Width="540" Height="480" MinWidth="420" MinHeight="300"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
-        Background="$(Get-TC 'BgDeep' '#0D0F1A')"
+        Background="{DynamicResource TB_0D0F1A}"
         WindowStyle="SingleBorderWindow">
+    <Window.Resources>
+        <!-- Estilos ContextMenu / MenuItem / Separator idénticos al MainWindow,
+             usando DynamicResource para que el cambio de tema los actualice. -->
+        <Style TargetType="ContextMenu">
+            <Setter Property="Background"      Value="{DynamicResource TB_1A1E2F}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource TB_3A4468}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{DynamicResource TB_1A1E2F}"
+                                BorderBrush="{DynamicResource TB_3A4468}"
+                                BorderThickness="1" CornerRadius="8" Padding="4,4">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.5" Color="#000000"/>
+                            </Border.Effect>
+                            <ItemsPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="MenuItem">
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="12"/>
+            <Setter Property="Foreground"  Value="{DynamicResource TB_E8ECF4}"/>
+            <Setter Property="Background"  Value="Transparent"/>
+            <Setter Property="Padding"     Value="10,6"/>
+            <Setter Property="Cursor"      Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="5" Margin="2,1" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header" VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="bd" Property="Background"
+                                        Value="{DynamicResource TB_1E3058}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="MenuItemDanger" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Foreground" Value="{DynamicResource TB_FF6B84}"/>
+        </Style>
+        <Style x:Key="MenuItemWarn" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Foreground" Value="{DynamicResource TB_FFB547}"/>
+        </Style>
+        <Style x:Key="MenuItemGreen" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Foreground" Value="{DynamicResource TB_4AE896}"/>
+        </Style>
+        <Style TargetType="Separator">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Rectangle Height="1" Fill="{DynamicResource TB_2A3448}" Margin="8,3"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -3962,7 +4270,7 @@ function Show-TasksWindow {
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')"
+        <Border Grid.Row="0" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}"
                 BorderThickness="0,0,0,1" Padding="14,10">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -3971,16 +4279,16 @@ function Show-TasksWindow {
                 </Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock FontFamily="Segoe UI" FontSize="13" FontWeight="Bold"
-                               Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')" Text="⚡  Tareas en Segundo Plano"/>
+                               Foreground="{DynamicResource TB_E8ECF4}" Text="⚡  Tareas en Segundo Plano"/>
                     <TextBlock Name="txtTasksSubtitle" FontFamily="Segoe UI" FontSize="10"
-                               Foreground="$(Get-TC 'TextMuted' '#7880A0')" Margin="0,2,0,0" Text="Sin tareas activas"/>
+                               Foreground="{DynamicResource TB_7880A0}" Margin="0,2,0,0" Text="Sin tareas activas"/>
                 </StackPanel>
                 <Button Name="btnTasksClearDone" Grid.Column="1"
                         Content="🧹  Limpiar completadas"
                         Height="24" FontSize="10" VerticalAlignment="Center"
                         Padding="10,0" Cursor="Hand"
-                        Background="$(Get-TC 'BgInput' '#1A1E2F')" Foreground="$(Get-TC 'TextMuted' '#7880A0')"
-                        BorderBrush="$(Get-TC 'BorderSubtle' '#2A3050')" BorderThickness="1"
+                        Background="{DynamicResource TB_1A1E2F}" Foreground="{DynamicResource TB_7880A0}"
+                        BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1"
                         FontFamily="Segoe UI"
                         ToolTip="Elimina las tareas ya completadas o fallidas"/>
             </Grid>
@@ -3988,22 +4296,110 @@ function Show-TasksWindow {
 
         <!-- Lista de tareas -->
         <ListBox Name="lbTasks" Grid.Row="1"
-                 Background="$(Get-TC 'BgDeep' '#0D0F1A')" BorderThickness="0" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')"
+                 Background="{DynamicResource TB_0D0F1A}" BorderThickness="0"
+                 Foreground="{DynamicResource TB_E8ECF4}"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  Margin="8,8,8,0">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
-                    <Setter Property="Background"                Value="Transparent"/>
-                    <Setter Property="Padding"                   Value="0"/>
-                    <Setter Property="Margin"                    Value="0,0,0,6"/>
+                    <Setter Property="Background"                 Value="Transparent"/>
+                    <Setter Property="Padding"                    Value="0"/>
+                    <Setter Property="Margin"                     Value="0,0,0,6"/>
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                    <Setter Property="Focusable"                 Value="False"/>
+                    <Setter Property="Focusable"                  Value="False"/>
                 </Style>
             </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')"
-                            BorderThickness="1" CornerRadius="8" Padding="14,10">
+                    <Border Background="{DynamicResource TB_131625}"
+                            BorderBrush="{DynamicResource TB_252B40}"
+                            BorderThickness="1" CornerRadius="8" Padding="14,10"
+                            Tag="{Binding Id}">
+                        <Border.ContextMenu>
+                            <!-- TB_* se resuelven desde Application.Current.Resources (disponible para todos los popups) -->
+                            <!-- Tag/MenuItem.Tag los propaga el handler ContextMenuOpening en PS                         -->
+                            <ContextMenu>
+                                <ContextMenu.Resources>
+                                    <Style TargetType="ContextMenu">
+                                        <Setter Property="Background"      Value="{DynamicResource TB_1A1E2F}"/>
+                                        <Setter Property="BorderBrush"     Value="{DynamicResource TB_3A4468}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Setter Property="Padding"         Value="4"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ContextMenu">
+                                                    <Border Background="{DynamicResource TB_1A1E2F}"
+                                                            BorderBrush="{DynamicResource TB_3A4468}"
+                                                            BorderThickness="1" CornerRadius="8" Padding="4,4">
+                                                        <Border.Effect>
+                                                            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.5" Color="#000000"/>
+                                                        </Border.Effect>
+                                                        <ItemsPresenter/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                    <Style x:Key="MenuItemBase" TargetType="MenuItem">
+                                        <Setter Property="FontFamily"  Value="Segoe UI"/>
+                                        <Setter Property="FontSize"    Value="12"/>
+                                        <Setter Property="Foreground"  Value="{DynamicResource TB_E8ECF4}"/>
+                                        <Setter Property="Background"  Value="Transparent"/>
+                                        <Setter Property="Padding"     Value="10,6"/>
+                                        <Setter Property="Cursor"      Value="Hand"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="MenuItem">
+                                                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                            CornerRadius="5" Margin="2,1" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter ContentSource="Header"
+                                                                          VerticalAlignment="Center"
+                                                                          RecognizesAccessKey="True"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsHighlighted" Value="True">
+                                                            <Setter TargetName="bd" Property="Background"
+                                                                    Value="{DynamicResource TB_1E3058}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter Property="Opacity" Value="0.35"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                    <Style x:Key="MenuItemWarn" TargetType="MenuItem" BasedOn="{StaticResource MenuItemBase}">
+                                        <Setter Property="Foreground" Value="{DynamicResource TB_FFB547}"/>
+                                    </Style>
+                                    <Style x:Key="MenuItemGreen" TargetType="MenuItem" BasedOn="{StaticResource MenuItemBase}">
+                                        <Setter Property="Foreground" Value="{DynamicResource TB_4AE896}"/>
+                                    </Style>
+                                    <Style x:Key="MenuItemDanger" TargetType="MenuItem" BasedOn="{StaticResource MenuItemBase}">
+                                        <Setter Property="Foreground" Value="{DynamicResource TB_FF6B84}"/>
+                                    </Style>
+                                    <Style TargetType="Separator">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Separator">
+                                                    <Rectangle Height="1" Fill="{DynamicResource TB_2A3448}" Margin="8,3"/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ContextMenu.Resources>
+                                <MenuItem Header="⏸   Pausar tarea"
+                                          IsEnabled="{Binding CanPause}"
+                                          Style="{StaticResource MenuItemWarn}"/>
+                                <MenuItem Header="▶  Reanudar tarea"
+                                          IsEnabled="{Binding CanResume}"
+                                          Style="{StaticResource MenuItemGreen}"/>
+                                <Separator/>
+                                <MenuItem Header="⊘  Cancelar tarea"
+                                          IsEnabled="{Binding CanCancel}"
+                                          Style="{StaticResource MenuItemDanger}"/>
+                            </ContextMenu>
+                        </Border.ContextMenu>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -4023,19 +4419,20 @@ function Show-TasksWindow {
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Name}"
                                            FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold"
-                                           Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')" Margin="0,0,0,4"
+                                           Foreground="{DynamicResource TB_E8ECF4}" Margin="0,0,0,4"
                                            TextTrimming="CharacterEllipsis"/>
-                                <!-- Barra de progreso responsive: ScaleTransform sobre Border interior -->
-                                <Border Height="5" CornerRadius="3" Background="$(Get-TC 'BgInput' '#1A1E2F')" Margin="0,0,0,4"
+                                <Border Height="5" CornerRadius="3"
+                                        Background="{DynamicResource TB_1A1E2F}" Margin="0,0,0,4"
                                         ClipToBounds="True">
-                                    <Border Name="BarFill" CornerRadius="3"
+                                    <Border CornerRadius="3"
                                             Background="{Binding BarColor}"
                                             HorizontalAlignment="Left"
                                             Width="{Binding BarPx}"/>
                                 </Border>
                                 <TextBlock Text="{Binding Detail}"
                                            FontFamily="Segoe UI" FontSize="10"
-                                           Foreground="$(Get-TC 'TextMuted' '#7880A0')" TextTrimming="CharacterEllipsis"/>
+                                           Foreground="{DynamicResource TB_7880A0}"
+                                           TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
 
                             <!-- Derecha: badge + tiempo -->
@@ -4049,7 +4446,8 @@ function Show-TasksWindow {
                                 </Border>
                                 <TextBlock Text="{Binding Elapsed}"
                                            FontFamily="JetBrains Mono" FontSize="10"
-                                           Foreground="$(Get-TC 'TextMuted' '#4A5270')" HorizontalAlignment="Right"/>
+                                           Foreground="{DynamicResource TB_7880A0}"
+                                           HorizontalAlignment="Right"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -4058,10 +4456,12 @@ function Show-TasksWindow {
         </ListBox>
 
         <!-- Statusbar -->
-        <Border Grid.Row="2" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')"
+        <Border Grid.Row="2" Background="{DynamicResource TB_131625}"
+                BorderBrush="{DynamicResource TB_252B40}"
                 BorderThickness="0,1,0,0" Padding="14,6">
             <TextBlock Name="txtTasksStatus" FontFamily="JetBrains Mono" FontSize="10"
-                       Foreground="$(Get-TC 'TextMuted' '#4A5270')" Text="Pool: 0 activa(s) · 0 completada(s)"/>
+                       Foreground="{DynamicResource TB_7880A0}"
+                       Text="Pool: 0 activa(s) · 0 completada(s)"/>
         </Border>
     </Grid>
 </Window>
@@ -4069,6 +4469,14 @@ function Show-TasksWindow {
     $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($twXaml))
     $tw     = [System.Windows.Markup.XamlReader]::Load($reader)
     try { $tw.Owner = $window } catch {}
+
+    # ── Inyectar TB_* brushes del tema actual ─────────────────────────────────
+    $themedRd = New-ThemedWindowResources
+    foreach ($k in @($themedRd.Keys)) {
+        $tw.Resources[$k] = $themedRd[$k]
+    }
+    # Registrar para actualizaciones futuras de tema
+    $script:ThemedWindows.Add($tw)
 
     $script:lbTasksWin           = $tw.FindName("lbTasks")
     $script:txtTasksSubtitleWin  = $tw.FindName("txtTasksSubtitle")
@@ -4092,11 +4500,73 @@ function Show-TasksWindow {
         Refresh-TasksPanel
     })
 
+    # ── Menú contextual de tareas: pausar / reanudar / cancelar ──────────────
+    # El ContextMenu vive en el DataTemplate, por lo que su evento Click
+    # burbujea hasta la ListBox. Lo capturamos con AddHandler en el propio lb.
+    $lbCtx = $script:lbTasksWin
+
+    # ── ContextMenuOpening — propaga Tag del item al CM y MenuItems ────────────
+    # Los TB_* se resuelven desde Application.Current.Resources (se sincronizan
+    # en window.Add_Loaded y en cada Apply-ThemeWithProgress).
+    # El unico trabajo aqui es poner el Id de la tarea en CM.Tag y MenuItem.Tag
+    # porque el DataContext del ContextMenu popup esta desconectado del binding.
+    $lbCtx.AddHandler(
+        [System.Windows.FrameworkElement]::ContextMenuOpeningEvent,
+        [System.Windows.Controls.ContextMenuEventHandler]{
+            param($sCmo, $eCmo)
+            try {
+                # Subir por el arbol visual hasta el Border que tiene el ContextMenu
+                $el = $eCmo.OriginalSource
+                $border = $el; $steps = 0
+                while ($null -ne $border -and $steps -lt 20) {
+                    if ($border -is [System.Windows.Controls.Border] -and $null -ne $border.ContextMenu) { break }
+                    $border = [System.Windows.Media.VisualTreeHelper]::GetParent($border)
+                    $steps++
+                }
+                if ($null -eq $border -or $null -eq $border.ContextMenu) { return }
+                $cm = $border.ContextMenu
+
+                # Propagar Id de la tarea al Tag del CM y de cada MenuItem
+                $dc     = $border.DataContext
+                $taskId = if ($null -ne $dc -and $null -ne $dc.Id) { [string]$dc.Id } else { "" }
+                $cm.Tag = $taskId
+                foreach ($mi in $cm.Items) {
+                    if ($mi -is [System.Windows.Controls.MenuItem]) { $mi.Tag = $taskId }
+                }
+            } catch {}
+        }
+    )
+
+    $lbCtx.AddHandler(
+        [System.Windows.Controls.MenuItem]::ClickEvent,
+        [System.Windows.RoutedEventHandler]{
+            param($s2, $e2)
+            $mi = $e2.OriginalSource
+            if (-not ($mi -is [System.Windows.Controls.MenuItem])) { return }
+            $taskId = [string]$mi.Tag
+            if ([string]::IsNullOrEmpty($taskId)) { return }
+
+            switch ($mi.Header) {
+                { $_ -like "*Pausar*" }    { Pause-Task  -Id $taskId }
+                { $_ -like "*Reanudar*" }  { Resume-Task -Id $taskId }
+                { $_ -like "*Cancelar*" }  {
+                    $t = $null
+                    $tName = if ($script:TaskPool.TryGetValue($taskId, [ref]$t) -and $null -ne $t) { $t.Name } else { $taskId }
+                    $ok = Show-ThemedDialog -Title "Confirmar cancelación" `
+                        -Message "¿Cancelar la tarea '$tName'?" -Type "confirm"
+                    if ($ok) { Cancel-Task -Id $taskId }
+                }
+            }
+        }
+    )
+
     $tw.Add_Closed(({
         $script:TasksWin            = $null
         $script:lbTasksWin          = $null
         $script:txtTasksSubtitleWin = $null
         $script:txtTasksStatusWin   = $null
+        # Desregistrar del registro de ventanas temáticas
+        try { $script:ThemedWindows.Remove($tw) | Out-Null } catch {}
     }.GetNewClosure()))
 
     $script:TasksWin = $tw
@@ -4107,15 +4577,58 @@ function Show-TasksWindow {
 # Mapas de presentación por estado
 $script:TaskStatusMap = @{
     running   = @{ Text = T 'StatusRunning' 'En curso';   Bg = (Get-TC 'BgStatusInfo' '#1A2F4A'); Fg = (Get-TC 'FgStatusInfo' '#5BA3FF') }
+    paused    = @{ Text = T 'StatusPaused'  'Pausada';    Bg = (Get-TC 'BgStatusWarn' '#2A2010');  Fg = (Get-TC 'FgStatusWarn' '#FFB547') }
     done      = @{ Text = T 'StatusDone' 'Completada';    Bg = (Get-TC 'BgStatusOk' '#182A1E');    Fg = (Get-TC 'FgStatusOk' '#4AE896') }
     error     = @{ Text = T 'StatusError' 'Error';        Bg = (Get-TC 'BgStatusErr' '#2A1018');   Fg = (Get-TC 'FgStatusErr' '#FF6B84') }
     cancelled = @{ Text = T 'StatusCancel' 'Cancelada';   Bg = (Get-TC 'BgStatusWarn' '#2A2010');  Fg = (Get-TC 'FgStatusWarn' '#FFB547') }
 }
 $script:TaskIconMap = @{
     running   = "⚙"
+    paused    = "⏸"
     done      = "✓"
     error     = "✗"
     cancelled = "⊘"
+}
+
+# ── Helpers de control de tareas invocados desde el menú contextual ───────────
+function Cancel-Task([string]$Id) {
+    $t = $null
+    if (-not $script:TaskPool.TryGetValue($Id, [ref]$t) -or $null -eq $t) { return }
+    if ($t.Status -notin @("running","paused")) { return }
+    # Si estaba pausada, reanudar antes de cancelar (evita runspace colgado)
+    if ($t.Paused -and $null -ne $t.ResumeFn) {
+        try { & $t.ResumeFn } catch {}
+        $t.Paused = $false
+    }
+    if ($null -ne $t.CancelFn) {
+        try { & $t.CancelFn } catch {}
+    }
+    $t.Status  = "cancelled"
+    $t.EndTime = [datetime]::Now
+    Write-Log "[TASK] Cancelada por el usuario: $($t.Name)" -Level "WARN" -NoUI
+    Refresh-TasksPanel
+}
+
+function Pause-Task([string]$Id) {
+    $t = $null
+    if (-not $script:TaskPool.TryGetValue($Id, [ref]$t) -or $null -eq $t) { return }
+    if ($t.Status -ne "running" -or $null -eq $t.PauseFn) { return }
+    try { & $t.PauseFn } catch {}
+    $t.Paused = $true
+    $t.Status = "paused"
+    Write-Log "[TASK] Pausada por el usuario: $($t.Name)" -Level "INFO" -NoUI
+    Refresh-TasksPanel
+}
+
+function Resume-Task([string]$Id) {
+    $t = $null
+    if (-not $script:TaskPool.TryGetValue($Id, [ref]$t) -or $null -eq $t) { return }
+    if ($t.Status -ne "paused" -or $null -eq $t.ResumeFn) { return }
+    try { & $t.ResumeFn } catch {}
+    $t.Paused = $false
+    $t.Status = "running"
+    Write-Log "[TASK] Reanudada por el usuario: $($t.Name)" -Level "INFO" -NoUI
+    Refresh-TasksPanel
 }
 
 function Refresh-TasksPanel {
@@ -4186,6 +4699,10 @@ function Refresh-TasksPanel {
             BarColor    = $barColor
             Detail      = [string]$t.Detail
             Elapsed     = $elapsed
+            # ── Capacidades para el menú contextual ──────────────────────────
+            CanCancel   = ($t.Status -in @("running","paused")) -and ($null -ne $t.CancelFn)
+            CanPause    = ($t.Status -eq "running")             -and ($null -ne $t.PauseFn)
+            CanResume   = ($t.Status -eq "paused")              -and ($null -ne $t.ResumeFn)
         })
     }
 
@@ -4213,7 +4730,6 @@ $script:TaskTimer.Add_Tick({
     Refresh-TasksPanel
 })
 $script:TaskTimer.Start()
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 $script:FilterText = ""
@@ -4251,7 +4767,6 @@ $btnDiskFilterClear.Add_Click({
     Apply-DiskFilter ""
 })
 
-# ─────────────────────────────────────────────────────────────────────────────
 # ─────────────────────────────────────────────────────────────────────────────
 $ctxMenu.Add_Opened({
     $sel = $lbDiskTree.SelectedItem
@@ -4314,7 +4829,6 @@ $ctxScanFolder.Add_Click({
     Show-FolderScanner -FolderPath $sel.FullPath
 })
 
-# ─────────────────────────────────────────────────────────────────────────────
 # ─────────────────────────────────────────────────────────────────────────────
 $btnExportCsv.Add_Click({
     if ($null -eq $script:AllScannedItems -or $script:AllScannedItems.Count -eq 0) {
@@ -4413,6 +4927,20 @@ $btnExportCsv.Add_Click({
     $script:_csvPs    = $ps4
     $script:_csvCtx   = $ctxCsv
     $script:_csvAsync = $asyncCsv
+
+    # CancelFn para el menú contextual de tareas
+    $csvTask = $null
+    if ($script:TaskPool.TryGetValue("csv", [ref]$csvTask) -and $null -ne $csvTask) {
+        $csvTask.CancelFn = {
+            $script:ExportState.Done  = $true
+            $script:ExportState.Error = "Cancelado por el usuario"
+            if ($null -ne $script:_csvTimer) { try { $script:_csvTimer.Stop() } catch {} }
+            try { $script:_csvPs.Stop() } catch {}
+            Dispose-PooledPS $script:_csvCtx
+            if ($null -ne $script:_csvProg) { try { $script:_csvProg.Window.Close() } catch {} }
+            try { $btnExportCsv.IsEnabled = $true } catch {}
+        }
+    }
 
     $csvTimer.Add_Tick({
         $st   = $script:ExportState
@@ -4679,6 +5207,19 @@ $btnDiskReport.Add_Click({
     $script:_htmlCtx   = $ctxHtml
     $script:_htmlAsync = $asyncHtml
 
+    # CancelFn para el menú contextual de tareas
+    $htmlTask = $null
+    if ($script:TaskPool.TryGetValue("html", [ref]$htmlTask) -and $null -ne $htmlTask) {
+        $htmlTask.CancelFn = {
+            $script:ExportState.Done  = $true
+            $script:ExportState.Error = "Cancelado por el usuario"
+            if ($null -ne $script:_htmlTimer) { try { $script:_htmlTimer.Stop() } catch {} }
+            try { $script:_htmlPs.Stop() } catch {}
+            Dispose-PooledPS $script:_htmlCtx
+            if ($null -ne $script:_htmlProg) { try { $script:_htmlProg.Window.Close() } catch {} }
+        }
+    }
+
     $htmlTimer.Add_Tick({
         $st   = $script:ExportState
         $prog = $script:_htmlProg
@@ -4712,7 +5253,6 @@ $btnDiskReport.Add_Click({
     $htmlTimer.Start()
 })
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # El hash se calcula en un runspace background para no bloquear la UI.
 # Los resultados se muestran en una ventana dedicada con grupos por hash.
@@ -4734,6 +5274,8 @@ $btnDedup.Add_Click({
     # Estado compartido entre runspace y UI
     $script:DedupState = [hashtable]::Synchronized(@{
         Done       = $false
+        Stop       = $false
+        Paused     = $false
         Error      = ""
         Groups     = $null     # List de grupos de duplicados
         TotalFiles = 0
@@ -4751,22 +5293,83 @@ $btnDedup.Add_Click({
             $sha256    = [System.Security.Cryptography.SHA256]::Create()
             $hashMap   = [System.Collections.Generic.Dictionary[string, System.Collections.Generic.List[string]]]::new()
 
-            # Enumerar archivos recursivamente desde la ruta escaneada
-            $files = [System.IO.Directory]::EnumerateFiles($RootPath, "*", [System.IO.SearchOption]::AllDirectories)
+            # [FIX-DEDUP-ACCESS] Enumerar archivos con cola manual para saltar directorios
+            # inaccesibles (p.ej. C:\Documents and Settings — junction point protegido de
+            # Windows Vista+) en lugar de EnumerateFiles(..., AllDirectories) que lanza
+            # UnauthorizedAccessException en el primer directorio denegado y aborta todo.
+            $queue = [System.Collections.Generic.Queue[string]]::new()
+            $queue.Enqueue($RootPath)
             $count = 0
-            foreach ($f in $files) {
-                try {
-                    $fi = [System.IO.FileInfo]::new($f)
-                    if ($fi.Length -lt $minBytes) { continue }
-                    $stream = [System.IO.File]::OpenRead($f)
-                    $hashBytes = $sha256.ComputeHash($stream)
-                    $stream.Close(); $stream.Dispose()
-                    $hex = [System.BitConverter]::ToString($hashBytes) -replace '-',''
-                    if (-not $hashMap.ContainsKey($hex)) {
-                        $hashMap[$hex] = [System.Collections.Generic.List[string]]::new()
+
+            # [FIX-DEDUP-SYSTEM] Rutas del sistema excluidas: archivos de Windows son
+            # idénticos por diseño (dlls, drivers) y marcarlos como "duplicados" es
+            # peligroso y confuso. Se excluyen también junctions conocidos.
+            $systemExclusions = [System.Collections.Generic.HashSet[string]]::new(
+                [System.StringComparer]::OrdinalIgnoreCase)
+            foreach ($excl in @(
+                [System.IO.Path]::Combine($RootPath, "Windows"),
+                [System.IO.Path]::Combine($RootPath, "Windows.old"),
+                [System.IO.Path]::Combine($RootPath, "Documents and Settings"),
+                [System.IO.Path]::Combine($RootPath, "System Volume Information"),
+                [System.IO.Path]::Combine($RootPath, "Recovery"),
+                [System.IO.Path]::Combine($RootPath, "$Recycle.Bin"),
+                [System.IO.Path]::Combine($RootPath, "ProgramData\Microsoft"),
+                [System.IO.Path]::Combine([System.Environment]::GetFolderPath("Windows"), "")
+            )) { [void]$systemExclusions.Add($excl.TrimEnd('\')) }
+
+            while ($queue.Count -gt 0) {
+                $dir = $queue.Dequeue()
+
+                # [CANCEL] Comprobar flag de cancelación en cada iteración
+                if ($State.Stop) { break }
+
+                # [PAUSE] Spinwait si la UI ha solicitado pausa
+                while ($State.Paused -and -not $State.Stop) {
+                    [System.Threading.Thread]::Sleep(100)
+                }
+                if ($State.Stop) { break }
+
+                # [FIX-DEDUP-SYSTEM] Saltar rutas del sistema
+                $dirNorm = $dir.TrimEnd('\')
+                $skipDir = $false
+                foreach ($excl in $systemExclusions) {
+                    if ($dirNorm -eq $excl -or $dirNorm.StartsWith($excl + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+                        $skipDir = $true; break
                     }
-                    $hashMap[$hex].Add($f)
-                    $count++
+                }
+                if ($skipDir) { continue }
+
+                # Saltar junction points / symlinks — evita bucles y accesos denegados
+                try {
+                    $dirInfo = [System.IO.DirectoryInfo]::new($dir)
+                    $isJunction = ($dirInfo.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0
+                    if ($isJunction) { continue }
+                } catch { continue }
+
+                # Encolar subdirectorios (silenciar error de acceso por directorio)
+                try {
+                    foreach ($sub in [System.IO.Directory]::GetDirectories($dir)) {
+                        $queue.Enqueue($sub)
+                    }
+                } catch { <# sin permisos — continuar con el resto #> }
+
+                # Procesar archivos del directorio actual
+                try {
+                    foreach ($f in [System.IO.Directory]::GetFiles($dir)) {
+                        try {
+                            $fi = [System.IO.FileInfo]::new($f)
+                            if ($fi.Length -lt $minBytes) { continue }
+                            $stream    = [System.IO.File]::OpenRead($f)
+                            $hashBytes = $sha256.ComputeHash($stream)
+                            $stream.Close(); $stream.Dispose()
+                            $hex = [System.BitConverter]::ToString($hashBytes) -replace '-',''
+                            if (-not $hashMap.ContainsKey($hex)) {
+                                $hashMap[$hex] = [System.Collections.Generic.List[string]]::new()
+                            }
+                            $hashMap[$hex].Add($f)
+                            $count++
+                        } catch { continue }
+                    }
                 } catch { continue }
             }
             $sha256.Dispose()
@@ -4819,10 +5422,29 @@ $btnDedup.Add_Click({
 
     $dedupTimer = New-Object System.Windows.Threading.DispatcherTimer
     $script:_dedupTimer = $dedupTimer
+
+    # Registrar hooks de control para el menú contextual de tareas
+    $dedupTask = $null
+    if ($script:TaskPool.TryGetValue("dedup", [ref]$dedupTask) -and $null -ne $dedupTask) {
+        $dedupTask.CancelFn = {
+            $script:DedupState.Paused = $false  # desbloquear spinwait antes de cancelar
+            $script:DedupState.Stop   = $true
+            $script:DedupState.Done   = $true   # desbloquea el timer tick para limpieza
+        }
+        $dedupTask.PauseFn = {
+            $script:DedupState.Paused = $true
+        }
+        $dedupTask.ResumeFn = {
+            $script:DedupState.Paused = $false
+        }
+    }
     $dedupTimer.Interval = [TimeSpan]::FromMilliseconds(400)
     $dedupTimer.Add_Tick({
         if (-not $script:DedupState.Done) { return }
-        $dedupTimer.Stop()
+        # [FIX] Usar $script:_dedupTimer en vez de $dedupTimer — en PS5.1 el closure
+        # del Add_Tick no captura variables locales del scope padre; $dedupTimer sería
+        # $null aquí y lanzaría "You cannot call a method on a null-valued expression".
+        $script:_dedupTimer.Stop()
         $script:_dedupTimer = $null
         Dispose-PooledPS $ctx
 
@@ -4862,6 +5484,12 @@ $btnDedup.Add_Click({
             $dr   = [System.Xml.XmlNodeReader]::new([xml]$dedupXaml)
             $dWin = [Windows.Markup.XamlReader]::Load($dr)
             $dWin.Owner = $window
+
+            # ── Inyectar TB_* brushes del tema actual y registrar para futuros cambios
+            $themedRd = New-ThemedWindowResources
+            foreach ($k in @($themedRd.Keys)) { $dWin.Resources[$k] = $themedRd[$k] }
+            $script:ThemedWindows.Add($dWin)
+            $dWin.Add_Closed({ try { $script:ThemedWindows.Remove($dWin) | Out-Null } catch {} })
 
             $lbGroups       = $dWin.FindName("lbDedupGroups")
             $txtDedupSum    = $dWin.FindName("txtDedupSummary")
@@ -5487,17 +6115,17 @@ function Show-FolderScanner {
             [System.GC]::WaitForPendingFinalizers()
             [System.GC]::Collect()
             try {
-                # [DLL] WseTrim -- libs\SysOpt.WseTrim.dll
-                if (-not ([System.Management.Automation.PSTypeName]'WseTrim').Type) {
-                    Add-Type -Path (Join-Path $PSScriptRoot "libs\SysOpt.WseTrim.dll") -ErrorAction Stop
+                # [DLL] WseTrim — cargado al inicio en el bloque de DLLs
+                if (([System.Management.Automation.PSTypeName]'WseTrim').Type) {
+                    [WseTrim]::TrimCurrentProcess()
                 }
-                [WseTrim]::TrimCurrentProcess()
             } catch {}
 
             $fsScanProgress.IsIndeterminate = $false
             $fsScanProgress.Value           = 100
             $cnt2 = $script:fsAllItems.Count
             $fsScanStatus.Text = "✅  Completado — $cnt2 archivos  ·  $(Format-FsSize $script:fsTotalBytes)"
+            Write-Log ("[SCAN] Completado: {0} archivos  |  {1}  |  ruta: {2}" -f $cnt2, (Format-FsSize $script:fsTotalBytes), $FolderPath) -Level "INFO" -NoUI
             $fsScanCount.Text  = "$cnt2 archivos"
             $fsTotalSize.Text  = Format-FsSize $script:fsTotalBytes
             $fsFileCount.Text  = "$cnt2 archivos"
@@ -7385,7 +8013,14 @@ function Start-Optimization {
     $confirm = Show-ThemedDialog -Title "Confirmar optimización" `
         -Message "Modo: $modeLabel`n`n¿Iniciar con $($selectedTasks.Count) tareas?`n• $($selectedTasks -join "`n• ")" `
         -Type "question" -Buttons "YesNo"
-    if (-not $confirm) { return }
+    if (-not $confirm) {
+        Write-Log "[OPT] Optimización cancelada por el usuario antes de iniciar." -Level "INFO" -NoUI
+        return
+    }
+    Write-Log ("── Inicio de optimización ────────────────────────────────") -Level "INFO" -NoUI
+    Write-Log ("[OPT] Modo          : {0}" -f $(if ($isDryRun) {"ANÁLISIS (dry-run)"} else {"REAL"})) -Level "INFO" -NoUI
+    Write-Log ("[OPT] Tareas ({0,2})  : {1}" -f $selectedTasks.Count, ($selectedTasks -join " | ")) -Level "INFO" -NoUI
+    Write-Log ("[OPT] Tema activo   : {0}  |  Idioma: {1}" -f $script:CurrentTheme, $script:CurrentLang) -Level "INFO" -NoUI
 
     # Preparar UI
     $btnStart.IsEnabled      = $false
@@ -7531,16 +8166,21 @@ function Start-Optimization {
             }
 
             if ($script:WasCancelled) {
+                Write-Log "[OPT] Proceso cancelado por el usuario." -Level "WARN" -NoUI
                 Show-ThemedDialog -Title "Proceso cancelado" `
                     -Message "La optimizacion fue cancelada por el usuario." -Type "warning"
             } elseif ($script:LastRunWasDryRun -and $null -ne $script:DiagReportData) {
                 # Modo análisis completado → mostrar informe de diagnóstico
+                Write-Log "[OPT] Análisis (dry-run) completado con informe de diagnóstico." -Level "INFO" -NoUI
                 Show-DiagnosticReport -Report $script:DiagReportData
             } elseif ($script:LastRunWasDryRun) {
                 # Dry run sin datos (tareas no recogen diagData) → mensaje simple
+                Write-Log "[OPT] Análisis (dry-run) completado." -Level "INFO" -NoUI
                 Show-ThemedDialog -Title "Análisis completado" `
                     -Message "Análisis completado.`n`nRevisa la consola para ver los detalles." -Type "info"
             } else {
+                Write-Log "── Fin de optimización ───────────────────────────────────" -Level "INFO" -NoUI
+                Write-Log "[OPT] Optimización real completada correctamente." -Level "INFO" -NoUI
                 Show-ThemedDialog -Title "Optimización completada" `
                     -Message "¡Proceso completado correctamente!`n`nTodas las tareas seleccionadas han finalizado." -Type "success"
             }
@@ -7567,7 +8207,8 @@ $btnCancel.Add_Click({
             $script:CancelSource.Cancel()
             $btnCancel.IsEnabled = $false
             $btnCancel.Content   = "⏹ Cancelando..."
-            Write-ConsoleMain "⚠ Cancelación solicitada — esperando fin de tarea actual..."
+            Write-Log "⚠ Cancelación solicitada — esperando fin de tarea actual..." -Level "UI"
+            Write-Log "[OPT] Usuario solicitó cancelación de la optimización en curso." -Level "WARN" -NoUI
         }
     }
 })
@@ -7605,7 +8246,7 @@ $btnSaveLog.Add_Click({
 
 # Botón Salir
 $btnExit.Add_Click({
-    try { $script:AppMutex.ReleaseMutex() } catch { }
+    try { [SysOptFallbacks]::DisposeMutex() } catch { }
     $window.Close()
 })
 
@@ -7613,7 +8254,7 @@ $btnExit.Add_Click({
 $window.Add_Closed({
     $script:AppClosing = $true
     # [BF3] Limpiar estado cacheado para evitar errores al reiniciar
-    try { $script:AppMutex.ReleaseMutex() } catch { }
+    try { [SysOptFallbacks]::DisposeMutex() } catch { }
     try { $chartTimer.Stop() } catch { }
     try { if ($null -ne $script:DiskUiTimer) { $script:DiskUiTimer.Stop() } } catch { }
     if ($null -ne $script:DiskCounter) { try { $script:DiskCounter.Dispose() } catch { } }
@@ -7633,11 +8274,10 @@ $window.Add_Closed({
     try { if ($null -ne $script:ActiveTimer)   { $script:ActiveTimer.Stop();   $script:ActiveTimer   = $null } } catch {}
     # [C3] Guardar configuración al cerrar
     try { Save-Settings } catch {}
-    # [LOG] Cerrar logger
+    # [LOG] Cerrar logger (delegado a LogEngine en SysOpt.Core.dll)
     try {
         Write-Log "Sesión cerrada por el usuario." -Level "INFO" -NoUI
-        if ($null -ne $script:LogWriter)  { $script:LogWriter.Close();  $script:LogWriter  = $null }
-        if ($null -ne $script:LogMutex)   { $script:LogMutex.Close();   $script:LogMutex   = $null }
+        [LogEngine]::Close()
     } catch {}
     # [ERR] Desregistrar handlers de error boundary
     try {
@@ -7651,6 +8291,12 @@ $window.Add_Closed({
 
     # Señalizar parada del runspace de escaneo y esperar brevemente
     [ScanCtl211]::Stop = $true
+    # [CTK] Cancelar y liberar el token global
+    try {
+        if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
+            [ScanTokenManager]::Dispose()
+        }
+    } catch {}
     if ($null -ne $script:DiskScanRunspace) {
         try { $script:DiskScanRunspace.Close()   } catch {}
         try { $script:DiskScanRunspace.Dispose() } catch {}
@@ -7694,7 +8340,6 @@ $window.Add_Closed({
 # ARRANQUE
 # ─────────────────────────────────────────────────────────────────────────────
 # Update-SystemInfo se llama ahora desde el evento Loaded de la ventana
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Función: Ventana emergente "Acerca de la versión"
 # ─────────────────────────────────────────────────────────────────────────────
@@ -7904,12 +8549,11 @@ if ($null -ne $btnOptions) {
     $btnOptions.Add_Click({ Show-OptionsWindow })
 }
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Mensaje de bienvenida simplificado en consola (novedades → botón ℹ)
 # ─────────────────────────────────────────────────────────────────────────────
 Write-ConsoleMain "═══════════════════════════════════════════════════════════"
-Write-ConsoleMain "SysOpt - Windows Optimizer GUI — VERSIÓN 3.1.0"
+Write-ConsoleMain "SysOpt - Windows Optimizer GUI  v$($script:AppVersion)"
 Write-ConsoleMain "═══════════════════════════════════════════════════════════"
 Write-ConsoleMain "Sistema iniciado correctamente"
 Write-ConsoleMain ""

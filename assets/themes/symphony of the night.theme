@@ -1,0 +1,99 @@
+# SysOpt Theme — symphony_of_the_night.theme
+# Tema inspirado en Castlevania: Symphony of the Night — v1.0
+# Castillo de Drácula: púrpuras nocturnos, dorado antiguo y rojo sangre
+
+[meta]
+Name        = Symphony of the Night
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0A0510
+BgCard                = #130A24
+BgInput               = #1E0F38
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #3B1A5E
+BorderActive          = #C8A000
+BorderHover           = #6B3090
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #4A3F9F
+AccentCyan            = #A08CFF
+AccentAmber           = #C8A000
+AccentRed             = #990010
+AccentGreen           = #3A8C4A
+AccentPurple          = #9B30FF
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #EAD8C0
+TextSecondary         = #A08060
+TextMuted             = #503860
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #6A0DAD
+ProgressEnd           = #C8A000
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #2A0D50
+BtnPrimaryFg          = #EAD8C0
+BtnPrimaryBorder      = #C8A000
+BtnPrimaryHover       = #C8A000
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #130A24
+BtnSecondaryFg        = #A08060
+BtnSecondaryBorder    = #3B1A5E
+BtnSecondaryHover     = #3B1A5E
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #0D0A30
+BtnCyanFg             = #A08CFF
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #2A1E00
+BtnAmberFg            = #C8A000
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #2D0008
+BtnDangerFg           = #CC2233
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #130A24
+BtnGhostBorder        = #3B1A5E
+BtnGhostFg            = #503860
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #1E0F38
+HdrBtnBorder          = #3B1A5E
+HdrBtnHover           = #3B1A5E
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #120820
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #261545
+ComboSelected         = #3A1060
+ComboSelectedFg       = #C8A000
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #221040
+CtxSepFill            = #3B1A5E
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #1E0F38
+DetailBorder          = #3B1A5E
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #130A24
+TabHoverBg            = #1E0F38
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0A0510
+PurpleBlobBg          = #180030
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #050008
+ConsoleFg             = #C8A000
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #130A24
+ScrollBarThumb        = #503860
+ScrollBarThumbHover   = #C8A000
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #3A8C4A
+StatusWarning         = #C8A000
+StatusError           = #CC2233
+StatusInfo            = #A08CFF
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #0A1E0D
+BgStatusWarn          = #2A1E00
+BgStatusErr           = #2D0008
+BgStatusInfo          = #0D0A30
+FgStatusOk            = #3A8C4A
+FgStatusWarn          = #C8A000
+FgStatusErr           = #CC2233
+FgStatusInfo          = #A08CFF

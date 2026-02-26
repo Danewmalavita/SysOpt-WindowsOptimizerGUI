@@ -1,0 +1,99 @@
+# SysOpt Theme — aws.theme
+# Tema inspirado en Amazon Web Services — v1.0
+# Gris oscuro enterprise, naranja AWS, azul cloud
+
+[meta]
+Name        = AWS
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0F1B2D
+BgCard                = #16213A
+BgInput               = #1E2D4A
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #2A3F5F
+BorderActive          = #FF9900
+BorderHover           = #3A5070
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #1A73E8
+AccentCyan            = #00A1C9
+AccentAmber           = #FF9900
+AccentRed             = #D13212
+AccentGreen           = #1D8102
+AccentPurple          = #7B4F9E
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #D5DBDB
+TextSecondary         = #8EA6C0
+TextMuted             = #4A6080
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #C47200
+ProgressEnd           = #FF9900
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #3D2400
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #FF9900
+BtnPrimaryHover       = #FF9900
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #1E2D4A
+BtnSecondaryFg        = #8EA6C0
+BtnSecondaryBorder    = #2A3F5F
+BtnSecondaryHover     = #2A3F5F
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #0A1E2A
+BtnCyanFg             = #00A1C9
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #2A1A00
+BtnAmberFg            = #FF9900
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #2A0A04
+BtnDangerFg           = #FF5252
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #16213A
+BtnGhostBorder        = #2A3F5F
+BtnGhostFg            = #4A6080
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #1E2D4A
+HdrBtnBorder          = #2A3F5F
+HdrBtnHover           = #2A3F5F
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #111D30
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #1E3050
+ComboSelected         = #0F2A50
+ComboSelectedFg       = #FF9900
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #1A2A45
+CtxSepFill            = #2A3F5F
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #1E2D4A
+DetailBorder          = #2A3F5F
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #16213A
+TabHoverBg            = #1E2D4A
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0F1B2D
+PurpleBlobBg          = #16103A
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #080E18
+ConsoleFg             = #FF9900
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #16213A
+ScrollBarThumb        = #4A6080
+ScrollBarThumbHover   = #FF9900
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #1D8102
+StatusWarning         = #FF9900
+StatusError           = #D13212
+StatusInfo            = #00A1C9
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #0A2010
+BgStatusWarn          = #2A1A00
+BgStatusErr           = #2A0A04
+BgStatusInfo          = #0A1E2A
+FgStatusOk            = #1D8102
+FgStatusWarn          = #FF9900
+FgStatusErr           = #D13212
+FgStatusInfo          = #00A1C9

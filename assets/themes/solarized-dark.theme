@@ -1,0 +1,99 @@
+# SysOpt Theme — solarized-dark.theme
+# Tema inspirado en Solarized Dark — Ethan Schoonover — v1.0
+# Azul petróleo, mostaza cálida, paleta científicamente calibrada
+
+[meta]
+Name        = Solarized Dark
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #002B36
+BgCard                = #073642
+BgInput               = #0D3D4A
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #1A4A52
+BorderActive          = #2AA198
+BorderHover           = #2A5560
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #268BD2
+AccentCyan            = #2AA198
+AccentAmber           = #B58900
+AccentRed             = #DC322F
+AccentGreen           = #859900
+AccentPurple          = #6C71C4
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #839496
+TextSecondary         = #586E75
+TextMuted             = #2A4A52
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #2AA198
+ProgressEnd           = #268BD2
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #003D40
+BtnPrimaryFg          = #EEE8D5
+BtnPrimaryBorder      = #2AA198
+BtnPrimaryHover       = #2AA198
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #0D3D4A
+BtnSecondaryFg        = #586E75
+BtnSecondaryBorder    = #1A4A52
+BtnSecondaryHover     = #1A4A52
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #002E32
+BtnCyanFg             = #2AA198
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #2A1E00
+BtnAmberFg            = #B58900
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #2A0A08
+BtnDangerFg           = #DC322F
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #073642
+BtnGhostBorder        = #1A4A52
+BtnGhostFg            = #2A4A52
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #0D3D4A
+HdrBtnBorder          = #1A4A52
+HdrBtnHover           = #1A4A52
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #003040
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #0A3C48
+ComboSelected         = #003D40
+ComboSelectedFg       = #2AA198
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #0A3844
+CtxSepFill            = #1A4A52
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #0D3D4A
+DetailBorder          = #1A4A52
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #073642
+TabHoverBg            = #0D3D4A
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #002B36
+PurpleBlobBg          = #062038
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #002B36
+ConsoleFg             = #859900
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #073642
+ScrollBarThumb        = #2A4A52
+ScrollBarThumbHover   = #2AA198
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #859900
+StatusWarning         = #B58900
+StatusError           = #DC322F
+StatusInfo            = #268BD2
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #0A1E00
+BgStatusWarn          = #2A1E00
+BgStatusErr           = #2A0A08
+BgStatusInfo          = #002E3A
+FgStatusOk            = #859900
+FgStatusWarn          = #B58900
+FgStatusErr           = #DC322F
+FgStatusInfo          = #268BD2

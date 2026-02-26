@@ -1,0 +1,99 @@
+# SysOpt Theme — diablo.theme
+# Tema inspirado en Diablo — The Lord of Terror — v1.0
+# Fuego infernal, rojo sangre, ámbar oscuro y piedra abismal
+
+[meta]
+Name        = Diablo
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0A0400
+BgCard                = #160800
+BgInput               = #221000
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #3D1400
+BorderActive          = #FF4500
+BorderHover           = #8B2500
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #8B3A00
+AccentCyan            = #D4600A
+AccentAmber           = #FF8C00
+AccentRed             = #CC1100
+AccentGreen           = #5A6A00
+AccentPurple          = #6B0080
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #E8C49A
+TextSecondary         = #A07040
+TextMuted             = #603820
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #8B1A00
+ProgressEnd           = #FF8C00
+# ── Botón Primario (▶ Iniciar) ───────────────────────────────────────────────
+BtnPrimaryBg          = #2E0C00
+BtnPrimaryFg          = #E8C49A
+BtnPrimaryBorder      = #FF4500
+BtnPrimaryHover       = #FF4500
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #221000
+BtnSecondaryFg        = #A07040
+BtnSecondaryBorder    = #3D1400
+BtnSecondaryHover     = #3D1400
+# ── Botón Cyan (Analizar) ────────────────────────────────────────────────────
+BtnCyanBg             = #1A0A00
+BtnCyanFg             = #D4600A
+# ── Botón Amber (Cancelar) ───────────────────────────────────────────────────
+BtnAmberBg            = #2A1400
+BtnAmberFg            = #FF8C00
+# ── Botón Danger (Salir) ─────────────────────────────────────────────────────
+BtnDangerBg           = #2E0000
+BtnDangerFg           = #FF1111
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #160800
+BtnGhostBorder        = #3D1400
+BtnGhostFg            = #603820
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #221000
+HdrBtnBorder          = #3D1400
+HdrBtnHover           = #3D1400
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #120600
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #2E1400
+ComboSelected         = #3D1800
+ComboSelectedFg       = #FF4500
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #280E00
+CtxSepFill            = #3D1400
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #221000
+DetailBorder          = #3D1400
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #160800
+TabHoverBg            = #221000
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0A0400
+PurpleBlobBg          = #180010
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #050200
+ConsoleFg             = #FF4500
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #160800
+ScrollBarThumb        = #603820
+ScrollBarThumbHover   = #FF4500
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #5A6A00
+StatusWarning         = #FF8C00
+StatusError           = #FF1111
+StatusInfo            = #D4600A
+
+# ── Fondos y texto para badges de estado de tareas ───────────────────────────
+BgStatusOk            = #101400
+BgStatusWarn          = #2A1400
+BgStatusErr           = #2E0000
+BgStatusInfo          = #1A0A00
+FgStatusOk            = #5A6A00
+FgStatusWarn          = #FF8C00
+FgStatusErr           = #FF1111
+FgStatusInfo          = #D4600A
