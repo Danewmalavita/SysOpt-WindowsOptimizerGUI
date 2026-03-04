@@ -1,0 +1,17 @@
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SysOpt Breakout"
+        Width="520" Height="460"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="#0D0F1A">
+
+    <!-- Single Canvas — GameHost (DrawingVisual) is added by C# engine -->
+    <Canvas x:Name="gameCanvas"
+            Width="480" Height="400"
+            ClipToBounds="True"
+            Background="Transparent"
+            Focusable="True"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"/>
+</Window>
