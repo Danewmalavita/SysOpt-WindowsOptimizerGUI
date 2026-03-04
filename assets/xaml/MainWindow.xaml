@@ -1,6 +1,6 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="SysOpt - Windows Optimizer GUI v3.1.0" Height="980" Width="1220"
+        Title="SysOpt - Windows Optimizer GUI v3.2.0" Height="980" Width="1220"
         WindowStartupLocation="CenterScreen" ResizeMode="CanResize"
         Background="{DynamicResource TB_0D0F1A}">
     <Window.Resources>
@@ -485,7 +485,7 @@
                                    Foreground="{DynamicResource TB_E8ECF4}">
                             <Run Text="SYS"/>
                             <Run Foreground="{DynamicResource TB_5BA3FF}" Text="OPT"/>
-                            <Run Foreground="{DynamicResource TB_B0BACC}" FontSize="13" FontWeight="Normal" Text="  v3.1.0  ·  Windows Optimizer GUI"/>
+                            <Run Foreground="{DynamicResource TB_B0BACC}" FontSize="13" FontWeight="Normal" Text="  v3.2.0  ·  Windows Optimizer GUI"/>
                         </TextBlock>
                         <TextBlock Name="StatusText" FontFamily="Segoe UI" FontSize="11"
                                    Foreground="{DynamicResource TB_9BA4C0}" Margin="2,3,0,0"
@@ -493,11 +493,11 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Controles derecha del header: Tareas + Acerca de + Modo Análisis -->
+                <!-- Controles derecha del header: Tareas + Config + Modo Análisis -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Botón Tareas en segundo plano -->
                     <Button Name="btnShowTasks"
-                            Width="32" Height="32" Padding="0" Margin="0,0,8,0"
+                            Width="32" Height="32" Padding="0" Margin="40,0,8,0"
                             Background="{DynamicResource TB_1A2040}" BorderBrush="{DynamicResource TB_3D5080}" BorderThickness="1"
                             Foreground="{DynamicResource TB_9BA4C0}" FontFamily="Segoe UI" FontSize="15" FontWeight="Bold"
                             Cursor="Hand" ToolTip="Tareas en segundo plano">
@@ -542,30 +542,6 @@
                             </ControlTemplate>
                         </Button.Template>
                         <TextBlock Text="⚙" FontSize="15" Foreground="{DynamicResource TB_A47CFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
-                    <!-- Botón Acerca de la versión -->
-                    <Button Name="btnAbout"
-                            Width="32" Height="32" Padding="0" Margin="0,0,8,0"
-                            Background="{DynamicResource TB_1A2040}" BorderBrush="{DynamicResource TB_3D5080}" BorderThickness="1"
-                            Foreground="{DynamicResource TB_9BA4C0}" FontFamily="Segoe UI" FontSize="15" FontWeight="Bold"
-                            Cursor="Hand" ToolTip="Acerca de SysOpt — Novedades de la versión">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="bd" CornerRadius="8"
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}">
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bd" Property="Background" Value="{DynamicResource TB_253060}"/>
-                                        <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource TB_5BA3FF}"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                        <TextBlock Text="ℹ" FontSize="15" Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                     <!-- Modo Dry Run toggle -->
                     <Border CornerRadius="8" Background="{DynamicResource TB_163530}"
@@ -645,7 +621,7 @@
                             <Border Width="22" Height="22" CornerRadius="5" Background="{DynamicResource TB_4A3010}" Margin="0,0,7,0" VerticalAlignment="Center">
                                 <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            <TextBlock Text="DISCO C:" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
+                            <TextBlock Name="txtHdrDiskC" Text="DISCO C:" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
                                       Foreground="{DynamicResource TB_C0933A}" VerticalAlignment="Center"/>
                             <TextBlock Name="DiskPctText" Text="  0%" FontFamily="Segoe UI" FontSize="10"
                                        FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}" VerticalAlignment="Center"/>
@@ -702,7 +678,7 @@
                 </TabControl.Resources>
 
                 <!-- ══ TAB 1: OPTIMIZACIÓN ══ -->
-                <TabItem Header="⚙  Optimización">
+                <TabItem Name="tabOptimization" Header="⚙  Optimización">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource TB_131625}">
                 <Grid Margin="4,8,4,4">
                     <Grid.ColumnDefinitions>
@@ -723,7 +699,7 @@
                                             Margin="0,0,10,0">
                                         <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="DISCOS Y ARCHIVOS" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrDisks" Text="DISCOS Y ARCHIVOS" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
                                               />
                                 </StackPanel>
@@ -745,7 +721,7 @@
                                             Margin="0,0,10,0">
                                         <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="MEMORIA Y PROCESOS" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrMemProc" Text="MEMORIA Y PROCESOS" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
                                               />
                                 </StackPanel>
@@ -763,7 +739,7 @@
                                             Margin="0,0,10,0">
                                         <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="RED Y NAVEGADORES" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrNetBrowser" Text="RED Y NAVEGADORES" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
                                               />
                                 </StackPanel>
@@ -786,7 +762,7 @@
                                             Margin="0,0,10,0">
                                         <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="REGISTRO DE WINDOWS" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrRegistry" Text="REGISTRO DE WINDOWS" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
                                               />
                                 </StackPanel>
@@ -804,7 +780,7 @@
                                             Margin="0,0,10,0">
                                         <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="VERIFICACIÓN DEL SISTEMA" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrSysVerify" Text="VERIFICACIÓN DEL SISTEMA" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
                                               />
                                 </StackPanel>
@@ -822,12 +798,12 @@
                                             Margin="0,0,10,0">
                                         <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="REGISTROS DE EVENTOS" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrEventLogs" Text="REGISTROS DE EVENTOS" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
                                               />
                                 </StackPanel>
                                 <CheckBox Name="chkEventLogs" Content="Event Viewer (System, Application, Setup)" IsChecked="False"/>
-                                <TextBlock Text="El log Security no se toca" FontFamily="Segoe UI" FontSize="10"
+                                <TextBlock Name="txtSecurityNote" Text="El log Security no se toca" FontFamily="Segoe UI" FontSize="10"
                                            Foreground="{DynamicResource TB_8B96B8}" Margin="27,3,0,0"/>
                             </StackPanel>
                         </Border>
@@ -841,12 +817,12 @@
                                             Margin="0,0,10,0">
                                         <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource TB_FFFFFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="PROGRAMAS DE INICIO" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrStartup" Text="PROGRAMAS DE INICIO" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"
                                               />
                                 </StackPanel>
                                 <CheckBox Name="chkShowStartup" Content="Gestionar entradas de autoarranque" IsChecked="False"/>
-                                <TextBlock Text="Abre ventana de gestión al iniciar" FontFamily="Segoe UI" FontSize="10"
+                                <TextBlock Name="txtStartupNote" Text="Abre ventana de gestión al iniciar" FontFamily="Segoe UI" FontSize="10"
                                            Foreground="{DynamicResource TB_8B96B8}" Margin="27,3,0,0"/>
                             </StackPanel>
                         </Border>
@@ -857,7 +833,7 @@
                 </TabItem>
 
                 <!-- ══ TAB 2: RENDIMIENTO ══ -->
-                <TabItem Header="📊  Rendimiento">
+                <TabItem Name="tabPerformance" Header="📊  Rendimiento">
                 <Grid Background="{DynamicResource TB_131625}" Margin="0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -870,7 +846,7 @@
                         <!-- [A3] Auto-refresco -->
                         <CheckBox Name="chkAutoRefresh" VerticalAlignment="Center" Margin="14,0,4,0">
                             <CheckBox.Content>
-                                <TextBlock Text="Auto-refresco" FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_9BA4C0}"/>
+                                <TextBlock Name="txtAutoRefreshLabel" Text="Auto-refresco" FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_9BA4C0}"/>
                             </CheckBox.Content>
                         </CheckBox>
                         <ComboBox Name="cmbRefreshInterval" Width="72" Height="26" Margin="2,0,0,0"
@@ -898,7 +874,7 @@
                                         <TextBlock Text="&#x1F5A5;" FontFamily="Segoe UI Emoji" FontSize="13"
                                                    Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="CORES DEL PROCESADOR" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrCpuCores" Text="CORES DEL PROCESADOR" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <!-- Nombre CPU -->
@@ -945,7 +921,7 @@
                                         <TextBlock Text="&#x1F9EE;" FontFamily="Segoe UI Emoji" FontSize="13"
                                                    Foreground="{DynamicResource TB_4AE896}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="MEMORIA RAM" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrRam" Text="MEMORIA RAM" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Grid>
@@ -956,22 +932,22 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                                        <TextBlock Text="TOTAL" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
+                                        <TextBlock Name="txtRamLblTotal" Text="TOTAL" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
                                         <TextBlock Name="txtRamTotal" Text="—" FontFamily="Segoe UI" FontSize="18"
                                                    FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                                        <TextBlock Text="USADA" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
+                                        <TextBlock Name="txtRamLblUsed" Text="USADA" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
                                         <TextBlock Name="txtRamUsed" Text="—" FontFamily="Segoe UI" FontSize="18"
                                                    FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="LIBRE" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
+                                        <TextBlock Name="txtRamLblFree" Text="LIBRE" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
                                         <TextBlock Name="txtRamFree" Text="—" FontFamily="Segoe UI" FontSize="18"
                                                    FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="3" HorizontalAlignment="Center">
-                                        <TextBlock Text="USO%" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
+                                        <TextBlock Name="txtRamLblPct" Text="USO%" FontFamily="Segoe UI" FontSize="9" Foreground="{DynamicResource TB_8B96B8}" HorizontalAlignment="Center"/>
                                         <TextBlock Name="txtRamPct" Text="—" FontFamily="Segoe UI" FontSize="18"
                                                    FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}" HorizontalAlignment="Center"/>
                                     </StackPanel>
@@ -1015,7 +991,7 @@
                                         <TextBlock Text="&#x1F4BD;" FontFamily="Segoe UI Emoji" FontSize="13"
                                                    Foreground="{DynamicResource TB_FFB547}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="ESTADO S.M.A.R.T. DEL DISCO" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrSmart" Text="ESTADO S.M.A.R.T. DEL DISCO" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <ItemsControl Name="icSmartDisks">
@@ -1075,7 +1051,7 @@
                                         <TextBlock Text="&#x1F310;" FontFamily="Segoe UI Emoji" FontSize="13"
                                                    Foreground="{DynamicResource TB_C07AFF}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="TARJETAS DE RED" FontFamily="Segoe UI" FontSize="13"
+                                    <TextBlock Name="txtHdrNic" Text="TARJETAS DE RED" FontFamily="Segoe UI" FontSize="13"
                                                FontWeight="Bold" Foreground="{DynamicResource TB_FFFFFF}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <ItemsControl Name="icNetAdapters">
@@ -1121,7 +1097,7 @@
                 </TabItem>
 
                 <!-- ══ TAB 3: EXPLORADOR DE DISCO ══ -->
-                <TabItem Header="💾  Explorador de Disco">
+                <TabItem Name="tabDiskExplorer" Header="💾  Explorador de Disco">
                 <Grid Background="{DynamicResource TB_131625}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -1140,7 +1116,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Ruta:" FontFamily="Segoe UI" FontSize="11"
+                            <TextBlock Grid.Column="0" Name="txtLblPath" Text="Ruta:" FontFamily="Segoe UI" FontSize="11"
                                        Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBox Name="txtDiskScanPath" Grid.Column="1" Text="C:\"
                                      FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_F0F3FA}"
@@ -1162,7 +1138,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="🔎  Filtrar:" FontFamily="Segoe UI" FontSize="11"
+                            <TextBlock Grid.Column="0" Name="txtLblFilter" Text="🔎  Filtrar:" FontFamily="Segoe UI" FontSize="11"
                                        Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBox Name="txtDiskFilter" Grid.Column="1"
                                      FontFamily="Segoe UI" FontSize="11" Foreground="{DynamicResource TB_F0F3FA}"
@@ -1198,13 +1174,13 @@
                                         <ColumnDefinition Width="70"/>
                                         <ColumnDefinition Width="90"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="  Nombre" FontFamily="Segoe UI" FontSize="10"
+                                    <TextBlock Grid.Column="0" Name="txtColName" Text="  Nombre" FontFamily="Segoe UI" FontSize="10"
                                                FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5"/>
-                                    <TextBlock Grid.Column="1" Text="Tamaño" FontFamily="Segoe UI" FontSize="10"
+                                    <TextBlock Grid.Column="1" Name="txtColSize" Text="Tamaño" FontFamily="Segoe UI" FontSize="10"
                                                FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5" TextAlignment="Right"/>
                                     <TextBlock Grid.Column="2" Text="%" FontFamily="Segoe UI" FontSize="10"
                                                FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5" TextAlignment="Right"/>
-                                    <TextBlock Grid.Column="3" Text="Archivos" FontFamily="Segoe UI" FontSize="10"
+                                    <TextBlock Grid.Column="3" Name="txtColFiles" Text="Archivos" FontFamily="Segoe UI" FontSize="10"
                                                FontWeight="SemiBold" Foreground="{DynamicResource TB_9BA4C0}" Padding="8,5" TextAlignment="Right"/>
                                 </Grid>
                                 <ListBox Name="lbDiskTree" Grid.Row="1"
@@ -1299,36 +1275,36 @@
                         <!-- Panel lateral de detalle -->
                         <Border Grid.Column="2" Background="{DynamicResource TB_131625}" Padding="12">
                             <StackPanel>
-                                <TextBlock Text="DETALLE" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
+                                <TextBlock Name="txtHdrDetail" Text="DETALLE" FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TB_6B7A9E}" Margin="0,0,0,10"/>
                                 <TextBlock Name="txtDiskDetailName" Text="—" FontFamily="Segoe UI" FontSize="12"
                                            FontWeight="Bold" Foreground="{DynamicResource TB_F0F3FA}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                                 <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <TextBlock Text="Tamaño:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
+                                    <TextBlock Name="txtLblDetailSize" Text="Tamaño:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
                                     <TextBlock Name="txtDiskDetailSize" Grid.Column="1" Text="—" FontFamily="Segoe UI"
                                                FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_FFB547}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <TextBlock Text="Archivos:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
+                                    <TextBlock Name="txtLblDetailFiles" Text="Archivos:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
                                     <TextBlock Name="txtDiskDetailFiles" Grid.Column="1" Text="—" FontFamily="Segoe UI"
                                                FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_4AE896}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <TextBlock Text="Carpetas:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
+                                    <TextBlock Name="txtLblDetailDirs" Text="Carpetas:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
                                     <TextBlock Name="txtDiskDetailDirs" Grid.Column="1" Text="—" FontFamily="Segoe UI"
                                                FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_5BA3FF}"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,14">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                    <TextBlock Text="% del padre:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
+                                    <TextBlock Name="txtLblDetailPct" Text="% del padre:" FontFamily="Segoe UI" FontSize="10" Foreground="{DynamicResource TB_8B96B8}"/>
                                     <TextBlock Name="txtDiskDetailPct" Grid.Column="1" Text="—" FontFamily="Segoe UI"
                                                FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TB_C07AFF}"/>
                                 </Grid>
                                 <Rectangle Height="1" Fill="{DynamicResource TB_3A4468}" Margin="0,0,0,12"/>
-                                <TextBlock Text="TOP 10 ARCHIVOS MÁS GRANDES" FontFamily="Segoe UI" FontSize="9"
+                                <TextBlock Name="txtHdrTop10" Text="TOP 10 ARCHIVOS MÁS GRANDES" FontFamily="Segoe UI" FontSize="9"
                                            FontWeight="SemiBold" Foreground="{DynamicResource TB_6B7A9E}" Margin="0,0,0,8"/>
                                 <ItemsControl Name="icTopFiles">
                                     <ItemsControl.ItemTemplate>
@@ -1403,7 +1379,7 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Nombre:" VerticalAlignment="Center"
+                                <TextBlock Grid.Column="0" Name="txtSnapNameLabel" Text="Nombre:" VerticalAlignment="Center"
                                            Foreground="{DynamicResource TB_7880A0}" FontSize="11" Margin="0,0,8,0"
                                            FontFamily="JetBrains Mono"/>
                                 <TextBox Name="txtSnapshotName" Grid.Column="1"
@@ -1644,7 +1620,7 @@
                             </StackPanel>
                             <!-- Etiquetas centradas -->
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="OUTPUT" FontFamily="Segoe UI" FontSize="9" FontWeight="SemiBold"
+                                <TextBlock Name="txtHdrOutput" Text="OUTPUT" FontFamily="Segoe UI" FontSize="9" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TB_8B96B8}" VerticalAlignment="Center"/>
                                 <TextBlock Name="TaskText" FontFamily="Segoe UI" FontSize="10"
                                            Foreground="{DynamicResource TB_9BA4C0}" VerticalAlignment="Center" Margin="14,0,0,0"/>

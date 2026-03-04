@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — bioshock.theme
+# Inspirado en BioShock — turquesa art deco Rapture, azul plásmido, amarillo bioluminiscente
+
+[meta]
+Name        = BioShock — Rapture
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #040A0C
+BgCard                = #081014
+BgInput               = #101820
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #162430
+BorderActive          = #20B8D0
+BorderHover           = #1E3040
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #20B8D0
+AccentCyan            = #60E8F0
+AccentAmber           = #D0A820
+AccentRed             = #CC2828
+AccentGreen           = #50C890
+AccentPurple          = #9050C0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #C8E8F0
+TextSecondary         = #5890A0
+TextMuted             = #306080
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #20B8D0
+ProgressEnd           = #D0A820
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #083040
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #20B8D0
+BtnPrimaryHover       = #20B8D0
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #101820
+BtnSecondaryFg        = #5890A0
+BtnSecondaryBorder    = #162430
+BtnSecondaryHover     = #162430
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #042428
+BtnCyanFg             = #60E8F0
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #281E00
+BtnAmberFg            = #D0A820
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #260808
+BtnDangerFg           = #CC2828
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #101820
+BtnGhostBorder        = #162430
+BtnGhostFg            = #306080
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #101820
+HdrBtnBorder          = #162430
+HdrBtnHover           = #162430
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #082030
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #102030
+ComboSelected         = #163040
+ComboSelectedFg       = #20B8D0
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #0E1C30
+CtxSepFill            = #162430
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #101820
+DetailBorder          = #162430
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #081014
+TabHoverBg            = #101820
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #060C10
+PurpleBlobBg          = #0C0818
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #030608
+ConsoleFg             = #20B8D0
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #081014
+ScrollBarThumb        = #162430
+ScrollBarThumbHover   = #20B8D0
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #50C890
+StatusWarning         = #D0A820
+StatusError           = #CC2828
+StatusInfo            = #20B8D0
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #082818
+BgStatusWarn          = #201800
+BgStatusErr           = #1E0606
+BgStatusInfo          = #082030
+FgStatusOk            = #50C890
+FgStatusWarn          = #D0A820
+FgStatusErr           = #CC2828
+FgStatusInfo          = #20B8D0

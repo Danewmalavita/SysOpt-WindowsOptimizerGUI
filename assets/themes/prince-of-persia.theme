@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — prince-of-persia.theme
+# Inspirado en Prince of Persia — arena dorada, turquesa persa, mármol blanco
+
+[meta]
+Name        = Prince of Persia
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #D8C8A0
+BgCard                = #F0E8CC
+BgInput               = #C8B888
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #A89060
+BorderActive          = #B06800
+BorderHover           = #806040
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #B06800
+AccentCyan            = #007888
+AccentAmber           = #805000
+AccentRed             = #A01800
+AccentGreen           = #386830
+AccentPurple          = #603888
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #1A0E00
+TextSecondary         = #3A2800
+TextMuted             = #6A5030
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #B06800
+ProgressEnd           = #007888
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #B06800
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #8A4C00
+BtnPrimaryHover       = #8A4C00
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #D8C8A0
+BtnSecondaryFg        = #3A2800
+BtnSecondaryBorder    = #A89060
+BtnSecondaryHover     = #C0A870
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #A8D4D8
+BtnCyanFg             = #003040
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #E8D4A0
+BtnAmberFg            = #4A2800
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #E8B0A0
+BtnDangerFg           = #5A0800
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #D0C090
+BtnGhostBorder        = #A08050
+BtnGhostFg            = #4A3820
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #D0C090
+HdrBtnBorder          = #A08050
+HdrBtnHover           = #C0B070
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #B8D8D0
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #C8B880
+ComboSelected         = #B8A860
+ComboSelectedFg       = #7A4400
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #C8B880
+CtxSepFill            = #A89060
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #D8C898
+DetailBorder          = #A89060
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #F0E8CC
+TabHoverBg            = #D8C898
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #E0D0A8
+PurpleBlobBg          = #D0C0E0
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #C0B080
+ConsoleFg             = #5A3000
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #C8B880
+ScrollBarThumb        = #907040
+ScrollBarThumbHover   = #5A3800
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #386830
+StatusWarning         = #805000
+StatusError           = #A01800
+StatusInfo            = #007888
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #C8E0C0
+BgStatusWarn          = #ECD8A0
+BgStatusErr           = #ECC0B0
+BgStatusInfo          = #B0D8E0
+FgStatusOk            = #386830
+FgStatusWarn          = #805000
+FgStatusErr           = #A01800
+FgStatusInfo          = #007888

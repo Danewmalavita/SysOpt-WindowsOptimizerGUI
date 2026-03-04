@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — crash-bandicoot.theme
+# Inspirado en Crash Bandicoot — naranja salvaje, selva oscura, cajas de madera
+
+[meta]
+Name        = Crash Bandicoot
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0F1A0A
+BgCard                = #162010
+BgInput               = #1E2E14
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #2E4018
+BorderActive          = #FF7A00
+BorderHover           = #4A5E28
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #FF7A00
+AccentCyan            = #FFD700
+AccentAmber           = #FF4500
+AccentRed             = #CC2200
+AccentGreen           = #6BBF3A
+AccentPurple          = #8B4513
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #F5EDD0
+TextSecondary         = #B8A878
+TextMuted             = #7A6A40
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #FF7A00
+ProgressEnd           = #FFD700
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #8A3A00
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #FF7A00
+BtnPrimaryHover       = #FF7A00
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #1E2E14
+BtnSecondaryFg        = #B8A878
+BtnSecondaryBorder    = #2E4018
+BtnSecondaryHover     = #2E4018
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #2A2800
+BtnCyanFg             = #FFD700
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #2E1A00
+BtnAmberFg            = #FF9A30
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #2E0A00
+BtnDangerFg           = #FF4500
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #1E2E14
+BtnGhostBorder        = #2E4018
+BtnGhostFg            = #7A6A40
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #1E2E14
+HdrBtnBorder          = #2E4018
+HdrBtnHover           = #2E4018
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #1A2E08
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #2A4010
+ComboSelected         = #3A5018
+ComboSelectedFg       = #FF7A00
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #243818
+CtxSepFill            = #2E4018
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #1E2E14
+DetailBorder          = #2E4018
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #162010
+TabHoverBg            = #1E2E14
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0F1A0A
+PurpleBlobBg          = #1A0800
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #080F04
+ConsoleFg             = #FF7A00
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #162010
+ScrollBarThumb        = #2E4018
+ScrollBarThumbHover   = #FF7A00
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #6BBF3A
+StatusWarning         = #FFD700
+StatusError           = #FF4500
+StatusInfo            = #FF7A00
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #1A2E08
+BgStatusWarn          = #2A2400
+BgStatusErr           = #2E0A00
+BgStatusInfo          = #2E1800
+FgStatusOk            = #6BBF3A
+FgStatusWarn          = #FFD700
+FgStatusErr           = #FF4500
+FgStatusInfo          = #FF7A00

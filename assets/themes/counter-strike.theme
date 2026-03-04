@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — counter-strike.theme
+# Inspirado en Counter-Strike — amarillo CT, naranja terrorista, negro táctical
+
+[meta]
+Name        = Counter-Strike — Tactical
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #080A08
+BgCard                = #101410
+BgInput               = #181C18
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #242C24
+BorderActive          = #D8A820
+BorderHover           = #303830
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #D8A820
+AccentCyan            = #80C8D8
+AccentAmber           = #FF7010
+AccentRed             = #CC2010
+AccentGreen           = #60C048
+AccentPurple          = #8858B8
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #D8E0D0
+TextSecondary         = #8A9880
+TextMuted             = #505C48
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #D8A820
+ProgressEnd           = #60C048
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #4A3800
+BtnPrimaryFg          = #000000
+BtnPrimaryBorder      = #D8A820
+BtnPrimaryHover       = #D8A820
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #181C18
+BtnSecondaryFg        = #8A9880
+BtnSecondaryBorder    = #242C24
+BtnSecondaryHover     = #242C24
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #0C2228
+BtnCyanFg             = #80C8D8
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #2C1400
+BtnAmberFg            = #FF7010
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #240800
+BtnDangerFg           = #CC2010
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #181C18
+BtnGhostBorder        = #242C24
+BtnGhostFg            = #505C48
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #181C18
+HdrBtnBorder          = #242C24
+HdrBtnHover           = #242C24
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #101810
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #1E2C1E
+ComboSelected         = #283828
+ComboSelectedFg       = #D8A820
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #1A2818
+CtxSepFill            = #242C24
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #181C18
+DetailBorder          = #242C24
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #101410
+TabHoverBg            = #181C18
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0C1008
+PurpleBlobBg          = #100C18
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #060806
+ConsoleFg             = #D8A820
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #101410
+ScrollBarThumb        = #242C24
+ScrollBarThumbHover   = #D8A820
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #60C048
+StatusWarning         = #FF7010
+StatusError           = #CC2010
+StatusInfo            = #80C8D8
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #0E1C08
+BgStatusWarn          = #221000
+BgStatusErr           = #1C0600
+BgStatusInfo          = #0C2028
+FgStatusOk            = #60C048
+FgStatusWarn          = #FF7010
+FgStatusErr           = #CC2010
+FgStatusInfo          = #80C8D8

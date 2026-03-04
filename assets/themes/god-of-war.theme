@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — god-of-war.theme
+# Inspirado en God of War — rojo Kratos, ceniza gris nórdica, azul hielo Midgard
+
+[meta]
+Name        = God of War
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0C0808
+BgCard                = #181010
+BgInput               = #221414
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #382018
+BorderActive          = #CC2200
+BorderHover           = #502820
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #CC2200
+AccentCyan            = #6AB4CC
+AccentAmber           = #D4A060
+AccentRed             = #FF3010
+AccentGreen           = #80A870
+AccentPurple          = #8870A0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #E8DDD0
+TextSecondary         = #A09080
+TextMuted             = #685848
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #CC2200
+ProgressEnd           = #6AB4CC
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #6A0800
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #CC2200
+BtnPrimaryHover       = #CC2200
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #221414
+BtnSecondaryFg        = #A09080
+BtnSecondaryBorder    = #382018
+BtnSecondaryHover     = #382018
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #0A2030
+BtnCyanFg             = #6AB4CC
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #281800
+BtnAmberFg            = #D4A060
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #300400
+BtnDangerFg           = #FF3010
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #221414
+BtnGhostBorder        = #382018
+BtnGhostFg            = #685848
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #221414
+HdrBtnBorder          = #382018
+HdrBtnHover           = #382018
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #182028
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #301808
+ComboSelected         = #402010
+ComboSelectedFg       = #CC2200
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #2E1608
+CtxSepFill            = #382018
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #221414
+DetailBorder          = #382018
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #181010
+TabHoverBg            = #221414
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #100C0C
+PurpleBlobBg          = #180C18
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #060404
+ConsoleFg             = #CC2200
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #181010
+ScrollBarThumb        = #382018
+ScrollBarThumbHover   = #CC2200
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #80A870
+StatusWarning         = #D4A060
+StatusError           = #FF3010
+StatusInfo            = #6AB4CC
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #102010
+BgStatusWarn          = #281800
+BgStatusErr           = #300400
+BgStatusInfo          = #0A1C28
+FgStatusOk            = #80A870
+FgStatusWarn          = #D4A060
+FgStatusErr           = #FF3010
+FgStatusInfo          = #6AB4CC

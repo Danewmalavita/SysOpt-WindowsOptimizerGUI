@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — gta-vice-city.theme
+# Inspirado en GTA Vice City — rosa neón Miami, turquesa 80s, palm trees sunset
+
+[meta]
+Name        = GTA Vice City
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #080414
+BgCard                = #100820
+BgInput               = #180C2C
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #2C1448
+BorderActive          = #FF40C0
+BorderHover           = #3C1C58
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #FF40C0
+AccentCyan            = #00E8D8
+AccentAmber           = #FFB800
+AccentRed             = #FF2060
+AccentGreen           = #40FF90
+AccentPurple          = #C040FF
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #FFE8F8
+TextSecondary         = #C080C0
+TextMuted             = #805890
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #FF40C0
+ProgressEnd           = #00E8D8
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #601048
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #FF40C0
+BtnPrimaryHover       = #FF40C0
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #180C2C
+BtnSecondaryFg        = #C080C0
+BtnSecondaryBorder    = #2C1448
+BtnSecondaryHover     = #2C1448
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #002830
+BtnCyanFg             = #00E8D8
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #2A1C00
+BtnAmberFg            = #FFB800
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #280018
+BtnDangerFg           = #FF2060
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #180C2C
+BtnGhostBorder        = #2C1448
+BtnGhostFg            = #805890
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #180C2C
+HdrBtnBorder          = #2C1448
+HdrBtnHover           = #2C1448
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #0C1828
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #240C40
+ComboSelected         = #301258
+ComboSelectedFg       = #FF40C0
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #200838
+CtxSepFill            = #2C1448
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #180C2C
+DetailBorder          = #2C1448
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #100820
+TabHoverBg            = #180C2C
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0C0618
+PurpleBlobBg          = #140828
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #060210
+ConsoleFg             = #FF40C0
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #100820
+ScrollBarThumb        = #2C1448
+ScrollBarThumbHover   = #FF40C0
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #40FF90
+StatusWarning         = #FFB800
+StatusError           = #FF2060
+StatusInfo            = #00E8D8
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #082018
+BgStatusWarn          = #201800
+BgStatusErr           = #200010
+BgStatusInfo          = #001C20
+FgStatusOk            = #40FF90
+FgStatusWarn          = #FFB800
+FgStatusErr           = #FF2060
+FgStatusInfo          = #00E8D8

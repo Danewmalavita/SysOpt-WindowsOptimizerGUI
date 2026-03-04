@@ -1,4 +1,4 @@
-# SysOpt Language File — es-es.lang
+﻿# SysOpt Language File — es-es.lang
 # Formato: clave = valor
 # No elimines claves. Si falta una clave el T() usa el fallback del XAML.
 
@@ -6,7 +6,7 @@
 Name        = Español (España)
 Code        = es-es
 Author      = Danew Malavita
-Version     = 3.0
+Version     = 3.2
 
 [ui]
 # ── Barra superior ────────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ PerfCardRam               = MEMORIA RAM
 PerfCardSmart             = ESTADO S.M.A.R.T. DEL DISCO
 PerfCardNet               = TARJETAS DE RED
 PerfDiskLabel             = DISCO C:
-PerfClickRefresh          =   Haz clic en Actualizar para cargar datos
+PerfClickRefresh          = Haz clic en Actualizar para cargar datos
 RamTotal                  = TOTAL
 RamUsed                   = USADA
 RamFree                   = LIBRE
@@ -97,7 +97,7 @@ DiskTopFilesHeader        = TOP 10 ARCHIVOS MÁS GRANDES
 DiskScanReady             = Listo
 DiskScanCancelling        = ⏹ Cancelando — espera a que termine la carpeta actual…
 BtnScan                   = 🔍  Escanear
-BtnStop                   = ⏹  Detener
+BtnStop                   = Detener
 BtnDedup                  = 🔍  Duplicados
 BtnExportCsv              = 📄  Exportar CSV
 BtnDiskReport             = 🌐  Informe HTML
@@ -106,14 +106,14 @@ BtnDiskReport             = 🌐  Informe HTML
 FsSortSize                = Tamaño ↓
 FsSortExt                 = Extensión
 FsColSize                 = Tamaño
-FsCtxLocation             = 📂  Ir a la ubicación
+FsCtxLocation             = Ir a la ubicación
 
 # ── Menú contextual ─────────────────────────────────────────────────────────
 CtxOpen                   = 📂  Abrir en Explorador
 CtxCopy                   = 📋  Copiar ruta
-CtxScanFolder             = 🔍  Escanear carpeta
+CtxScanFolder                     = Escanear carpeta
 CtxDelete                 = 🗑  Eliminar carpeta...
-CtxShowOutput             = 🖥  Mostrar Output
+CtxShowOutput             = Mostrar Output
 
 # ── Historial / Snapshots ───────────────────────────────────────────────────
 SnapshotNameLabel         = Nombre:
@@ -248,10 +248,8 @@ OptModeReal               = ⚙ EJECUCIÓN real
 OptStartingAnalysis       = INICIANDO OPTIMIZACIÓN  —  MODO ANÁLISIS (DRY RUN)
 OptStartingReal           = INICIANDO OPTIMIZACIÓN DEL SISTEMA WINDOWS
 OptModeLabel              = Modo:
-OptCancelledByUser        = ⚠ OPTIMIZACIÓN CANCELADA POR EL USUARIO
 OptAllDone                = ¡Todas las tareas completadas!
 OptStatusDone             = completada
-OptAnalysisDone           = Análisis
 OptOptimizationDone       = Optimización
 OptCompletedSuccess       = COMPLETADO EXITOSAMENTE
 OptAnalysisCompleted      = ANÁLISIS COMPLETADO EXITOSAMENTE
@@ -265,7 +263,6 @@ DiagScoreLabel            = PUNTUACIÓN
 DiagActionHint            = ▶  Pulsa 'Iniciar Optimización' en la ventana principal para reparar los puntos marcados.
 DiagUrgentAttention       = Atención urgente
 DiagExportTitle           = Exportar Informe de Diagnóstico
-DiagReportTitle           = INFORME DE DIAGNÓSTICO DEL SISTEMA — SysOpt
 DiagSaveLogTitle          = Guardar Log de Optimización
 DiagBuildingUI            = Construyendo interfaz gráfica...
 
@@ -281,9 +278,7 @@ DiagWarnings              = aviso(s)
 # ── Splash / inicio ──────────────────────────────────────────────────────────
 SplashLoadingAssemblies   = Cargando ensamblados .NET...
 SplashLoadingTheme        = Cargando tema...
-SplashAnalyzingPerms      = Analizando permisos...
 SplashApplyingTheme       = Aplicando tema...
-SplashReady               = Listo.
 
 # ── Barra de estado — mensajes en tiempo de ejecución ────────────────────────
 StatusPathCopied          = Ruta copiada:
@@ -293,7 +288,6 @@ StatusGeneratingHtml      = Generando informe HTML en segundo plano...
 StatusCalcHashes          = Calculando hashes SHA256 (archivos >10 MB)...
 
 # ── Estado de snapshots ───────────────────────────────────────────────────────
-SnapLoadingHistory        = Cargando historial de snapshots
 SnapLoadingHistoryStatus  = Cargando historial...
 SnapSavingTask            = Guardando snapshot:
 SnapSavingProgress        = Guardando snapshot
@@ -330,7 +324,6 @@ ErrOpenDuplicates         = Error al abrir la ventana de duplicados:
 ErrOpenFile               = Error al abrir archivo
 ErrOpenFileTitle          = Error al abrir archivo
 ErrOpenFileMsg            = No se puede abrir el archivo.
-ErrOpenChangelog          = Error al abrir la ventana de novedades:
 ErrDedupHashes            = Error al calcular hashes:
 
 # ── Diálogos — sin datos / template ──────────────────────────────────────────
@@ -358,3 +351,579 @@ MsgCancelRequested        = Cancelación solicitada — esperando fin de tarea a
 # ── Ventana de escáner de archivos ────────────────────────────────────────────
 FsScanDone                = Completado
 FsScanFiles               = archivos
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Claves añadidas en v3.2.0 — externalización de textos hardcodeados
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Splash / DLL loading ─────────────────────────────────────────────────────
+SplashLoadingMemHelper        = Cargando MemoryHelper...
+SplashLoadingDiskEngine       = Cargando DiskEngine...
+SplashLoadingCore             = Cargando Core...
+SplashLoadingThemeEngine      = Cargando ThemeEngine...
+SplashLoadingWseTrim          = Cargando WseTrim...
+SplashLoadingOptimizer        = Cargando Optimizer...
+SplashLoadingStartupMgr       = Cargando StartupManager...
+SplashLoadingDiag             = Cargando Diagnostics...
+
+# ── Admin / permissions dialogs ──────────────────────────────────────────────
+DlgAdminRequiredMsg           = Este programa requiere permisos de administrador.\n\nPor favor, ejecuta PowerShell como administrador y vuelve a intentarlo.
+DlgAdminRequiredTitle         = Permisos Insuficientes
+DlgBtnYes                     = Sí
+
+# ── CPU / performance ────────────────────────────────────────────────────────
+CpuCoresLabel                 = núcleos
+CpuLogicalLabel               = lógicos
+
+# ── SMART / Network ──────────────────────────────────────────────────────────
+SmartReadErrorMsg             = Error al leer SMART
+NetNoIP                       = Sin IP
+NetNoGW                       = Sin GW
+NetActive                     = Activa
+NetErrorDAL                   = ⚠ Error DAL al leer red
+NetErrorAdapters              = Error al leer adaptadores
+AutoRefreshActive             = Auto-refresco cada {0} s activo
+
+# ── Disk scan ────────────────────────────────────────────────────────────────
+ScanPathNotFoundMsg           = Ruta no encontrada: {0}
+ScanStartingMsg               = Iniciando escaneo de {0} …
+ScanCancelledFromPanel        = Cancelado desde panel de tareas…
+ScanPaused                    = ⏸ Escaneo pausado
+ScanDefaultName               = Escaneo
+ScanSelectFolder              = Selecciona la carpeta a escanear
+DiskEntriesReadFmt            = {0} entradas leídas
+DiskSummaryFmt                = {0} carpetas raíz · {1} total · {2}
+
+# ── Snapshots ────────────────────────────────────────────────────────────────
+SnapLoadingMsg                    = Cargando historial...
+SnapLoadingEntries                = Cargando entradas del snapshot...
+SnapLoadingSnap               = Cargando snapshot…
+SnapReadingFile               = Leyendo archivo...
+SnapJsonInvalid               = JSON inválido en '{0}': {1}
+SnapCompDoneFmt               = Comparación completada — {0} carpetas.
+SnapCompDoneAnalysedFmt       = Comparación completada — {0} carpetas analizadas.
+SnapCompNoChange              = sin cambio
+SnapConfirmDeleteOne          = Eliminar el snapshot:\n  - {0}
+SnapConfirmDeleteMany         = Eliminar {0} snapshots:\n  - {1}
+SnapDeletedWithErrors         = Eliminados con {0} errores.
+SnapSavedMsg                  = Snapshot guardado
+SnapLoadingAMsg                   = Cargando snapshot A...
+SnapLoadingBMsg                   = Cargando snapshot B...
+SnapLoadingCompareMsg             = Cargando snapshot para comparar...
+SnapCompareLoadingFmt         = Comparar — cargando {0}
+SnapCompareVsCurrent          = Comparando: {0}  →  Escaneo actual
+SnapLoadingSnapLabel          = Cargando snapshot — {0}
+SnapSelectedCount             = {0} de {1} seleccionados
+
+# ── Task panel ───────────────────────────────────────────────────────────────
+TaskConfirmCancelTitle        = Confirmar cancelación
+TaskConfirmCancelMsg          = ¿Cancelar la tarea '{0}'?
+TaskNoTasks                   = Sin tareas
+TaskDoneSummary               = {0} tarea(s) completada(s)
+TaskActiveSummary             = {0} tarea(s) en curso · {1} completada(s)
+
+# ── Disk explorer dialogs ────────────────────────────────────────────────────
+DlgConfirmDeleteFolderFmt     = ¿Eliminar permanentemente esta carpeta?\n\n{0}\n\nTamaño: {1}\n\nEsta acción no se puede deshacer.
+DlgConfirmDeleteFileFmt       = ¿Eliminar permanentemente este archivo?\n\n{0}\n\nTamaño: {1}\n\nEsta acción no se puede deshacer.
+
+# ── CSV export ───────────────────────────────────────────────────────────────
+CsvWritingRow                 = Escribiendo fila {0} de {1}...
+CsvCancelledByUser            = Cancelado por el usuario
+DlgCsvSavedFmt                = CSV guardado en:\n{0}\n\n{1} elementos.
+DlgAllFilesFilter             = Todos los archivos
+DlgExportCsvFilter            = CSV (*.csv)|*.csv|Todos los archivos|*.*
+
+# ── HTML report ──────────────────────────────────────────────────────────────
+HtmlGeneratingBg                  = Generando informe HTML en segundo plano...
+HtmlLoadingLogo               = Cargando logo...
+HtmlDiskUsageLabel            = Uso de disco
+HtmlPctUsedFmt                = {0}% utilizado — {1} de {2}
+HtmlGeneratingPieChart        = Generando grafico de sectores...
+HtmlGeneratingTable           = Generando tabla de carpetas...
+HtmlWritingFile               = Escribiendo archivo...
+HtmlReportGenerated           = ✅ Informe generado: {0}
+HtmlReportGeneratedLabel      = Informe generado
+HtmlReportError               = Error al generar informe.
+DlgHtmlSavedFmt               = Informe HTML guardado en:\n{0}\n\n¿Abrir en el navegador?
+
+# ── Deduplication ────────────────────────────────────────────────────────────
+DedupGroupsFmt                = grupos de duplicados
+DedupConfirmDeleteFmt         = Se eliminarán {0} copia(s) del grupo:\n(se conserva: {1})\n\n¿Continuar?
+DedupDeletedResult            = archivo(s) eliminado(s)
+DedupOneFile                  = 1 archivo
+DedupSizeBinding              = Tamaño: {0}
+DedupDeleteCopies             = Eliminar copias (conserva la primera)
+
+# ── File scanner ─────────────────────────────────────────────────────────────
+FsScanDoneDetail              = ✅  Completado — {0} archivos  ·  {1}
+FsWindowTitle                 = Explorador de Carpeta
+FsPreviewOpen                 = 👁  Vista previa / Abrir archivo
+FsDeleteFile                  = 🗑  Eliminar archivo
+FsScanStarting                = Iniciando escaneo…
+
+# ── Startup manager ──────────────────────────────────────────────────────────
+StartupMgrResult              = entradas desactivadas del registro.
+StartupMgrErrors              = {0} entradas no pudieron modificarse (requieren permisos adicionales).
+StartupTitle                  = Gestor de Inicio
+StartupHeader                 = Gestor de Programas de Inicio
+StartupHint                   = Entradas de autoarranque en el registro de Windows (HKCU y HKLM). Desmarca para deshabilitar.
+
+# ── Diagnostics ──────────────────────────────────────────────────────────────
+DiagSubtitle                  = {0}  ·  {1} crítico(s)  ·  {2} aviso(s)
+DiagExportDoneMsg             = Informe guardado en:\n{0}
+DiagExportDoneTitle           = Informe exportado
+DiagExportBtn                 = Exportar informe
+
+# ── Optimization flow ────────────────────────────────────────────────────────
+DlgRegistryNoBackupTitle      = Sin backup del registro
+DlgClearConsoleTitle          = Limpiar consola
+DlgClearConsoleMsgExt         = La consola tiene contenido de una ejecución anterior.\n\n¿Deseas limpiarla y comenzar una nueva sesión?\n(Si quieres conservar el log, pulsa No y guárdalo primero)
+OptTaskCloseProc              = Cerrar procesos
+OptTaskBackupReg              = Backup registro
+OptTaskCleanReg               = Limpiar registro
+DlgNoTasksTitle               = Sin tareas seleccionadas
+OptAnalysisModeLabel          = 🔍 MODO ANÁLISIS (sin cambios)
+OptCurrentTask                = Tarea actual: {0}
+OptRestartMsg                 = Reiniciando el sistema en 10 segundos...\n
+OptProcessCancelled           = Proceso cancelado
+DlgSaveLogTitle               = Guardar Log de Optimización
+DlgSaveLogFilter              = Archivo de texto (*.txt)|*.txt|Todos los archivos (*.*)|*.*
+DlgLogSavedTitle              = Log guardado
+DlgLogSavedMsg                = Log guardado en:\n\n{0}
+SessionClosed                 = Sesión cerrada por el usuario.
+BtnCancelStop                 = ⏹ Cancelar
+
+# ── Welcome console ──────────────────────────────────────────────────────────
+WelcomeLine2Ext               = Selecciona las opciones y presiona '▶ Iniciar Optimización'
+WelcomeLine3Ext               =   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+
+# ── Theme ────────────────────────────────────────────────────────────────────
+ThemeNotFound                 = Tema no encontrado: {0}
+ThemeApplyingColors           = Aplicando colores...
+ThemeApplied                  = Tema aplicado!
+ThemeLoadError                = Error al cargar tema: {0}
+TooltipOptionsTheme           = Opciones — Tema e Idioma
+
+# ── Tasks window XAML ────────────────────────────────────────────────────────
+TasksHeader                   = ⚡  Tareas en Segundo Plano
+TasksNoActive                 = Sin tareas activas
+TasksCleanBtn                 = 🧹  Limpiar completadas
+TasksCleanTooltip             = Elimina las tareas ya completadas o fallidas
+TaskPauseBtn                  = ⏸   Pausar tarea
+TaskResumeBtn                 = ▶  Reanudar tarea
+TaskCancelBtn                 = ⊘  Cancelar tarea
+TasksPoolDefault              = Pool: 0 activa(s) · 0 completada(s)
+
+# ── Options ──────────────────────────────────────────────────────────────────
+OptionsDebugLog               = 🔍 Habilitar logs de depuración (DBG)
+
+# ── Error messages ───────────────────────────────────────────────────────────
+ErrOpenFileDetail             = No se puede abrir el archivo.\n{0}
+
+# ── Optimization checkboxes (XAML card headers covered by Apply-LanguageToUI) ─
+CardOptimizeDisks             = Optimizar discos (Defrag HDD / TRIM SSD·NVMe)
+
+# ── Claves adicionales (externalización v3.2.0 — batch 2) ─────────────────
+AutoRefreshDisabled           = Auto-refresco desactivado
+DiskFolders                   = carpetas
+SnapNoneSaved                 = Sin snapshots guardados.
+SnapReadingFiles              = Leyendo archivos...
+SnapLoadError                 = Error al cargar
+SnapSavingMsg                 = Guardando snapshot
+SnapSaveError                 = Error al guardar
+SnapEntriesInSnapshot         = entradas en el snapshot.
+SnapComparing                 = Comparando
+SnapCompareError              = Error al comparar
+SnapProcessing                = Procesando...
+SnapInitializing              = Iniciando...
+DlgConfirmDeleteFolderMsg     = ¿Eliminar permanentemente esta carpeta?
+DlgConfirmDeleteFileMsg       = ¿Eliminar permanentemente este archivo?
+DlgSize                       = Tamaño
+DlgCannotUndo                 = Esta acción no se puede deshacer.
+DlgDeleteError                = Error al eliminar
+DlgExportExplorerTitle        = Exportar resultados del explorador
+DlgExportError                = Error al exportar
+CsvExportedMsg                = CSV exportado
+HtmlTemplateNotFound          = No se encontró el archivo de plantilla
+HtmlReportSavedOpenBrowser    = Informe HTML guardado. ¿Abrir en el navegador?
+DedupCalculatingHashes        = Calculando hashes SHA256 (archivos >10 MB)...
+DedupHashError                = Error al calcular hashes
+DedupErrors                   = error(es)
+DedupWindowError              = Error al abrir la ventana de duplicados
+FsFiles                       = archivos
+StartupEntriesFound           = entradas encontradas
+DlgRegistryNoBackupMsg        = Has activado 'Limpiar registro' sin 'Crear backup'.\nLimpiar el registro SIN backup puede ser peligroso.\n¿Deseas continuar igualmente SIN hacer backup?
+OptAnalysisDoneTitle          = Análisis completado
+OptAnalysisDoneMsg            = Análisis completado.\nRevisa la consola para ver los detalles.
+OptConfirmCancelMsg           = ¿Cancelar la optimización en curso?\nLa tarea actual terminará antes de detenerse.
+OptConsoleEmpty               = La consola está vacía. No hay nada que guardar.
+DlgSaveError                  = Error al guardar
+BgErrorMsg                    = SysOpt ha detectado un error inesperado en un proceso en segundo plano. La aplicación intentará continuar.
+ErrNewsWindow                 = Error al abrir la ventana de novedades
+
+# ── Section Headers & UI Labels (v3.2.0) ──
+HdrDisksFiles                 = DISCOS Y ARCHIVOS
+HdrMemoryProc                 = MEMORIA Y PROCESOS
+HdrNetBrowsers                = RED Y NAVEGADORES
+HdrRegistry                   = REGISTRO DE WINDOWS
+HdrSysVerify                  = VERIFICACIÓN DEL SISTEMA
+HdrEventLogs                  = REGISTROS DE EVENTOS
+HdrStartupPrograms            = PROGRAMAS DE INICIO
+HdrCpuCores                   = CORES DEL PROCESADOR
+HdrMemoryRam                  = MEMORIA RAM
+HdrSmartDisk                  = ESTADO S.M.A.R.T. DEL DISCO
+HdrNetCards                   = TARJETAS DE RED
+HdrDiskC                      = DISCO C:
+HdrDetail                     = DETALLE
+HdrOutput "OUTPUT"
+RamLblTotal                   = TOTAL
+RamLblUsed                    = USADA
+RamLblFree                    = LIBRE
+RamLblUsePct                  = USO%
+DiagReportSubtitle            = Análisis completado — resultados por categoría
+DiagCalculating               = calculando...
+FolderScannerTitle            = Explorador de Carpeta
+FsFolderTotal                 = Total: 
+FsFolderFiles                 = Archivos: 
+FsSortLabel                   = Ordenar:
+FsColName                     = Nombre
+FsColExt                      = Ext.
+FsColModified                 = Modificado
+StartupMgrTitle               = Gestor de Programas de Inicio
+StartupMgrSubtitle            = Entradas de autoarranque en el registro de Windows (HKCU y HKLM). Desmarca para deshabilitar.
+TasksNoneActive               = Sin tareas activas
+TasksPoolStatus               = Pool: 0 activa(s) · 0 completada(s)
+
+# ── Console Welcome Messages ──
+WelcomeLine4                  =   o '🔍 Analizar' para ver qué se liberaría sin cambios.
+WelcomeLine5                  = 💡 Ver novedades de la versión: botón  ℹ  en la barra superior.
+
+# ── Auto-externalized strings (v3.2.0) ──
+AboutWindowTitle=Acerca de SysOpt
+BtnCompare=Comparar
+BtnDeselectAll=Deseleccionar Todo
+BtnSelectAll2=Seleccionar Todo
+CancelledByUser=Cancelado por el usuario
+CoreSessionStarted=  {0} v{1}  —  Sesión iniciada: {2}
+CpuTotal=CPU Total
+CsvFiles=Archivos
+CsvFolders=Carpetas
+CsvPath=Ruta
+CsvPctTotal=% del total
+CsvSize=Tamaño
+CsvType=Tipo
+DedupConfirmDelete=Se eliminarán
+DedupContinue=¿Continuar?
+DedupCopiesOfGroup=copia(s) del grupo
+DedupFilesAnalyzed=archivos analizados
+DedupGroups=grupos
+DedupKeep=se conserva
+DedupNoDuplicates=Sin duplicados
+DedupRecoverable=recuperables
+DedupRecoverableDelCopies=recuperables eliminando copias
+Deleted=Eliminado
+DiagBrowserCacheClean=Caché de navegadores limpia
+DiagBrowserCacheLarge=Caché de navegadores muy grande
+DiagBrowserCachePresent=Caché de navegadores presente
+DiagCleanBrowsers=Limpiar caché navegadores
+DiagCleanDns=Limpiar caché DNS
+DiagCritPrefix=[CRÍTICO]
+DiagCritWarn=Críticos: {0}  |  Avisos: {1}
+DiagDnsCacheLarge=Caché DNS muy grande
+DiagDnsCacheNormal=Caché DNS normal
+DiagDnsSlowResolution={0} entradas — puede ralentizar resolución
+DiagEventLogsOk=Logs de eventos dentro de límites
+DiagMinimalImpact={0} claves — impacto mínimo
+DiagNoUpdateResidues=Sin residuos de actualización
+DiagOptimalLevel={0} MB — nivel óptimo
+DiagOrphanKeys=Claves huérfanas en el registro
+DiagRamCritical=Memoria RAM crítica
+DiagRecycleBinEmpty=Papelera vacía
+DiagRegistryClean=Registro sin claves huérfanas
+DiagReportTitle=INFORME DE DIAGNÓSTICO DEL SISTEMA — SysOpt v1.0
+DiagScore=Puntuación: {0} / 100
+DiagSomeOrphanKeys=Algunas claves huérfanas
+DiagUrgent=Atención urgente
+DiagWUCacheClean=Caché de Windows Update limpia
+DiagWUCacheLarge=Caché de Windows Update grande
+DiagWUCachePresent=Caché Windows Update presente
+DiskExportCSV=Exportar CSV
+DiskExportingCSV=Exportando CSV en segundo plano...
+DiskHtmlReport=Informe HTML
+DiskNoScanData=No hay datos de escaneo. Realiza un escaneo primero.
+DiskPathCopied=Ruta copiada
+DiskPathNotFound=Ruta no encontrada
+DiskReportGenerated=Informe generado
+DiskScanPaused=Escaneo pausado
+DiskScanTask=Escaneo
+DiskSearchingLargeFiles=Buscando archivos grandes…
+DiskTotalDrive=Total unidad
+DlgBtnOK=Aceptar
+ErrCheckLog=La aplicación intentará continuar. Revisa el log en .\logs\
+ErrDeleting=Error al eliminar
+ErrUnexpectedUI=Error inesperado en la interfaz gráfica.
+Folders=carpetas
+GbFree=GB libre
+Items=elementos
+NetTotal=Total
+NicActive=Activa
+NicNoAdapters=Sin adaptadores activos
+NicNoAdaptersDesc=No se detectaron tarjetas de red activas
+NicNoGW=Sin GW
+NotAvailable=No disponible
+Of=de
+OptAnalysis=Análisis
+OptAnalysisDone=ANÁLISIS COMPLETADO EXITOSAMENTE
+OptAnalysisMode=🔍 ANÁLISIS (Dry Run) — solo reportar
+OptCancelled=OPTIMIZACIÓN CANCELADA
+OptCancelledByUser=⚠ OPTIMIZACIÓN CANCELADA POR EL USUARIO
+OptCurrentSize=  Tamaño actual: 
+OptDiskOptResult=✓ Optimización de discos 
+OptDone=OPTIMIZACIÓN COMPLETADA EXITOSAMENTE
+OptDryRunClose=  [DRY RUN] Cerraría: 
+OptDryRunDns=  [DRY RUN] Caché DNS actual: 
+OptDryRunFree=  [DRY RUN] Se liberarían ~
+OptDryRunMode= [MODO ANÁLISIS — sin cambios]
+OptDryRunWorkingSet=  [DRY RUN] Se vaciaría el Working Set de todos los procesos accesibles
+OptFreeAfter=  Libre después:   
+OptLblDnsCache=Limpiando caché DNS
+OptLblOptimizeDisks=Optimización de discos
+OptMode=Modo
+OptOptimization=Optimización
+OptRealMode=⚙ EJECUCIÓN real
+OptRestarting=Reiniciando el sistema en 10 segundos...
+OptRestartingIn=Reiniciando en {0} segundos...
+OptSelectAtLeastOne=Por favor, selecciona al menos una opción.
+OptStartDryRun=INICIANDO OPTIMIZACIÓN — MODO ANÁLISIS (DRY RUN)
+OptStartReal=INICIANDO OPTIMIZACIÓN DEL SISTEMA WINDOWS
+OptStartWith=¿Iniciar con
+OptStep1=1. OPTIMIZACIÓN DE DISCOS DUROS
+OptStep10=10. LIMPIANDO CACHÉ DE NAVEGADORES
+OptStep12=12. LIMPIANDO CLAVES HUÉRFANAS DEL REGISTRO
+OptStep14=14. DISM — Reparación de imagen del sistema
+OptStep8=8. CERRANDO PROCESOS NO CRÍTICOS
+OptStep9=9. LIMPIANDO CACHÉ DNS
+OptTasks=tareas
+OtherFolders=Otras carpetas
+PctUsed=usado
+PerfAutoRefresh=Auto-refresco cada
+PerfAutoRefreshActive=activo
+PerfUpdated=Actualizado
+PhaseCompleted=Completado
+PhaseGenFolderTable=Generando tabla de carpetas...
+PhasePreparingData=Preparando datos...
+PhasePreparingDir=Preparando directorio...
+PhasePreparingShort=Preparando...
+PhaseQueuing=Encolando...
+PhaseStarting=Iniciando...
+PhaseWriting=Escribiendo...
+PhaseWritingRow=Escribiendo fila
+Processing=Procesando...
+Rows=filas
+SmartReadErr=Errores lect.
+SmartSize=Tamaño
+SmartTemp=Temperatura
+SmartType=Tipo
+SmartWear=Desgaste
+SnapAvailable=snapshot(s) disponibles.
+SnapDeleteMulti=Eliminar
+SnapDeleteOne=Eliminar el snapshot
+SnapDeleted=eliminada
+SnapEntries=entradas
+SnapEntriesRead=entradas leídas
+SnapLoaded=snapshot(s) cargados
+SnapLoading=Cargando snapshot
+SnapLoadingHistory=Cargando historial de snapshots
+SnapLoadingShort=cargando
+SnapNoChange=sin cambio
+SnapNoSnapshots=Sin snapshots guardados.
+SnapPutBackground=Poner en segundo plano
+SnapRootFolders=carpetas raíz
+SnapSaving=Guardando snapshot
+SnapScanLabel=Escaneo
+SnapSelectToView=Selecciona un snapshot para ver sus carpetas
+SnapSelected=seleccionados
+SplashAnalyzingPerms=Analizando permisos...
+SplashReady=Listo.
+StartupChangesApplied=Cambios aplicados
+StartupEntriesDisabled=entradas desactivadas
+TaskCompleted=tarea(s) completada(s)
+TaskCompletedShort=completada(s)
+TaskInProgress=tarea(s) en curso
+TaskNone=Sin tareas
+TasksCancelTask=Cancelar tarea
+TasksClearCompleted=Limpiar completadas
+TasksPause=Pausar tarea
+TasksResume=Reanudar tarea
+TasksWindowTitle=Tareas en Segundo Plano
+TypeFile=Archivo
+TypeFolder=Carpeta
+
+# ── Additional UI elements ────────────────────────────────────────────
+FsCtxPreview                  = Vista previa / Abrir archivo
+FsCtxDelete                   = Eliminar archivo
+BtnClose                      = Cerrar
+StartupColActive              = ACTIVO
+StartupColName                = NOMBRE
+StartupColCommand             = COMANDO
+StartupColSource              = ORIGEN
+StartupBtnApply               = Aplicar cambios
+DiagFixHint                   = Pulsa Iniciar Optimización en la ventana principal para reparar los puntos marcados.
+DedupTitle                    = Archivos Duplicados
+DedupDeleteTip                = Eliminar copias (conserva la primera)
+TipOutputClose                = Ocultar output
+TipOutputMinimize             = Minimizar output
+TipOutputExpand               = Expandir output
+PerfBtnRefresh                = Actualizar
+PerfChkAutoRefresh            = Auto-refresco
+DiskBtnScan                   = Escanear
+DiskBtnStop                   = Detener
+DiskExportCsvTip              = Exportar CSV
+DiskHtmlReportTip             = Genera informe HTML visual del escaneo
+SplashBuildingUI              = Construyendo interfaz gráfica...
+SplashBindingControls         = Enlazando controles...
+ErrUnexpectedTitle            = Error inesperado
+ErrUITitle                    = Error de interfaz
+TasksClearTip                 = Elimina las tareas ya completadas o fallidas
+
+DiskLblPath               = Ruta:
+DiskLblFilter             = 🔎  Filtrar:
+DiskDetailSize            = Tamaño:
+DiskDetailDirs            = Carpetas:
+DiskDetailPctParent       = % del padre:
+DiskHdrTop10              = TOP 10 ARCHIVOS MÁS GRANDES
+DiskBrowseTip             = Seleccionar carpeta
+DiskFilterTip             = Filtra carpetas por nombre en tiempo real
+DiskBtnDedup              = Duplicados
+DiskDedupTip              = Busca archivos duplicados por SHA256 (>10 MB) en el escaneo actual
+DiskBtnExportCsv          = Exportar CSV
+DiskBtnHtmlReport         = Informe HTML
+DiskStatusReady           = Listo
+CtxOpenExplorer           = Abrir en Explorador
+CtxCopyPath               = Copiar ruta
+CtxDeleteFolder           = Eliminar carpeta...
+NoteSecurityLog           = El log Security no se toca
+NoteStartupManage         = Abre ventana de gestión al iniciar
+SnapLblName               = Nombre:
+SnapBtnSave               = Guardar
+SnapChkAll                = Todo
+SnapSavedStatus           = Snapshots guardados
+SnapBtnCompare            = Comparar
+SnapCompareTip            = Compara los snapshots marcados entre sí o contra el escaneo actual
+SnapBtnDelete             = Eliminar
+SnapDeleteTip             = Elimina todos los snapshots marcados
+SnapSelectPrompt          = Selecciona un snapshot
+FsSortName                = Nombre
+BtnResume                 = Reanudar
+OptDoneMsg                = Optimización completada
+OptDoneTitle              = Completado
+ScanCancelling            = Cancelando escaneo...
+SplashThemeApplied        = Tema aplicado
+StatusCancel              = Cancelado
+StatusDone                = Completado
+StatusError               = Error
+StatusPaused              = Pausado
+StatusRunning             = En ejecución
+TaskActive                = activa(s)
+TaskPause                 = Pausar tarea
+TaskResume                = Reanudar tarea
+TaskCancel                = Cancelar tarea
+
+PhaseDeserializing=Deserializando...
+PhaseQueuingEntries=Encolando entradas...
+PhaseWritingEntries=Escribiendo entradas...
+PhaseSortingData=Ordenando datos...
+PhaseWritingCsv=Escribiendo CSV...
+PhaseReadingTemplate=Leyendo plantilla...
+PhaseCalcStats=Calculando estadísticas...
+DiskFreeSpace=Espacio libre
+DiskUsage=Uso de disco
+PhaseGenHtmlRows=Generando filas HTML...
+PhaseAssemblingHtml=Ensamblando HTML...
+PhaseWritingFile=Escribiendo archivo...
+PhaseGenPieChart=Generando gráfico de sectores...
+SnapEntriesLoaded=entradas cargadas
+CsvExporting=Exportando CSV
+
+# ── Options Window (Win11 Settings) + Toast Notifications ──
+OptSettingsTitle=Configuración
+OptNavInterface=Interfaz
+OptNavBehavior=Comportamiento
+OptSectionTheme=TEMA VISUAL
+OptSectionLang=IDIOMA
+OptSectionToast=NOTIFICACIONES
+OptSectionDebug=DEPURACIÓN
+OptToggleToast=Notificaciones toast
+OptToggleToastDesc=Mostrar alertas emergentes al completar tareas
+OptToggleDebug=Logs de depuración
+OptToggleDebugDesc=Registrar información detallada en la consola (nivel DBG)
+OptRestartHint=Algunos cambios de idioma requieren reiniciar SysOpt.
+OptToastTest=Probar notificación
+OptToastTestDesc=Enviar una notificación toast de prueba
+ToastOptDoneTitle=Optimización completada
+ToastAnalysisDoneTitle=Análisis completado
+ToastAnalysisDoneMsg=Informe de diagnóstico generado correctamente.
+ToastSnapSavedTitle=Snapshot guardado
+ToastSnapSavedMsg=Se guardó el snapshot correctamente.
+ToastExportDoneTitle=Exportación completada
+ToastExportDoneMsg=Los datos se exportaron correctamente.
+ToastTestTitle=Notificación de prueba
+ToastTestMsg=Las notificaciones toast están funcionando correctamente.
+SplashLoadingToast=Cargando motor de notificaciones...
+
+# ── Diagnóstico: etiquetas del motor (SysOpt.Diagnostics.dll) ──────────
+DiagSectStorage           = ALMACENAMIENTO
+DiagSectMemory            = MEMORIA Y RENDIMIENTO
+DiagSectNetwork           = RED Y NAVEGADORES
+DiagSectRegistry          = REGISTRO DE WINDOWS
+DiagSectEventLogs         = REGISTROS DE EVENTOS
+DiagTempCrit              = Archivos temporales acumulados
+DiagTempCritDetail        = {0} MB en carpetas Temp
+DiagTempCritAction        = Limpiar Temp Windows + Usuario
+DiagTempWarn              = Archivos temporales moderados
+DiagTempWarnDetail        = {0} MB — recomendable limpiar
+DiagTempWarnAction        = Limpiar carpetas Temp
+DiagTempOk                = Carpetas temporales limpias
+DiagRecycleBinFull        = Papelera de reciclaje llena
+DiagRecycleBinDetail      = {0} MB ocupados
+DiagRecycleBinAction      = Vaciar papelera
+DiagRecycleBinInfo        = Papelera con contenido
+DiagRecycleBinEmptyDetail = Sin archivos pendientes de eliminar
+DiagWUCacheDetail         = {0} MB en SoftwareDistribution
+DiagWUCacheAction         = Limpiar WU Cache
+DiagRamCritDetail         = {0}% en uso — riesgo de lentitud severa
+DiagRamCritAction         = Liberar RAM urgente
+DiagRamWarn               = Uso de RAM elevado
+DiagRamPctInUse           = {0}% en uso
+DiagRamWarnAction         = Liberar RAM recomendado
+DiagRamOk                 = Memoria RAM en niveles normales
+DiagDiskCrit              = Disco C: casi lleno
+DiagDiskCritDetail        = {0}% ocupado — rendimiento muy degradado
+DiagDiskCritAction        = Liberar espacio urgente
+DiagDiskWarn              = Disco C: con poco espacio libre
+DiagDiskPctUsed           = {0}% ocupado
+DiagDiskWarnAction        = Limpiar archivos
+DiagDiskOk                = Espacio en disco C: saludable
+DiagDnsEntries            = {0} entradas
+DiagBrowserWarnDetail     = {0} MB — recomendable limpiar
+DiagOrphanDetail          = {0} claves de programas desinstalados
+DiagOrphanAction          = Limpiar registro
+DiagRegistryCleanDetail   = No se detectaron entradas obsoletas
+DiagEventLogWarn          = Logs de eventos grandes
+DiagEventLogDetail        = {0} MB en System+Application+Setup
+DiagEventLogAction        = Limpiar Event Logs
+DiagScoreGood             = Sistema en buen estado
+DiagScoreRecommended      = Mantenimiento recomendado
+DiagExportDate            = Fecha: {0}
+DiagExportSummary         = === RESUMEN ===
+DiagExportState           = Estado: {0}
+DiagPrefixWarn            = [AVISO]
+DiagPrefixInfo            = [INFO]
+DiagPrefixOk              = [OK]
+
+# ── Acerca de (sección About en Opciones) ──────────────
+OptNavAbout               = Acerca de
+AboutDeveloper            = Desarrollado por
+AboutBtnChangelog         = Cambios en la versión
+AboutChangelogTitle       = Registro de cambios
+ErrOpenChangelog          = Error al abrir registro de cambios

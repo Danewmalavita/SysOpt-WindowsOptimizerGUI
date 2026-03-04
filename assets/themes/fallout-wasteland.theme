@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — fallout-wasteland.theme
+# Inspirado en Fallout — arena nuclear, naranja radiactivo, verde vaultsuit
+
+[meta]
+Name        = Fallout — The Wasteland
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0C0A04
+BgCard                = #181408
+BgInput               = #221C0C
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #382E10
+BorderActive          = #E88820
+BorderHover           = #4E3E18
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #E88820
+AccentCyan            = #C8D040
+AccentAmber           = #FF6000
+AccentRed             = #CC2000
+AccentGreen           = #88C040
+AccentPurple          = #908060
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #E8D8A8
+TextSecondary         = #A09050
+TextMuted             = #685E30
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #E88820
+ProgressEnd           = #88C040
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #583200
+BtnPrimaryFg          = #F0DCA0
+BtnPrimaryBorder      = #E88820
+BtnPrimaryHover       = #E88820
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #221C0C
+BtnSecondaryFg        = #A09050
+BtnSecondaryBorder    = #382E10
+BtnSecondaryHover     = #382E10
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #282A00
+BtnCyanFg             = #C8D040
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #341600
+BtnAmberFg            = #FF6000
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #2A0800
+BtnDangerFg           = #CC2000
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #221C0C
+BtnGhostBorder        = #382E10
+BtnGhostFg            = #685E30
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #221C0C
+HdrBtnBorder          = #382E10
+HdrBtnHover           = #382E10
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #1C1C08
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #2E2408
+ComboSelected         = #3E3010
+ComboSelectedFg       = #E88820
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #282008
+CtxSepFill            = #382E10
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #221C0C
+DetailBorder          = #382E10
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #181408
+TabHoverBg            = #221C0C
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #141008
+PurpleBlobBg          = #180E08
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #080602
+ConsoleFg             = #E88820
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #181408
+ScrollBarThumb        = #382E10
+ScrollBarThumbHover   = #E88820
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #88C040
+StatusWarning         = #FF6000
+StatusError           = #CC2000
+StatusInfo            = #E88820
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #141C00
+BgStatusWarn          = #281200
+BgStatusErr           = #200600
+BgStatusInfo          = #241200
+FgStatusOk            = #88C040
+FgStatusWarn          = #FF6000
+FgStatusErr           = #CC2000
+FgStatusInfo          = #E88820

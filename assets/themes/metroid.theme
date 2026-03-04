@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — metroid.theme
+# Inspirado en Metroid — naranja traje de Samus, negro espacio, verde Phazon
+
+[meta]
+Name        = Metroid — Chozo
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #060808
+BgCard                = #0C1010
+BgInput               = #141A18
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #1E2A28
+BorderActive          = #FF8820
+BorderHover           = #283A38
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #FF8820
+AccentCyan            = #40D8C0
+AccentAmber           = #FFD020
+AccentRed             = #FF2040
+AccentGreen           = #60E840
+AccentPurple          = #9040E0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #D0E8E0
+TextSecondary         = #709090
+TextMuted             = #405858
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #FF8820
+ProgressEnd           = #60E840
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #5A2C00
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #FF8820
+BtnPrimaryHover       = #FF8820
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #141A18
+BtnSecondaryFg        = #709090
+BtnSecondaryBorder    = #1E2A28
+BtnSecondaryHover     = #1E2A28
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #082820
+BtnCyanFg             = #40D8C0
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #282000
+BtnAmberFg            = #FFD020
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #260010
+BtnDangerFg           = #FF2040
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #141A18
+BtnGhostBorder        = #1E2A28
+BtnGhostFg            = #405858
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #141A18
+HdrBtnBorder          = #1E2A28
+HdrBtnHover           = #1E2A28
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #0A2020
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #162E28
+ComboSelected         = #1E3830
+ComboSelectedFg       = #FF8820
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #142A20
+CtxSepFill            = #1E2A28
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #141A18
+DetailBorder          = #1E2A28
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #0C1010
+TabHoverBg            = #141A18
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #080E0C
+PurpleBlobBg          = #0C0818
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #040608
+ConsoleFg             = #60E840
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #0C1010
+ScrollBarThumb        = #1E2A28
+ScrollBarThumbHover   = #FF8820
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #60E840
+StatusWarning         = #FFD020
+StatusError           = #FF2040
+StatusInfo            = #FF8820
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #0E2008
+BgStatusWarn          = #201E00
+BgStatusErr           = #1E0010
+BgStatusInfo          = #201000
+FgStatusOk            = #60E840
+FgStatusWarn          = #FFD020
+FgStatusErr           = #FF2040
+FgStatusInfo          = #FF8820

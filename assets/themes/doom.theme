@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — doom.theme
+# Inspirado en DOOM — rojo infierno, naranja demónico, negro abismo
+
+[meta]
+Name        = DOOM Eternal
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0A0400
+BgCard                = #140800
+BgInput               = #1E0C00
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #3A1400
+BorderActive          = #FF2200
+BorderHover           = #5A2000
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #FF2200
+AccentCyan            = #FF8800
+AccentAmber           = #FFB800
+AccentRed             = #FF0000
+AccentGreen           = #88C840
+AccentPurple          = #CC44AA
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #F0E0D0
+TextSecondary         = #C08070
+TextMuted             = #804040
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #FF2200
+ProgressEnd           = #FF8800
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #780000
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #FF2200
+BtnPrimaryHover       = #FF2200
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #1E0C00
+BtnSecondaryFg        = #C08070
+BtnSecondaryBorder    = #3A1400
+BtnSecondaryHover     = #3A1400
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #301400
+BtnCyanFg             = #FF8800
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #341800
+BtnAmberFg            = #FFB800
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #380000
+BtnDangerFg           = #FF0000
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #1E0C00
+BtnGhostBorder        = #3A1400
+BtnGhostFg            = #804040
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #1E0C00
+HdrBtnBorder          = #3A1400
+HdrBtnHover           = #3A1400
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #200C00
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #301000
+ComboSelected         = #401800
+ComboSelectedFg       = #FF2200
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #2E1000
+CtxSepFill            = #3A1400
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #1E0C00
+DetailBorder          = #3A1400
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #140800
+TabHoverBg            = #1E0C00
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0C0400
+PurpleBlobBg          = #1C0014
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #060200
+ConsoleFg             = #FF2200
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #140800
+ScrollBarThumb        = #3A1400
+ScrollBarThumbHover   = #FF2200
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #88C840
+StatusWarning         = #FFB800
+StatusError           = #FF0000
+StatusInfo            = #FF8800
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #142000
+BgStatusWarn          = #2C1800
+BgStatusErr           = #2C0000
+BgStatusInfo          = #2C1000
+FgStatusOk            = #88C840
+FgStatusWarn          = #FFB800
+FgStatusErr           = #FF0000
+FgStatusInfo          = #FF8800

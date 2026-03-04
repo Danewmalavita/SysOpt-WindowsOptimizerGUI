@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — assassins-creed.theme
+# Inspirado en Assassin's Creed — blanco Altair, rojo Abstergo, gris piedra medieval
+
+[meta]
+Name        = Assassin's Creed
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0A0A0C
+BgCard                = #121214
+BgInput               = #1A1A1E
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #282830
+BorderActive          = #CC1010
+BorderHover           = #383840
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #CC1010
+AccentCyan            = #D4C890
+AccentAmber           = #C8A030
+AccentRed             = #FF2020
+AccentGreen           = #708870
+AccentPurple          = #9080A0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #EAE8E0
+TextSecondary         = #A8A498
+TextMuted             = #686460
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #CC1010
+ProgressEnd           = #D4C890
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #5A0000
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #CC1010
+BtnPrimaryHover       = #CC1010
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #1A1A1E
+BtnSecondaryFg        = #A8A498
+BtnSecondaryBorder    = #282830
+BtnSecondaryHover     = #282830
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #282414
+BtnCyanFg             = #D4C890
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #281800
+BtnAmberFg            = #C8A030
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #2E0000
+BtnDangerFg           = #FF2020
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #1A1A1E
+BtnGhostBorder        = #282830
+BtnGhostFg            = #686460
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #1A1A1E
+HdrBtnBorder          = #282830
+HdrBtnHover           = #282830
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #181818
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #201820
+ComboSelected         = #2C1010
+ComboSelectedFg       = #CC1010
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #201818
+CtxSepFill            = #282830
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #1A1A1E
+DetailBorder          = #282830
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #121214
+TabHoverBg            = #1A1A1E
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0C0C0E
+PurpleBlobBg          = #140C14
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #060606
+ConsoleFg             = #CC1010
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #121214
+ScrollBarThumb        = #282830
+ScrollBarThumbHover   = #CC1010
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #708870
+StatusWarning         = #C8A030
+StatusError           = #FF2020
+StatusInfo            = #D4C890
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #101810
+BgStatusWarn          = #241800
+BgStatusErr           = #2A0000
+BgStatusInfo          = #242010
+FgStatusOk            = #708870
+FgStatusWarn          = #C8A030
+FgStatusErr           = #FF2020
+FgStatusInfo          = #D4C890

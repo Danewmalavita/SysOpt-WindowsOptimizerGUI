@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — minecraft.theme
+# Inspirado en Minecraft — tierra marrón, hierba verde, cielo azul, piedra gris
+
+[meta]
+Name        = Minecraft — Overworld
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #C8D8E8
+BgCard                = #E8F0F8
+BgInput               = #B0C0D8
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #8898B0
+BorderActive          = #2A7A18
+BorderHover           = #6878A0
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #2A7A18
+AccentCyan            = #2060A8
+AccentAmber           = #887000
+AccentRed             = #882000
+AccentGreen           = #2A7A18
+AccentPurple          = #580880
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #080808
+TextSecondary         = #202020
+TextMuted             = #484848
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #2A7A18
+ProgressEnd           = #2060A8
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #2A7A18
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #1E5810
+BtnPrimaryHover       = #1E5810
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #C0D0E8
+BtnSecondaryFg        = #202020
+BtnSecondaryBorder    = #8898B0
+BtnSecondaryHover     = #A8BAD0
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #B0C8E8
+BtnCyanFg             = #002050
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #E8D898
+BtnAmberFg            = #483000
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #E8B8A8
+BtnDangerFg           = #500800
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #C0D0E8
+BtnGhostBorder        = #8090B8
+BtnGhostFg            = #383838
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #C8D8E8
+HdrBtnBorder          = #8898C0
+HdrBtnHover           = #B0C0D8
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #B8D8C8
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #A8C8E8
+ComboSelected         = #90B8D8
+ComboSelectedFg       = #1A5010
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #A8C0E0
+CtxSepFill            = #8898B0
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #D0E0F0
+DetailBorder          = #8898B0
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #E8F0F8
+TabHoverBg            = #D0E0F0
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #D8E8F0
+PurpleBlobBg          = #D8C8F0
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #B0B8C8
+ConsoleFg             = #0A3808
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #B8C8E0
+ScrollBarThumb        = #7888A8
+ScrollBarThumbHover   = #405868
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #2A7A18
+StatusWarning         = #887000
+StatusError           = #882000
+StatusInfo            = #2060A8
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #C0E8C8
+BgStatusWarn          = #F0E0A0
+BgStatusErr           = #F0B8B0
+BgStatusInfo          = #B8D8F8
+FgStatusOk            = #2A7A18
+FgStatusWarn          = #887000
+FgStatusErr           = #882000
+FgStatusInfo          = #2060A8

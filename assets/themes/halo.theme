@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — halo.theme
+# Inspirado en Halo — acero UNSC, verde militar Spartan, azul holográfico Cortana
+
+[meta]
+Name        = Halo — UNSC
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #080C0A
+BgCard                = #0E1410
+BgInput               = #141E18
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #243020
+BorderActive          = #5EC45E
+BorderHover           = #304028
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #5EC45E
+AccentCyan            = #40C8D8
+AccentAmber           = #C8A840
+AccentRed             = #D84040
+AccentGreen           = #5EC45E
+AccentPurple          = #8888FF
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #D4E8D4
+TextSecondary         = #8AAA8A
+TextMuted             = #506050
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #5EC45E
+ProgressEnd           = #40C8D8
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #1A4A1A
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #5EC45E
+BtnPrimaryHover       = #5EC45E
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #141E18
+BtnSecondaryFg        = #8AAA8A
+BtnSecondaryBorder    = #243020
+BtnSecondaryHover     = #243020
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #082830
+BtnCyanFg             = #40C8D8
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #282000
+BtnAmberFg            = #C8A840
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #280808
+BtnDangerFg           = #D84040
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #141E18
+BtnGhostBorder        = #243020
+BtnGhostFg            = #506050
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #141E18
+HdrBtnBorder          = #243020
+HdrBtnHover           = #243020
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #0A1E18
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #183028
+ComboSelected         = #1E3C28
+ComboSelectedFg       = #5EC45E
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #183020
+CtxSepFill            = #243020
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #141E18
+DetailBorder          = #243020
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #0E1410
+TabHoverBg            = #141E18
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0A1010
+PurpleBlobBg          = #080C18
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #040808
+ConsoleFg             = #5EC45E
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #0E1410
+ScrollBarThumb        = #243020
+ScrollBarThumbHover   = #5EC45E
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #5EC45E
+StatusWarning         = #C8A840
+StatusError           = #D84040
+StatusInfo            = #40C8D8
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #0E2010
+BgStatusWarn          = #201800
+BgStatusErr           = #200808
+BgStatusInfo          = #082028
+FgStatusOk            = #5EC45E
+FgStatusWarn          = #C8A840
+FgStatusErr           = #D84040
+FgStatusInfo          = #40C8D8

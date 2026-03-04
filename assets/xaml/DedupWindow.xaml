@@ -1,4 +1,4 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Archivos Duplicados — SysOpt" Width="860" Height="620"
         WindowStartupLocation="CenterOwner"
@@ -20,7 +20,7 @@
       <StackPanel>
         <TextBlock FontFamily="Segoe UI" FontSize="15" FontWeight="Bold"
                    Foreground="{DynamicResource TB_E8ECF4}">
-          <Run Text="🔍  Archivos Duplicados"/>
+          <Run Text="🔍  $(T 'DedupTitle' 'Archivos Duplicados')"/>
           <Run Foreground="{DynamicResource TB_FF6B84}" Text="  [B5 SHA256]"/>
         </TextBlock>
         <TextBlock Name="txtDedupSummary" FontFamily="Segoe UI" FontSize="11"
@@ -97,7 +97,7 @@
                       Foreground="{DynamicResource TB_FF6B84}"
                       BorderBrush="{DynamicResource TB_3A2010}" BorderThickness="1"
                       Cursor="Hand" FontSize="14"
-                      ToolTip="Eliminar copias (conserva la primera)"/>
+                      ToolTip="$(T 'DedupDeleteTip' 'Eliminar copias (conserva la primera)')"/>
             </Grid>
           </Border>
         </DataTemplate>

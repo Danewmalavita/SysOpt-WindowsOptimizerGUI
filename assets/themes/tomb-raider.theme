@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — tomb-raider.theme
+# Inspirado en Tomb Raider — verde jungla, piedra antigua, turquesa agua subterránea
+
+[meta]
+Name        = Tomb Raider — Lara Croft
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #C0C8B8
+BgCard                = #DDE8D5
+BgInput               = #A8B8A0
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #809078
+BorderActive          = #2A6820
+BorderHover           = #607058
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #2A6820
+AccentCyan            = #208878
+AccentAmber           = #906800
+AccentRed             = #8C2008
+AccentGreen           = #2A6820
+AccentPurple          = #5830A0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #080C06
+TextSecondary         = #1C2C18
+TextMuted             = #425040
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #2A6820
+ProgressEnd           = #208878
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #2A6820
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #1C4C14
+BtnPrimaryHover       = #1C4C14
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #C4D4BC
+BtnSecondaryFg        = #1C2C18
+BtnSecondaryBorder    = #809078
+BtnSecondaryHover     = #A8BAA0
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #A0C8C0
+BtnCyanFg             = #082820
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #E0CC98
+BtnAmberFg            = #402C00
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #E0AEA0
+BtnDangerFg           = #500800
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #BCC8B4
+BtnGhostBorder        = #788870
+BtnGhostFg            = #303C28
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #C0D0B8
+HdrBtnBorder          = #809078
+HdrBtnHover           = #A8BAA0
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #A8CCC4
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #A8C0A0
+ComboSelected         = #90AE88
+ComboSelectedFg       = #1A5010
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #A8B8A0
+CtxSepFill            = #809078
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #CCD8C4
+DetailBorder          = #809078
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #DDE8D5
+TabHoverBg            = #CCD8C4
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #D0DCC8
+PurpleBlobBg          = #CCC0E0
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #A8B4A0
+ConsoleFg             = #0E3808
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #B0C0A8
+ScrollBarThumb        = #708868
+ScrollBarThumbHover   = #3C5830
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #2A6820
+StatusWarning         = #906800
+StatusError           = #8C2008
+StatusInfo            = #208878
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #BCE0B4
+BgStatusWarn          = #ECD898
+BgStatusErr           = #EAB4A8
+BgStatusInfo          = #B0D8D0
+FgStatusOk            = #2A6820
+FgStatusWarn          = #906800
+FgStatusErr           = #8C2008
+FgStatusInfo          = #208878

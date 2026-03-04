@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — mortal-kombat.theme
+# Inspirado en Mortal Kombat — negro abismo, amarillo trueno, rojo sangre
+
+[meta]
+Name        = Mortal Kombat
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #080608
+BgCard                = #100C10
+BgInput               = #181418
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #2A1E28
+BorderActive          = #E8C000
+BorderHover           = #3C2838
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #E8C000
+AccentCyan            = #FF8800
+AccentAmber           = #FF4400
+AccentRed             = #CC0808
+AccentGreen           = #70A850
+AccentPurple          = #A040C0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #F0E8D0
+TextSecondary         = #A08878
+TextMuted             = #685850
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #E8C000
+ProgressEnd           = #FF4400
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #4A3C00
+BtnPrimaryFg          = #000000
+BtnPrimaryBorder      = #E8C000
+BtnPrimaryHover       = #E8C000
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #181418
+BtnSecondaryFg        = #A08878
+BtnSecondaryBorder    = #2A1E28
+BtnSecondaryHover     = #2A1E28
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #301400
+BtnCyanFg             = #FF8800
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #341000
+BtnAmberFg            = #FF4400
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #2C0000
+BtnDangerFg           = #CC0808
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #181418
+BtnGhostBorder        = #2A1E28
+BtnGhostFg            = #685850
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #181418
+HdrBtnBorder          = #2A1E28
+HdrBtnHover           = #2A1E28
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #180C18
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #241428
+ComboSelected         = #301C30
+ComboSelectedFg       = #E8C000
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #201020
+CtxSepFill            = #2A1E28
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #181418
+DetailBorder          = #2A1E28
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #100C10
+TabHoverBg            = #181418
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0C080C
+PurpleBlobBg          = #140818
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #060406
+ConsoleFg             = #E8C000
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #100C10
+ScrollBarThumb        = #2A1E28
+ScrollBarThumbHover   = #E8C000
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #70A850
+StatusWarning         = #FF8800
+StatusError           = #CC0808
+StatusInfo            = #E8C000
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #101808
+BgStatusWarn          = #281400
+BgStatusErr           = #220000
+BgStatusInfo          = #282000
+FgStatusOk            = #70A850
+FgStatusWarn          = #FF8800
+FgStatusErr           = #CC0808
+FgStatusInfo          = #E8C000

@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — sekiro.theme
+# Inspirado en Sekiro — rojo japonés, blanco nieve, negro shinobi
+
+[meta]
+Name        = Sekiro — Shadows Die Twice
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #080608
+BgCard                = #100C0C
+BgInput               = #181010
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #2A1C18
+BorderActive          = #D82020
+BorderHover           = #3C2420
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #D82020
+AccentCyan            = #E8C8A0
+AccentAmber           = #D89020
+AccentRed             = #FF1010
+AccentGreen           = #70A060
+AccentPurple          = #885080
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #F0E8E0
+TextSecondary         = #A08878
+TextMuted             = #685848
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #D82020
+ProgressEnd           = #D89020
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #6A0808
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #D82020
+BtnPrimaryHover       = #D82020
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #181010
+BtnSecondaryFg        = #A08878
+BtnSecondaryBorder    = #2A1C18
+BtnSecondaryHover     = #2A1C18
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #2A1C10
+BtnCyanFg             = #E8C8A0
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #2C1800
+BtnAmberFg            = #D89020
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #2A0000
+BtnDangerFg           = #FF1010
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #181010
+BtnGhostBorder        = #2A1C18
+BtnGhostFg            = #685848
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #181010
+HdrBtnBorder          = #2A1C18
+HdrBtnHover           = #2A1C18
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #141010
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #221410
+ComboSelected         = #301A14
+ComboSelectedFg       = #D82020
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #1E1010
+CtxSepFill            = #2A1C18
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #181010
+DetailBorder          = #2A1C18
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #100C0C
+TabHoverBg            = #181010
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0C0808
+PurpleBlobBg          = #140810
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #060404
+ConsoleFg             = #D82020
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #100C0C
+ScrollBarThumb        = #2A1C18
+ScrollBarThumbHover   = #D82020
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #70A060
+StatusWarning         = #D89020
+StatusError           = #FF1010
+StatusInfo            = #D82020
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #101808
+BgStatusWarn          = #221600
+BgStatusErr           = #220000
+BgStatusInfo          = #1E0808
+FgStatusOk            = #70A060
+FgStatusWarn          = #D89020
+FgStatusErr           = #FF1010
+FgStatusInfo          = #D82020

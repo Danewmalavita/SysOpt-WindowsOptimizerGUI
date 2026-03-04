@@ -1,4 +1,4 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Explorador de Carpeta" Height="680" Width="920"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
@@ -114,19 +114,19 @@
                     <TextBlock Text="🔍" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="Explorador de Carpeta" FontSize="15" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
+                    <TextBlock Text="$(T 'FolderScannerTitle' 'Explorador de Carpeta')" FontSize="15" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
                     <TextBlock Name="fsPathLabel" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border CornerRadius="6" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" Padding="10,5" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Total: " FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"/>
+                            <TextBlock Text="$(T 'FsFolderTotal' 'Total: ')" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"/>
                             <TextBlock Name="fsTotalSize" Text="—" FontSize="11" FontWeight="Bold" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')"/>
                         </StackPanel>
                     </Border>
                     <Border CornerRadius="6" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" Padding="10,5">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Archivos: " FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"/>
+                            <TextBlock Text="$(T 'FsFolderFiles' 'Archivos: ')" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"/>
                             <TextBlock Name="fsFileCount" Text="—" FontSize="11" FontWeight="Bold" Foreground="$(Get-TC 'AccentGreen' '#4AE896')"/>
                         </StackPanel>
                     </Border>
@@ -151,11 +151,11 @@
                 <TextBlock Name="fsFilterHint" Grid.Column="0"
                            Text="  🔎  Filtrar por nombre…" FontSize="11" Foreground="$(Get-TC 'BorderHover' '#4A5068')"
                            VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0"/>
-                <TextBlock Grid.Column="1" Text="Ordenar:" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" VerticalAlignment="Center" Margin="10,0,6,0"/>
+                <TextBlock Grid.Column="1" Text="$(T 'FsSortLabel' 'Ordenar:')" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" VerticalAlignment="Center" Margin="10,0,6,0"/>
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Name="fsSortSize"  Content="Tamaño ↓" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Margin="0,0,4,0" FontSize="10"/>
-                    <Button Name="fsSortName"  Content="Nombre"   Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,4,0" FontSize="10"/>
-                    <Button Name="fsSortExt"   Content="Extensión" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" FontSize="10"/>
+                    <Button Name="fsSortSize"  Content="$(T 'FsSortSize' 'Tamaño ↓')" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Margin="0,0,4,0" FontSize="10"/>
+                    <Button Name="fsSortName"  Content="$(T 'FsSortName' 'Nombre')"   Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,4,0" FontSize="10"/>
+                    <Button Name="fsSortExt"   Content="$(T 'FsSortExt' 'Extensión')" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" FontSize="10"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -178,10 +178,10 @@
                             <ColumnDefinition Width="180"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="" Padding="8,6"/>
-                        <TextBlock Grid.Column="1" Text="Nombre" FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6"/>
-                        <TextBlock Grid.Column="2" Text="Tamaño"   FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6" TextAlignment="Right"/>
-                        <TextBlock Grid.Column="3" Text="Ext."     FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6" TextAlignment="Center"/>
-                        <TextBlock Grid.Column="4" Text="Modificado" FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6"/>
+                        <TextBlock Grid.Column="1" Text="$(T 'FsColName' 'Nombre')" FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6"/>
+                        <TextBlock Grid.Column="2" Text="$(T 'FsColSize' 'Tamaño')"   FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6" TextAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Text="$(T 'FsColExt' 'Ext.')"     FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6" TextAlignment="Center"/>
+                        <TextBlock Grid.Column="4" Text="$(T 'FsColModified' 'Modificado')" FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6"/>
                     </Grid>
                 </Border>
                 <!-- Filas de archivos -->
@@ -192,10 +192,10 @@
                          SelectionMode="Single">
                     <ListBox.ContextMenu>
                         <ContextMenu>
-                            <MenuItem Name="fsCtxPreview"  Header="👁  Vista previa / Abrir archivo"/>
-                            <MenuItem Name="fsCtxLocation" Header="📂  Ir a la ubicación"/>
+                            <MenuItem Name="fsCtxPreview"  Header="👁  $(T 'FsCtxPreview' 'Vista previa / Abrir archivo')"/>
+                            <MenuItem Name="fsCtxLocation" Header="📂  $(T 'FsCtxLocation' 'Ir a la ubicación')"/>
                             <Separator/>
-                            <MenuItem Name="fsCtxDelete"   Header="🗑  Eliminar archivo" Style="{StaticResource MIDanger}"/>
+                            <MenuItem Name="fsCtxDelete"   Header="🗑  $(T 'FsCtxDelete' 'Eliminar archivo')" Style="{StaticResource MIDanger}"/>
                         </ContextMenu>
                     </ListBox.ContextMenu>
                     <ListBox.ItemContainerStyle>
@@ -275,7 +275,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
-                    <TextBlock Name="fsScanStatus" Text="Iniciando escaneo…" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,0,4"/>
+                    <TextBlock Name="fsScanStatus" Text="$(T 'FsScanStarting' 'Iniciando escaneo…')" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,0,4"/>
                     <ProgressBar Name="fsScanProgress" IsIndeterminate="True" Height="5"/>
                 </StackPanel>
                 <TextBlock Name="fsScanCount" Grid.Column="1" Text="" FontSize="10" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')"
@@ -290,7 +290,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBlock Name="fsSelInfo" Grid.Column="0" Text="" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" VerticalAlignment="Center"/>
-            <Button Name="fsBtnClose" Grid.Column="1" Content="Cerrar"
+            <Button Name="fsBtnClose" Grid.Column="1" Content="$(T 'BtnClose' 'Cerrar')"
                     Background="$(Get-TC 'BtnDangerBg' '#2E0E14')" BorderBrush="$(Get-TC 'BtnDangerFg' '#FF4D6A')" Foreground="$(Get-TC 'BtnDangerFg' '#FF4D6A')"
                     MinWidth="90"/>
         </Grid>

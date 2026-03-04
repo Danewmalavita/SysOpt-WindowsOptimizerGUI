@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — portal.theme
+# Inspirado en Portal — azul y naranja portales, blanco Aperture, gris ciencia
+
+[meta]
+Name        = Portal — Aperture Science
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #080C10
+BgCard                = #101820
+BgInput               = #182028
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #243040
+BorderActive          = #0088FF
+BorderHover           = #303848
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #0088FF
+AccentCyan            = #FF6600
+AccentAmber           = #FFB000
+AccentRed             = #FF2020
+AccentGreen           = #40E0A0
+AccentPurple          = #8050D8
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #D0E8FF
+TextSecondary         = #7898B0
+TextMuted             = #405868
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #0088FF
+ProgressEnd           = #FF6600
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #003068
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #0088FF
+BtnPrimaryHover       = #0088FF
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #182028
+BtnSecondaryFg        = #7898B0
+BtnSecondaryBorder    = #243040
+BtnSecondaryHover     = #243040
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #301C00
+BtnCyanFg             = #FF6600
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #2C2000
+BtnAmberFg            = #FFB000
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #280808
+BtnDangerFg           = #FF2020
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #182028
+BtnGhostBorder        = #243040
+BtnGhostFg            = #405868
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #182028
+HdrBtnBorder          = #243040
+HdrBtnHover           = #243040
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #0E2030
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #1A2C48
+ComboSelected         = #203858
+ComboSelectedFg       = #0088FF
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #182838
+CtxSepFill            = #243040
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #182028
+DetailBorder          = #243040
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #101820
+TabHoverBg            = #182028
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0C1218
+PurpleBlobBg          = #100C20
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #060A0E
+ConsoleFg             = #0088FF
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #101820
+ScrollBarThumb        = #243040
+ScrollBarThumbHover   = #0088FF
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #40E0A0
+StatusWarning         = #FFB000
+StatusError           = #FF2020
+StatusInfo            = #0088FF
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #082818
+BgStatusWarn          = #201800
+BgStatusErr           = #200808
+BgStatusInfo          = #082038
+FgStatusOk            = #40E0A0
+FgStatusWarn          = #FFB000
+FgStatusErr           = #FF2020
+FgStatusInfo          = #0088FF

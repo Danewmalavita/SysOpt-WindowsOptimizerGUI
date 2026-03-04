@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — overwatch.theme
+# Inspirado en Overwatch — naranja logo, azul cielo, blanco futuro
+
+[meta]
+Name        = Overwatch — Heroes Never Die
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #C8D8F0
+BgCard                = #E8F2FF
+BgInput               = #B0C4E8
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #8098C8
+BorderActive          = #E87820
+BorderHover           = #6080B8
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #E87820
+AccentCyan            = #2080D8
+AccentAmber           = #D06000
+AccentRed             = #C81020
+AccentGreen           = #20A850
+AccentPurple          = #7020B8
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #030810
+TextSecondary         = #0C2240
+TextMuted             = #344870
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #E87820
+ProgressEnd           = #2080D8
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #E87820
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #C05A10
+BtnPrimaryHover       = #C05A10
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #C8D8F0
+BtnSecondaryFg        = #0C2240
+BtnSecondaryBorder    = #8098C8
+BtnSecondaryHover     = #A8C0E0
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #A8CCF0
+BtnCyanFg             = #002858
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #F0D898
+BtnAmberFg            = #482400
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #F0AAAA
+BtnDangerFg           = #5A0008
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #C0D0EC
+BtnGhostBorder        = #7890C0
+BtnGhostFg            = #283858
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #C8D8F0
+HdrBtnBorder          = #8098C8
+HdrBtnHover           = #B0C4E0
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #A8C8E8
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #A8C4F0
+ComboSelected         = #90B4E8
+ComboSelectedFg       = #8A3A00
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #A8BCE8
+CtxSepFill            = #8098C8
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #D0E0F8
+DetailBorder          = #8098C8
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #E8F2FF
+TabHoverBg            = #D0E0F8
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #D8E8F8
+PurpleBlobBg          = #D8C8F0
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #B8C8E8
+ConsoleFg             = #8A3A00
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #B8C8E0
+ScrollBarThumb        = #6880B0
+ScrollBarThumbHover   = #3858A8
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #20A850
+StatusWarning         = #D06000
+StatusError           = #C81020
+StatusInfo            = #2080D8
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #B8E8CC
+BgStatusWarn          = #F0DCA0
+BgStatusErr           = #F0B0B0
+BgStatusInfo          = #B0D0F8
+FgStatusOk            = #20A850
+FgStatusWarn          = #D06000
+FgStatusErr           = #C81020
+FgStatusInfo          = #2080D8

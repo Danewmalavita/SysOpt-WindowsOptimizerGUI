@@ -1,0 +1,49 @@
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="$(T 'AboutChangelogTitle' 'Registro de cambios')" Width="680" Height="580"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="$(Get-TC 'BgDeep' '#0D0F1A')" WindowStyle="SingleBorderWindow">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" FontFamily="Segoe UI" FontSize="18" FontWeight="Bold"
+                   Foreground="$(Get-TC 'TextPrimary' '#E8EAF6')" Margin="0,0,0,14">
+            <Run Text="📋  "/><Run Text="$(T 'AboutChangelogTitle' 'Registro de cambios')"/>
+        </TextBlock>
+
+        <!-- Content -->
+        <Border Grid.Row="1" CornerRadius="8" Background="$(Get-TC 'BgCard' '#161925')" Padding="16">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="txtCLContent" FontFamily="Consolas" FontSize="11"
+                           Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" TextWrapping="Wrap"
+                           LineHeight="18"/>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Close button -->
+        <Button x:Name="btnCLClose" Grid.Row="2" Content="$(T 'BtnClose' 'Cerrar')"
+                Width="120" Height="34" Margin="0,14,0,0" HorizontalAlignment="Center"
+                Background="$(Get-TC 'HdrBtnBg' '#1A2040')" BorderBrush="$(Get-TC 'AccentBlue' '#5BA3FF')"
+                BorderThickness="1" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')"
+                FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold" Cursor="Hand">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" CornerRadius="8" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="$(Get-TC 'HdrBtnHover' '#253060')"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+    </Grid>
+</Window>

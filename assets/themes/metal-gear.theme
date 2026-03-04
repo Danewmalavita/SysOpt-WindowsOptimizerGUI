@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — metal-gear.theme
+# Inspirado en Metal Gear Solid — verde sigilo, gris acero, rojo alerta
+
+[meta]
+Name        = Metal Gear Solid — Sneaking
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #060808
+BgCard                = #0C1010
+BgInput               = #141818
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #1E2A24
+BorderActive          = #48A870
+BorderHover           = #283830
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #48A870
+AccentCyan            = #70D0A8
+AccentAmber           = #C8A030
+AccentRed             = #E83010
+AccentGreen           = #48A870
+AccentPurple          = #8058A8
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #C8DDD0
+TextSecondary         = #688878
+TextMuted             = #3C5448
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #48A870
+ProgressEnd           = #E83010
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #143C28
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #48A870
+BtnPrimaryHover       = #48A870
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #141818
+BtnSecondaryFg        = #688878
+BtnSecondaryBorder    = #1E2A24
+BtnSecondaryHover     = #1E2A24
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #0C2820
+BtnCyanFg             = #70D0A8
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #261C00
+BtnAmberFg            = #C8A030
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #280800
+BtnDangerFg           = #E83010
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #141818
+BtnGhostBorder        = #1E2A24
+BtnGhostFg            = #3C5448
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #141818
+HdrBtnBorder          = #1E2A24
+HdrBtnHover           = #1E2A24
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #0E1E18
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #182E24
+ComboSelected         = #1E3A2C
+ComboSelectedFg       = #48A870
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #142820
+CtxSepFill            = #1E2A24
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #141818
+DetailBorder          = #1E2A24
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #0C1010
+TabHoverBg            = #141818
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #080C0A
+PurpleBlobBg          = #0C0818
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #040608
+ConsoleFg             = #48A870
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #0C1010
+ScrollBarThumb        = #1E2A24
+ScrollBarThumbHover   = #48A870
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #48A870
+StatusWarning         = #C8A030
+StatusError           = #E83010
+StatusInfo            = #70D0A8
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #0C2018
+BgStatusWarn          = #201800
+BgStatusErr           = #200600
+BgStatusInfo          = #0E2820
+FgStatusOk            = #48A870
+FgStatusWarn          = #C8A030
+FgStatusErr           = #E83010
+FgStatusInfo          = #70D0A8

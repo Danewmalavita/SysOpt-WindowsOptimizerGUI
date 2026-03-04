@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — the-witcher.theme
+# Inspirado en The Witcher — plata de brujo, rojo sangre, verde veneno mutagénico
+
+[meta]
+Name        = The Witcher — Wolf School
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #080A06
+BgCard                = #101408
+BgInput               = #181C10
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #282E18
+BorderActive          = #C0C8B0
+BorderHover           = #384028
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #C0C8B0
+AccentCyan            = #80CC60
+AccentAmber           = #C8B040
+AccentRed             = #CC3020
+AccentGreen           = #80CC60
+AccentPurple          = #9060A0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #DDE8D0
+TextSecondary         = #90A078
+TextMuted             = #586048
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #C0C8B0
+ProgressEnd           = #80CC60
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #384838
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #C0C8B0
+BtnPrimaryHover       = #C0C8B0
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #181C10
+BtnSecondaryFg        = #90A078
+BtnSecondaryBorder    = #282E18
+BtnSecondaryHover     = #282E18
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #0E2008
+BtnCyanFg             = #80CC60
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #282000
+BtnAmberFg            = #C8B040
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #260C08
+BtnDangerFg           = #CC3020
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #181C10
+BtnGhostBorder        = #282E18
+BtnGhostFg            = #586048
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #181C10
+HdrBtnBorder          = #282E18
+HdrBtnHover           = #282E18
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #101C08
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #202810
+ComboSelected         = #2A3418
+ComboSelectedFg       = #C0C8B0
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #1C2810
+CtxSepFill            = #282E18
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #181C10
+DetailBorder          = #282E18
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #101408
+TabHoverBg            = #181C10
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0C1008
+PurpleBlobBg          = #140C18
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #060804
+ConsoleFg             = #80CC60
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #101408
+ScrollBarThumb        = #282E18
+ScrollBarThumbHover   = #C0C8B0
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #80CC60
+StatusWarning         = #C8B040
+StatusError           = #CC3020
+StatusInfo            = #C0C8B0
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #0E2208
+BgStatusWarn          = #201A00
+BgStatusErr           = #1E0800
+BgStatusInfo          = #1C2018
+FgStatusOk            = #80CC60
+FgStatusWarn          = #C8B040
+FgStatusErr           = #CC3020
+FgStatusInfo          = #C0C8B0

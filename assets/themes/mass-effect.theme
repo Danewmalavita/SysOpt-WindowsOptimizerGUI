@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — mass-effect.theme
+# Inspirado en Mass Effect — azul omni-tool, negro espacial, naranja N7
+
+[meta]
+Name        = Mass Effect — N7
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #06080E
+BgCard                = #0C1018
+BgInput               = #121820
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #1C2840
+BorderActive          = #00A8E8
+BorderHover           = #263450
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #00A8E8
+AccentCyan            = #40D8FF
+AccentAmber           = #FF6600
+AccentRed             = #CC1030
+AccentGreen           = #40D8B0
+AccentPurple          = #9060E8
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #D0E8F8
+TextSecondary         = #7898B8
+TextMuted             = #405870
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #00A8E8
+ProgressEnd           = #40D8FF
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #003858
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #00A8E8
+BtnPrimaryHover       = #00A8E8
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #121820
+BtnSecondaryFg        = #7898B8
+BtnSecondaryBorder    = #1C2840
+BtnSecondaryHover     = #1C2840
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #002838
+BtnCyanFg             = #40D8FF
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #2A1800
+BtnAmberFg            = #FF6600
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #220010
+BtnDangerFg           = #CC1030
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #121820
+BtnGhostBorder        = #1C2840
+BtnGhostFg            = #405870
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #121820
+HdrBtnBorder          = #1C2840
+HdrBtnHover           = #1C2840
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #0A1E28
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #162438
+ComboSelected         = #1C3050
+ComboSelectedFg       = #00A8E8
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #142038
+CtxSepFill            = #1C2840
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #121820
+DetailBorder          = #1C2840
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #0C1018
+TabHoverBg            = #121820
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #080C14
+PurpleBlobBg          = #100820
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #040608
+ConsoleFg             = #00A8E8
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #0C1018
+ScrollBarThumb        = #1C2840
+ScrollBarThumbHover   = #00A8E8
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #40D8B0
+StatusWarning         = #FF6600
+StatusError           = #CC1030
+StatusInfo            = #00A8E8
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #082820
+BgStatusWarn          = #201000
+BgStatusErr           = #1C0008
+BgStatusInfo          = #082038
+FgStatusOk            = #40D8B0
+FgStatusWarn          = #FF6600
+FgStatusErr           = #CC1030
+FgStatusInfo          = #00A8E8

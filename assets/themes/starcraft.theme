@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — starcraft.theme
+# Inspirado en StarCraft — azul Terran, morado Protoss, verde Zerg
+
+[meta]
+Name        = StarCraft — Terran Command
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #060810
+BgCard                = #0C1020
+BgInput               = #141828
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #1C2840
+BorderActive          = #4080FF
+BorderHover           = #243450
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #4080FF
+AccentCyan            = #20D8A0
+AccentAmber           = #D8A820
+AccentRed             = #E03030
+AccentGreen           = #20D8A0
+AccentPurple          = #C050FF
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #C8D8F8
+TextSecondary         = #6880A8
+TextMuted             = #3A4C70
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #4080FF
+ProgressEnd           = #C050FF
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #102860
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #4080FF
+BtnPrimaryHover       = #4080FF
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #141828
+BtnSecondaryFg        = #6880A8
+BtnSecondaryBorder    = #1C2840
+BtnSecondaryHover     = #1C2840
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #082820
+BtnCyanFg             = #20D8A0
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #261C00
+BtnAmberFg            = #D8A820
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #240808
+BtnDangerFg           = #E03030
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #141828
+BtnGhostBorder        = #1C2840
+BtnGhostFg            = #3A4C70
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #141828
+HdrBtnBorder          = #1C2840
+HdrBtnHover           = #1C2840
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #0A2030
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #162040
+ComboSelected         = #1E2E58
+ComboSelectedFg       = #4080FF
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #141C40
+CtxSepFill            = #1C2840
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #141828
+DetailBorder          = #1C2840
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #0C1020
+TabHoverBg            = #141828
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #080C18
+PurpleBlobBg          = #100820
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #040608
+ConsoleFg             = #4080FF
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #0C1020
+ScrollBarThumb        = #1C2840
+ScrollBarThumbHover   = #4080FF
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #20D8A0
+StatusWarning         = #D8A820
+StatusError           = #E03030
+StatusInfo            = #4080FF
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #082818
+BgStatusWarn          = #201800
+BgStatusErr           = #1E0608
+BgStatusInfo          = #0C2048
+FgStatusOk            = #20D8A0
+FgStatusWarn          = #D8A820
+FgStatusErr           = #E03030
+FgStatusInfo          = #4080FF

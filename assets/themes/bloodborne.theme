@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — bloodborne.theme
+# Inspirado en Bloodborne — dorado victoriano, sangre carmesí, negro gothic Yharnam
+
+[meta]
+Name        = Bloodborne — Yharnam
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #080606
+BgCard                = #120C08
+BgInput               = #1A1008
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #2E1C10
+BorderActive          = #C89040
+BorderHover           = #422818
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #C89040
+AccentCyan            = #E8D090
+AccentAmber           = #FF8800
+AccentRed             = #880010
+AccentGreen           = #608050
+AccentPurple          = #7040A0
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #E0CCA8
+TextSecondary         = #987050
+TextMuted             = #664830
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #C89040
+ProgressEnd           = #880010
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #483000
+BtnPrimaryFg          = #F0DCA0
+BtnPrimaryBorder      = #C89040
+BtnPrimaryHover       = #C89040
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #1A1008
+BtnSecondaryFg        = #987050
+BtnSecondaryBorder    = #2E1C10
+BtnSecondaryHover     = #2E1C10
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #2A1C00
+BtnCyanFg             = #E8D090
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #301400
+BtnAmberFg            = #FF8800
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #1C0000
+BtnDangerFg           = #880010
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #1A1008
+BtnGhostBorder        = #2E1C10
+BtnGhostFg            = #664830
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #1A1008
+HdrBtnBorder          = #2E1C10
+HdrBtnHover           = #2E1C10
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #141010
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #261808
+ComboSelected         = #342208
+ComboSelectedFg       = #C89040
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #221408
+CtxSepFill            = #2E1C10
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #1A1008
+DetailBorder          = #2E1C10
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #120C08
+TabHoverBg            = #1A1008
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0E0A06
+PurpleBlobBg          = #140810
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #060402
+ConsoleFg             = #C89040
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #120C08
+ScrollBarThumb        = #2E1C10
+ScrollBarThumbHover   = #C89040
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #608050
+StatusWarning         = #FF8800
+StatusError           = #880010
+StatusInfo            = #C89040
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #0E1808
+BgStatusWarn          = #241200
+BgStatusErr           = #180000
+BgStatusInfo          = #201400
+FgStatusOk            = #608050
+FgStatusWarn          = #FF8800
+FgStatusErr           = #880010
+FgStatusInfo          = #C89040

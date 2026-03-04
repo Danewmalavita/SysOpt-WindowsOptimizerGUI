@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — league-of-legends.theme
+# Inspirado en League of Legends — dorado Rito, azul real, negro abismo
+
+[meta]
+Name        = League of Legends — Summoner's Rift
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #060608
+BgCard                = #0C0E14
+BgInput               = #14161E
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #1E2030
+BorderActive          = #C89A40
+BorderHover           = #2A2C40
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #C89A40
+AccentCyan            = #60B8E8
+AccentAmber           = #E8A820
+AccentRed             = #C02030
+AccentGreen           = #50B870
+AccentPurple          = #A050D8
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #E0D8C0
+TextSecondary         = #908060
+TextMuted             = #5C5040
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #C89A40
+ProgressEnd           = #60B8E8
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #4A3200
+BtnPrimaryFg          = #F0DCA0
+BtnPrimaryBorder      = #C89A40
+BtnPrimaryHover       = #C89A40
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #14161E
+BtnSecondaryFg        = #908060
+BtnSecondaryBorder    = #1E2030
+BtnSecondaryHover     = #1E2030
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #0A1E30
+BtnCyanFg             = #60B8E8
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #2C1C00
+BtnAmberFg            = #E8A820
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #280810
+BtnDangerFg           = #C02030
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #14161E
+BtnGhostBorder        = #1E2030
+BtnGhostFg            = #5C5040
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #14161E
+HdrBtnBorder          = #1E2030
+HdrBtnHover           = #1E2030
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #101020
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #1E1C30
+ComboSelected         = #2A2840
+ComboSelectedFg       = #C89A40
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #1A1828
+CtxSepFill            = #1E2030
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #14161E
+DetailBorder          = #1E2030
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #0C0E14
+TabHoverBg            = #14161E
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #080A10
+PurpleBlobBg          = #0E0818
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #040406
+ConsoleFg             = #C89A40
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #0C0E14
+ScrollBarThumb        = #1E2030
+ScrollBarThumbHover   = #C89A40
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #50B870
+StatusWarning         = #E8A820
+StatusError           = #C02030
+StatusInfo            = #60B8E8
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #0E1E10
+BgStatusWarn          = #221800
+BgStatusErr           = #1E0810
+BgStatusInfo          = #0A1C30
+FgStatusOk            = #50B870
+FgStatusWarn          = #E8A820
+FgStatusErr           = #C02030
+FgStatusInfo          = #60B8E8

@@ -1,0 +1,97 @@
+﻿# SysOpt Theme — spyro.theme
+# Inspirado en Spyro the Dragon — púrpura mágico, fuego dorado, mundos de ensueño
+
+[meta]
+Name        = Spyro the Dragon
+Author      = Danew Malavita
+Version     = 1.0
+
+[colors]
+# ── Fondos ────────────────────────────────────────────────────────────────────
+BgDeep                = #0D0818
+BgCard                = #150F28
+BgInput               = #1C1535
+# ── Bordes ────────────────────────────────────────────────────────────────────
+BorderSubtle          = #2E2450
+BorderActive          = #C87CFF
+BorderHover           = #3A2E60
+# ── Acentos ───────────────────────────────────────────────────────────────────
+AccentBlue            = #C87CFF
+AccentCyan            = #FFD700
+AccentAmber           = #FF8C00
+AccentRed             = #FF4488
+AccentGreen           = #50E8C0
+AccentPurple          = #8844CC
+# ── Texto ─────────────────────────────────────────────────────────────────────
+TextPrimary           = #EDE0FF
+TextSecondary         = #A890CC
+TextMuted             = #6850A0
+# ── Progreso ──────────────────────────────────────────────────────────────────
+ProgressStart         = #C87CFF
+ProgressEnd           = #FFD700
+# ── Botón Primario ───────────────────────────────────────────────────────────
+BtnPrimaryBg          = #4A1A8A
+BtnPrimaryFg          = #FFFFFF
+BtnPrimaryBorder      = #C87CFF
+BtnPrimaryHover       = #C87CFF
+# ── Botón Secundario ─────────────────────────────────────────────────────────
+BtnSecondaryBg        = #1C1535
+BtnSecondaryFg        = #A890CC
+BtnSecondaryBorder    = #2E2450
+BtnSecondaryHover     = #2E2450
+# ── Botón Cyan ────────────────────────────────────────────────────────────────
+BtnCyanBg             = #1A2E28
+BtnCyanFg             = #50E8C0
+# ── Botón Amber ───────────────────────────────────────────────────────────────
+BtnAmberBg            = #2E2000
+BtnAmberFg            = #FFD700
+# ── Botón Danger ─────────────────────────────────────────────────────────────
+BtnDangerBg           = #2E0820
+BtnDangerFg           = #FF4488
+# ── Botón Ghost ──────────────────────────────────────────────────────────────
+BtnGhostBg            = #1C1535
+BtnGhostBorder        = #2E2450
+BtnGhostFg            = #6850A0
+# ── Botones mini cabecera ────────────────────────────────────────────────────
+HdrBtnBg              = #1C1535
+HdrBtnBorder          = #2E2450
+HdrBtnHover           = #2E2450
+# ── Elementos especiales ─────────────────────────────────────────────────────
+DryRunBg              = #1A0E30
+# ── ComboBox ─────────────────────────────────────────────────────────────────
+ComboHover            = #241840
+ComboSelected         = #301E58
+ComboSelectedFg       = #C87CFF
+# ── ContextMenu ──────────────────────────────────────────────────────────────
+CtxHover              = #201440
+CtxSepFill            = #2E2450
+# ── Listas y paneles ─────────────────────────────────────────────────────────
+LbItemHover           = #1C1535
+DetailBorder          = #2E2450
+# ── TabControl ───────────────────────────────────────────────────────────────
+TabSelectedBg         = #150F28
+TabHoverBg            = #1C1535
+# ── Fondos secundarios ───────────────────────────────────────────────────────
+BgCardDark            = #0F0A20
+PurpleBlobBg          = #1A0828
+# ── Consola / Output ─────────────────────────────────────────────────────────
+ConsoleBg             = #080510
+ConsoleFg             = #C87CFF
+# ── Scrollbar ─────────────────────────────────────────────────────────────────
+ScrollBarTrack        = #150F28
+ScrollBarThumb        = #2E2450
+ScrollBarThumbHover   = #C87CFF
+# ── Estados ───────────────────────────────────────────────────────────────────
+StatusSuccess         = #50E8C0
+StatusWarning         = #FFD700
+StatusError           = #FF4488
+StatusInfo            = #C87CFF
+# ── Badges ───────────────────────────────────────────────────────────────────
+BgStatusOk            = #0E2820
+BgStatusWarn          = #2A2000
+BgStatusErr           = #2A0818
+BgStatusInfo          = #1E1040
+FgStatusOk            = #50E8C0
+FgStatusWarn          = #FFD700
+FgStatusErr           = #FF4488
+FgStatusInfo          = #C87CFF
