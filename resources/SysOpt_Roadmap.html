@@ -715,7 +715,7 @@
     <div>
       <div class="dev-banner-title">Estado actual — v3.2.0 (Dev) en desarrollo / Base estable v2.5.0</div>
       <div class="dev-banner-desc">
-        <code>SysOpt v3.2.0 (Dev)</code> incluye 33 temas visuales, soporte multiidioma (ES/EN/PT-BR), 9 DLLs modulares,
+        <code>SysOpt v3.2.0 (Dev)</code> incluye 33 temas visuales, soporte multiidioma (ES/EN/PT-BR), 8 DLLs modulares,
         ventana de opciones y nuevas DLLs modulares (<code>SysOpt.Core.dll</code>, <code>SysOpt.ThemeEngine.dll</code>).
         La estrategia dual de tematización cubre 293 bindings DynamicResource + 298 llamadas Get-TC en UI dinámica.
         Próximos objetivos: CancellationToken unificado, abstracción de capa de datos y notificaciones Toast.
@@ -791,7 +791,7 @@
       <div class="bug-id fixed">FIX · ADD_CLOSED</div>
       <div class="bug-name">Cleanup incompleto al cerrar la ventana</div>
       <div class="bug-desc">El evento <code>Add_Closed</code> no liberaba las nuevas variables del refactor de closure, dejando objetos vivos al relanzar.</div>
-      <div class="bug-fix">FIX: Dispose de <code>$script:DiskScanPS</code>, null de <code>$script:DiskScanAsync</code>, y cleanup completo de todos los contextos async (v3.2.0: ActivePowershell, load/csv/html/save contexts, <code>[Environment]::Exit(0)</code>).</div>
+      <div class="bug-fix">FIX: Dispose de <code>$script:DiskScanPS</code> y null de <code>$script:DiskScanAsync</code> añadidos al handler de cierre.</div>
     </div>
 
   </div>
@@ -983,7 +983,7 @@
 
   <!-- ── SECCIÓN: Cambios v3.2.0 Dev ── -->
   <div class="section-label">Implementado en v3.2.0 (Dev)</div>
-  <div class="section-title">⚡ Externalización a DLLs + Toggle Win11 + 68 Temas</div>
+  <div class="section-title">⚡ Externalización a DLLs + Toggle Win11 + 33 Temas</div>
   <div class="bugs-grid">
 
     <div class="bug-card" style="border-top-color:var(--green)">
@@ -1009,9 +1009,9 @@
 
     <div class="bug-card" style="border-top-color:var(--cyan)">
       <div class="bug-id" style="color:var(--cyan);background:rgba(46,223,191,.1)">[THEME] 33 TEMAS</div>
-      <div class="bug-name">68 temas preinstalados — expansión de 11 a 68</div>
+      <div class="bug-name">33 temas preinstalados — expansión de 11 a 33</div>
       <div class="bug-desc">Nuevos temas: Apple, AWS, Azure, Bloomberg, Cyberpunk, Diablo, Dracula, Figma, GitHub Dark, Kiss, Monokai, Notion, Office, PS5, Simpsons, Slack, Solarized Dark, Star Wars, Symphony of the Night, Ubuntu, Wall Street, Xbox, y más.</div>
-      <div class="bug-fix">IMPL: 68 archivos <code>.theme</code> en <code>.\assets\themes\</code>. Cada tema define ~27 claves de color.</div>
+      <div class="bug-fix">IMPL: 33 archivos <code>.theme</code> en <code>.\assets\themes\</code>. Cada tema define ~27 claves de color.</div>
     </div>
 
     <div class="bug-card" style="border-top-color:var(--cyan)">
@@ -1022,9 +1022,9 @@
     </div>
 
     <div class="bug-card" style="border-top-color:var(--blue)">
-      <div class="bug-id" style="color:var(--blue);background:rgba(91,163,255,.1)">[DBG] AUDITORÍA 9 DLLs</div>
-      <div class="bug-name">Debug muestra carga y estado de las 9 DLLs</div>
-      <div class="bug-desc">Splash de arranque con progreso 1/8 a 9/9. Auditoría en log: estado [OK]/[FALTA] de cada DLL. Auto-detección en disco de DLLs no cargadas con aviso <code>[EN DISCO NO CARGADA]</code>.</div>
+      <div class="bug-id" style="color:var(--blue);background:rgba(91,163,255,.1)">[DBG] AUDITORÍA 8 DLLs</div>
+      <div class="bug-name">Debug muestra carga y estado de las 8 DLLs</div>
+      <div class="bug-desc">Splash de arranque con progreso 1/8 a 8/8. Auditoría en log: estado [OK]/[FALTA] de cada DLL. Auto-detección en disco de DLLs no cargadas con aviso <code>[EN DISCO NO CARGADA]</code>.</div>
       <div class="bug-fix">IMPL: <code>$expectedDlls</code> con 9 guard types. Escaneo de <code>libs/*.dll</code> para detectar nuevas DLLs automáticamente.</div>
     </div>
 
@@ -1124,7 +1124,7 @@
           <li class="done-li">Import-Module en runspace de rendimiento</li>
           <li class="done-li">Update-SystemInfo asíncrono (no bloquea UI)</li>
           <li class="done-li">Fix closure $async → $script:DiskScanAsync</li>
-          <li class="done-li">Cleanup completo en Add_Closed — incluyendo [Environment]::Exit(0)</li>
+          <li class="done-li">Cleanup completo en Add_Closed</li>
         </ul>
       </div>
 
@@ -1204,7 +1204,7 @@
           <li class="done-li">[DLL] SysOpt.Diagnostics.dll — diagnóstico del sistema</li>
           <li class="done-li">[THEME] 33 temas preinstalados (+22 nuevos)</li>
           <li class="done-li">[UI] Toggle Win11 en opciones</li>
-          <li class="done-li">[DBG] Auditoría de 9 DLLs en debug</li>
+          <li class="done-li">[DBG] Auditoría de 8 DLLs en debug</li>
           <li class="done-li">[OPT] PS1 reducido 683 líneas (-9.9%)</li>
         </ul>
       </div>
@@ -1258,20 +1258,20 @@
             <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.0.0 Dev</span><span class="tag">C#</span><span class="tag">DLL</span><span class="tag">Add-Type</span><span class="tag">Arquitectura</span></div>
           </div>
         </div>
-        <div class="item-card done">
+        <div class="item-card">
           <div class="item-id-box">CTK</div>
           <div class="item-content">
             <div class="item-name">CancellationToken unificado</div>
-            <div class="item-desc"><code>ScanTokenManager</code> en <code>SysOpt.Core.dll</code> con <code>RequestNew()</code>, <code>Cancel()</code>, <code>Dispose()</code>. Bridge CTK→ScanCtl integrado. Cancelación limpia e inmediata en todos los runspaces.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.2.0</span><span class="tag">CancellationToken</span><span class="tag">Runspace</span><span class="tag">Performance</span></div>
+            <div class="item-desc">Único <code>CancellationTokenSource</code> global vinculado a <code>ScanControl.Stop</code>. Elimina el sleep polling de 150 ms en todos los runspaces y permite cancelación limpia e inmediata. Requiere refactorización de todos los loops async.</div>
+            <div class="item-tags"><span class="tag">CancellationToken</span><span class="tag">Runspace</span><span class="tag">Performance</span></div>
           </div>
         </div>
-        <div class="item-card done">
+        <div class="item-card">
           <div class="item-id-box">DAL</div>
           <div class="item-content">
             <div class="item-name">Abstracción de la capa de datos</div>
-            <div class="item-desc"><code>SystemDataCollector</code> en <code>SysOpt.Core.dll</code> con 13 WMI queries. <code>GetFullSnapshot()</code> → <code>SystemSnapshot</code>. Modelos puros: <code>CpuSnapshot</code>, <code>RamSnapshot</code>, <code>DiskSnapshot</code>, etc. Separación completa UI/Datos.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.2.0</span><span class="tag">WMI</span><span class="tag">CIM</span><span class="tag">Separación UI/Datos</span></div>
+            <div class="item-desc">Extraer toda la lógica WMI/CIM a funciones <code>Get-CpuData</code>, <code>Get-RamData</code>, <code>Get-DiskData</code> puras, separadas del rendering. Paso necesario para tests unitarios y mantenimiento escalable.</div>
+            <div class="item-tags"><span class="tag">WMI</span><span class="tag">CIM</span><span class="tag">Separación UI/Datos</span></div>
           </div>
         </div>
       </div>
@@ -1294,12 +1294,12 @@
             <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.1.0</span><span class="tag">Theming</span><span class="tag">DynamicResource</span><span class="tag">DLL</span></div>
           </div>
         </div>
-        <div class="item-card done">
+        <div class="item-card">
           <div class="item-id-box">C2</div>
           <div class="item-content">
             <div class="item-name">Notificaciones Toast nativas</div>
-            <div class="item-desc"><code>SysOpt.Toast.dll</code> (294 líneas C#) con <code>ToastManager</code> temático. Tipos: Success, Info, Warning, Error. Sincronización con tema activo vía <code>Sync-ToastTheme</code>. Toggle en OptionsWindow. Integrado en: optimización, exportación, diagnóstico, snapshots.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.2.0</span><span class="tag">Toast</span><span class="tag">DLL</span><span class="tag">UX</span></div>
+            <div class="item-desc">Usar <code>[Windows.UI.Notifications.ToastNotificationManager]</code> para notificaciones nativas al finalizar operaciones largas en background (exportación, escaneo, deduplicación).</div>
+            <div class="item-tags"><span class="tag">Toast</span><span class="tag">WinRT</span><span class="tag">UX</span></div>
           </div>
         </div>
         <div class="item-card">
@@ -1316,15 +1316,6 @@
             <div class="item-name">Plugin system para módulos externos</div>
             <div class="item-desc">Arquitectura de plugins que cargue módulos externos desde <code>.\plugins\</code>. Cada plugin declara nombre, descripción, icono y punto de entrada — la UI los integra automáticamente en la interfaz.</div>
             <div class="item-tags"><span class="tag">Plugin</span><span class="tag">Extensibilidad</span><span class="tag">Modular</span></div>
-          </div>
-        </div>
-      
-        <div class="item-card">
-          <div class="item-id-box">C3</div>
-          <div class="item-content">
-            <div class="item-name">Persistencia de configuración en JSON</div>
-            <div class="item-desc">Settings guardados en <code>%AppData%\SysOpt\settings.json</code>: idioma, tema, toggles, última sesión. Carga y guardado automático con fallback a defaults.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.1.0</span><span class="tag">JSON</span><span class="tag">Settings</span></div>
           </div>
         </div>
       </div>
@@ -1368,61 +1359,14 @@
 
   </div>
 
-
-  <div class="priority-block" style="border-left-color:var(--amber)">
-      <div class="priority-header">
-        <div class="priority-dot" style="background:var(--amber)"></div>
-        <div>
-          <div class="priority-label">Próximas Fases · En Planificación</div>
-          <div class="priority-title">🚀 Roadmap v3.3+ — Refactor y Nuevas Funcionalidades</div>
-        </div>
-      </div>
-      <div class="items-grid">
-        <div class="item-card">
-          <div class="item-id-box">2E</div>
-          <div class="item-content">
-            <div class="item-name">Refactor PS1 como Launcher (~2,500 líneas)</div>
-            <div class="item-desc">Reorganizar <code>SysOpt.ps1</code> de ~6,900 líneas a ~2,500: consolidar init, #regions, reducir funciones UI delegando a DLLs. Sub-pasos: 9a (regions), 9b (Init &amp; Paths), 9c (funciones UI), 9d (Event Wiring).</div>
-            <div class="item-tags"><span class="tag">Refactor</span><span class="tag">Arquitectura</span><span class="tag">PS1</span></div>
-          </div>
-        </div>
-        <div class="item-card">
-          <div class="item-id-box">ANI</div>
-          <div class="item-content">
-            <div class="item-name">Temas dinámicos / animados</div>
-            <div class="item-desc">Sección <code>[animation]</code> opcional en archivos .theme. Motor de animación en DLL con Canvas overlay: Matrix rain, star field, partículas, CRT scanlines. Pool de TextBlocks + toggle de usuario.</div>
-            <div class="item-tags"><span class="tag">Animation</span><span class="tag">Canvas</span><span class="tag">Theming</span><span class="tag">Performance</span></div>
-          </div>
-        </div>
-        <div class="item-card done">
-          <div class="item-id-box">EXT</div>
-          <div class="item-content">
-            <div class="item-name">Cierre completo de DLLs y subprocesos</div>
-            <div class="item-desc">Disposal de todos los contextos async (ActivePowershell, load/csv/html/save), GC agresivo, y <code>[Environment]::Exit(0)</code> tras <code>ShowDialog()</code>. Elimina proceso zombie al cerrar.</div>
-            <div class="item-tags"><span class="tag done-tag">✓ Completado en v3.2.0</span><span class="tag">Cleanup</span><span class="tag">Exit</span><span class="tag">Runspace</span></div>
-          </div>
-        </div>
-        <div class="item-card">
-          <div class="item-id-box">EGG</div>
-          <div class="item-content">
-            <div class="item-name">Easter egg — Atari Breakout</div>
-            <div class="item-desc">Tras pulsar 4 veces el logo en About (OptionsWindow), cargar un Atari Breakout embebido en WPF Canvas con físicas de bola, paddle y bloques destructibles.</div>
-            <div class="item-tags"><span class="tag">Easter Egg</span><span class="tag">Canvas</span><span class="tag">Fun</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-    <!-- ── Footer ── -->
+  <!-- ── Footer ── -->
   <footer>
-    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v3.2.0-STABLE · Arquitectura modular · 9 DLLs · 68 temas · 3 idiomas</p>
+    <p style="margin-bottom:12px;">SysOpt Windows Optimizer GUI — v3.2.0 (Dev) · Base estable v2.5.0 · Desarrollando hacia v3.x</p>
     <div>
       <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>v3.2.0 Dev</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>68 Temas + 9 DLLs</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>33 Temas + 8 DLLs</span>
       <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>Multiidioma ES/EN/PT</span>
-      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>9 DLLs modulares</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>8 DLLs modulares</span>
       <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>Ventana de Opciones</span>
       <span class="chip"><span class="chip-dot" style="background:var(--red)"></span>ComboBox theming</span>
       <span class="chip"><span class="chip-dot" style="background:var(--muted)"></span>PowerShell + WPF</span>

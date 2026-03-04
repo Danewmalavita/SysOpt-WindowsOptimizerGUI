@@ -1,0 +1,95 @@
+Este es mi proyecto, almacenalo de esta manera:
+Ordena los archivos de esta manera:
+├───SysOpt-WindowsOptimizerGUI-3.1.0-DEV
+│   ├───assets ---> Almacena los assets
+│   │   ├───img --> imagen de logo de programa y archivo .ico
+│   │   │   ├─── SysOpt.ico --> Icono de aplicación
+│   │   │   └─── sysopt.png --> logo mostrable en aplicación
+│   │   ├───lang --> bibliotecas de idiomas, para la traducción
+│   │   │   ├─── en-us.lang --> idioma inglés
+│   │   │   ├─── es-es.lang --> idioma español
+│   │   │   └─── pt-br.lang --> idioma portugués
+│   │   ├───templates --> Templates html para los informes
+│   │   │   └─── diskreport.html --> plantila html del programa
+│   │   ├───themes --> Ubicación de los archivos .theme de los temas
+│   │   │   ├─── apple.theme
+│   │   │   ├─── aws.theme
+│   │   │   ├─── azure.theme
+│   │   │   ├─── bloomberg.theme
+│   │   │   ├─── cyberpunk.theme
+│   │   │   ├─── default.theme
+│   │   │   ├─── default-light.theme
+│   │   │   ├─── diablo.theme
+│   │   │   ├─── dracula.theme
+│   │   │   ├─── figma.theme
+│   │   │   ├─── github-dark.theme
+│   │   │   ├─── iceblue.theme
+│   │   │   ├─── icecream.theme
+│   │   │   ├─── kiss.theme
+│   │   │   ├─── manga-japan.theme
+│   │   │   ├─── matrix.theme
+│   │   │   ├─── monokai.theme
+│   │   │   ├─── notion.theme
+│   │   │   ├─── office.theme
+│   │   │   ├─── pipboy.theme
+│   │   │   ├─── ps5.theme
+│   │   │   ├─── simpsons.theme
+│   │   │   ├─── slack.theme
+│   │   │   ├─── solarized-dark.theme
+│   │   │   ├─── starwars.theme
+│   │   │   ├─── symphony of the night.theme
+│   │   │   ├─── ubuntu.theme
+│   │   │   ├─── votorantim.theme
+│   │   │   ├─── votorantim2.theme
+│   │   │   ├─── wallstreet.theme
+│   │   │   ├─── windows.theme
+│   │   │   ├─── windows-light.theme
+│   │   │   └─── xbox.theme
+│   │   └───xaml --> Ubicación de las XAML
+│   │   │   ├─── AboutWindow.xaml
+│   │   │   ├─── DedupWindow.xaml
+│   │   │   ├─── DiagnosticWindow.xaml
+│   │   │   ├─── FolderScannerWindow.xaml
+│   │   │   ├─── MainWindow.xaml
+│   │   │   ├─── OptionsWindow.xaml
+│   │   │   ├─── SplashWindow.xaml
+│   │   │   ├─── StartupManagerWindow.xaml
+│   │   │   └─── TasksWindow.xaml
+│   ├───libs --> ubicación de los archivos dll
+│   │   ├───csproj --> ubicación de los archivos .cs de las dll sin compilar y ubicación del compilador
+│   │   │   ├─── DiskEngine.cs
+│   │   │   ├─── SysOpt.Diagnostics.cs
+│   │   │   ├─── SysOpt.Optimizer.cs
+│   │   │   ├─── SysOpt.StartupManager.cs
+│   │   │   ├─── MemoryHelper.cs
+│   │   │   ├─── SysOpt.Core.cs
+│   │   │   ├─── SysOpt.ThemeEngine.cs
+│   │   │   ├─── WseTrim.cs
+│   │   │   ├─── SysOpt.DiskEngine.csproj
+│   │   │   ├─── SysOpt.MemoryHelper.csproj
+│   │   │   ├─── SysOpt.WseTrim.csproj
+│   │   │   └─── compile-dlls.ps1 --> Compilador de las dll
+│   │   ├───x86 --> ubicación de las dll en arquitectura x86
+│   │   │   ├─── SysOpt.Core.dll
+│   │   │   ├─── SysOpt.Diagnostics.dll
+│   │   │   ├─── SysOpt.DiskEngine.dll
+│   │   │   ├─── SysOpt.MemoryHelper.dll
+│   │   │   ├─── SysOpt.Optimizer.dll
+│   │   │   ├─── SysOpt.StartupManager.dll
+│   │   │   ├─── SysOpt.ThemeEngine.dll
+│   │   │   └─── SysOpt.WseTrim.dll
+│   │   ├─── SysOpt.Core.dll
+│   │   ├─── SysOpt.Diagnostics.dll
+│   │   ├─── SysOpt.DiskEngine.dll
+│   │   ├─── SysOpt.MemoryHelper.dll
+│   │   ├─── SysOpt.Optimizer.dll
+│   │   ├─── SysOpt.StartupManager.dll
+│   │   ├─── SysOpt.ThemeEngine.dll
+│   │   └─── SysOpt.WseTrim.dll
+│   ├───logs --> almacenamiento de los logs del programa
+│   ├───output --> Almacenamiento de los informes emitidos por el programa
+│   ├───resources --> Recursos para la página de github
+│   ├───snapshots --> ubicación de los snapshot de disco duro
+│   ├───SysOpt.ps1 --> Programa inicial
+│   ├───README.MD --> Markdown para página de github
+│   └───SysOpt_Roadmap.html --> Roadmap del programa

@@ -7,69 +7,17 @@
 #>
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Metadatos de versión — mostrados en el About (Show-AboutWindow)
+# Metadatos de versión — cargados desde SysOpt.info (About en Opciones)
 # ─────────────────────────────────────────────────────────────────────────────
 $script:AppVersion = "3.2.0"
-$script:AppNotes   = @{
-    RequiresAdmin = $true
-    Cambios = [ordered]@{
-        "v3.2.0" = @{
-            Titulo = "CTK + DAL + Agent hooks en SysOpt.Core.dll"
-            Items  = @(
-                "[CTK] ScanTokenManager — CancellationToken global, reemplaza flag ScanCtl211.Stop",
-                "[CTK] RequestNew() + Cancel() + Dispose() en Add_Closed — cancelación limpia de runspaces",
-                "[DAL] SystemDataCollector — GetCpuSnapshot/GetRamSnapshot/GetDiskSnapshot/GetNetworkSnapshot/GetGpuSnapshot/GetPortSnapshot",
-                "[DAL] GetFullSnapshot() — SystemSnapshot completo serializable para modo agente",
-                "[DAL] Modelos puros: CpuSnapshot, RamSnapshot, DiskSnapshot, NetworkSnapshot, GpuSnapshot, PortSnapshot",
-                "[AGENT] AgentBus + IAgentTransport + AgentThresholds — hooks preparados, standalone safe",
-                "[DLL] compile-dlls.ps1 renovado — auto-descubre todos los .cs de .\libs\ con referencias correctas",
-                "[DLL] WseTrim cargado al inicio (junto al resto) en lugar de bajo demanda",
-                "[DLL] Load-SysOptDll helper unificado — un punto de carga para las 5 DLLs",
-                "[DLL] SysOpt.Optimizer.dll — 15 tareas de optimización en C#",
-                "[DLL] SysOpt.StartupManager.dll — gestión de inicio de Windows",
-                "[DLL] SysOpt.Diagnostics.dll — motor de diagnóstico del sistema",
-                "[THEME] 33 temas preinstalados (expansión de 11 a 33)",
-                "[UI] Toggle switch Win11 en ventana de opciones",
-                "[DBG] Auditoría y carga de 8 DLLs en debug/splash",
-                "[OPT] PS1 reducido de 6924 a ~6241 líneas (-9.9%)",
-                "[OPT] Compactación: $taskMap, reflexión $diagHash"
-            )
-        }
-        "v3.1.0" = @{
-            Titulo = "Temas visuales + Internacionalización + DLLs modulares"
-            Items  = @(
-                "[THEME] Sistema de temas dinámicos cargado desde .\assets\themes\ vía SysOpt.ThemeEngine.dll",
-                "[THEME] Barra de progreso animada al aplicar temas — parsing en runspace background",
-                "[THEME] 11 temas incluidos: Default Dark/Light, IceBlue, IceCream, Manga, Matrix, PipBoy, Simpsons, Votorantim, Windows Dark/Light",
-                "[I18N] Sistema de idiomas cargado desde .\assets\lang\ vía SysOpt.Core.dll (LangEngine)",
-                "[I18N] Idiomas incluidos: Español, English, Português (Brasil)",
-                "[I18N] Función T() — traducción centralizada con fallback al texto XAML original",
-                "[DLL] SysOpt.Core.dll — LangEngine + SettingsHelper compilados como ensamblado externo en .\libs\",
-                "[DLL] SysOpt.ThemeEngine.dll — ThemeEngine compilado como ensamblado externo en .\libs\",
-                "[UI] Botón ⚙ Opciones en la barra superior (entre Tareas y About)",
-                "[UI] Ventana de Opciones con selectores de tema e idioma + vista previa",
-                "[CFG] Tema e idioma seleccionados se persisten en settings.json (%APPDATA%\SysOpt)",
-                "[FIX] Símbolo © correcto en la ventana About (antes mostraba '(c)')"
-            )
-        }
-        "v3.0.0" = @{
-            Titulo = "DLL externos nativos + arquitectura modular"
-            Items  = @(
-                "[DLL] SysOpt.MemoryHelper.dll y SysOpt.DiskEngine.dll como ensamblados externos en .\libs\",
-                "[DLL] Eliminada la compilación inline C# — tipos cargados con Add-Type -Path una sola vez",
-                "[DLL] Guard de tipo compartido: DiskItem_v211, DiskItemToggle_v230, ScanCtl211, PScanner211",
-                "[ARCH] Ruta de libs normalizada a .\libs\ relativa al script (PSScriptRoot)"
-            )
-        }
-        "v2.5.0" = @{
-            Titulo = "Estabilidad + Deduplicación + TaskPool"
-            Items  = @(
-                "[LOG] Write-Log centralizado con rotación diaria y Mutex thread-safe",
-                "[ERR] Error boundary global: AppDomain + Dispatcher",
-                "[B5] Deduplicación SHA256 archivos >10 MB en background",
-                "[TASKPOOL] Panel de tareas async estilo torrent"
-            )
-        }
+# ── Metadatos de versión — cargados desde SysOpt.info ──
+$script:AppNotes = $null
+$_infoPath = Join-Path $PSScriptRoot "SysOpt.info"
+if (Test-Path $_infoPath) {
+    try {
+        $script:AppNotes = & ([scriptblock]::Create((Get-Content $_infoPath -Raw -Encoding UTF8)))
+    } catch {
+        Write-Warning "Error cargando SysOpt.info: $_"
     }
 }
 
@@ -82,6 +30,53 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName Microsoft.VisualBasic
 Add-Type -AssemblyName WindowsBase
 
+
+# ── Early i18n bootstrap (before DLLs) ──────────────────────────────
+# LangEngine lives in Core.dll which isn't loaded yet.  We parse the
+# .lang file with pure PowerShell so splash strings are translated.
+$script:LangDict       = @{}           # Diccionario clave→texto actual
+$script:LangDir        = Join-Path $PSScriptRoot "assets\lang"
+
+function global:T([string]$Key, [string]$Fallback = "") {
+    if ($script:LangDict -and $script:LangDict.Count -gt 0 -and $script:LangDict.ContainsKey($Key)) {
+        return $script:LangDict[$Key]
+    }
+    if ($Fallback) { return $Fallback }
+    return $Key
+}
+
+# Quick .lang parser (key = value) — replaced later by LangEngine
+function script:Bootstrap-Language {
+    $code = "es-es"   # default; will be overridden by Load-Settings later
+    $settingsPath = Join-Path $PSScriptRoot "config.json"
+    if (Test-Path $settingsPath) {
+        try {
+            $cfg = Get-Content $settingsPath -Raw | ConvertFrom-Json
+            if ($cfg.Language) { $code = $cfg.Language }
+        } catch {}
+    }
+    $langPath = Join-Path $script:LangDir "$code.lang"
+    if (-not (Test-Path $langPath)) { return }
+    $dict = @{}
+    foreach ($line in [System.IO.File]::ReadAllLines($langPath)) {
+        $line = $line.Trim()
+        if ($line -eq '' -or $line.StartsWith('#') -or $line.StartsWith('[')) { continue }
+        $idx = $line.IndexOf('=')
+        if ($idx -gt 0) {
+            $k = $line.Substring(0, $idx).Trim()
+            $v = $line.Substring($idx + 1).Trim()
+            # Remove surrounding quotes if present
+            if ($v.Length -ge 2 -and $v[0] -eq '"' -and $v[-1] -eq '"') {
+                $v = $v.Substring(1, $v.Length - 2)
+            }
+            $dict[$k] = $v
+        }
+    }
+    $script:LangDict = $dict
+    $script:CurrentLang = $code
+}
+Bootstrap-Language
+
 # ─────────────────────────────────────────────────────────────────────────────
 $splashXaml = [System.IO.File]::ReadAllText((Join-Path $PSScriptRoot "assets\xaml\SplashWindow.xaml"))
 $splashReader = [System.Xml.XmlNodeReader]::new([xml]$splashXaml)
@@ -91,14 +86,14 @@ $splashBar    = $splashWin.FindName("SplashBar")
 $splashWin.Show()
 [System.Windows.Forms.Application]::DoEvents()   # pump WPF sin necesitar runspace
 
-function Set-SplashProgress([int]$Pct, [string]$Msg = "") {
+function global:Set-SplashProgress([int]$Pct, [string]$Msg = "") {
     if ($Msg) { $splashMsg.Text = $Msg }
     # Anti-retroceso: solo avanzar, nunca retroceder
     $targetW = [math]::Round(408 * [math]::Min(100,$Pct) / 100)
     if ($targetW -gt $splashBar.Width) { $splashBar.Width = $targetW }
     [System.Windows.Forms.Application]::DoEvents()
 }
-Set-SplashProgress 10 "Cargando ensamblados .NET..."
+Set-SplashProgress 10 ((T "SplashLoadingAssemblies"))
 
 # =============================================================================
 # CARGA DE DLL EXTERNAS  —  todas en .\libs\  relativas a PSScriptRoot
@@ -150,58 +145,65 @@ function script:Load-SysOptDll {
 $script:_libsDir = Join-Path $PSScriptRoot "libs"
 
 # ── [DLL 1/7] MemoryHelper — Win32 P/Invoke para EmptyWorkingSet ─────────────
-Set-SplashProgress 10 "Cargando MemoryHelper..."
+Set-SplashProgress 10 ((T "SplashLoadingMemHelper"))
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.MemoryHelper.dll") `
                -GuardType "MemoryHelper" -Label "MemoryHelper" -Hard
 
 # ── [DLL 2/7] DiskEngine — modelos y escaner paralelo del Explorador ──────────
 # Contiene: DiskItem_v211, DiskItemToggle_v230, ScanCtl211, PScanner211
-Set-SplashProgress 17 "Cargando DiskEngine..."
+Set-SplashProgress 17 ((T "SplashLoadingDiskEngine"))
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.DiskEngine.dll") `
                -GuardType "DiskItem_v211" -Label "DiskEngine" -Hard
 
 # ── [DLL 3/7] Core — LangEngine + XamlLoader + CTK + DAL + AgentBus ──────────
 # v3.2.0: añade ScanTokenManager, SystemDataCollector, modelos de datos y AgentBus
-Set-SplashProgress 24 "Cargando Core (CTK + DAL)..."
+Set-SplashProgress 24 ((T "SplashLoadingCore"))
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.Core.dll") `
                -GuardType "LangEngine" -Label "Core" -Hard
 
 # ── [DLL 4/7] ThemeEngine — parser de archivos .theme ────────────────────────
-Set-SplashProgress 31 "Cargando ThemeEngine..."
+Set-SplashProgress 31 ((T "SplashLoadingThemeEngine"))
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.ThemeEngine.dll") `
                -GuardType "ThemeEngine" -Label "ThemeEngine" -Hard
 
 # ── [DLL 5/7] WseTrim — SetProcessWorkingSetSize para trim de Working Set ─────
 # Se carga aqui (inicio) en lugar de bajo demanda para errores tempranos visibles
-Set-SplashProgress 38 "Cargando WseTrim..."
+Set-SplashProgress 38 ((T "SplashLoadingWseTrim"))
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.WseTrim.dll") `
                -GuardType "WseTrim" -Label "WseTrim"
 # WseTrim es no-Hard: si falta el DLL la app sigue funcionando sin trim de WS
 
 # ── [DLL 6/7] Optimizer — OptimizerEngine + WUCacheManager + ProcessManager ──
 # Contiene: OptimizeOptions, OptimizeProgress, OptimizerEngine, WUCacheManager, ProcessManager
-Set-SplashProgress 45 "Cargando Optimizer..."
+Set-SplashProgress 45 ((T "SplashLoadingOptimizer"))
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.Optimizer.dll") `
                -GuardType "SysOpt.Optimizer.OptimizerEngine" -Label "Optimizer" 
 
 # ── [DLL 7/7] StartupManager — motor de gestión de programas de inicio ──────
 # Contiene: StartupEntry, ApplyResult, StartupEngine
-Set-SplashProgress 52 "Cargando StartupManager..."
+Set-SplashProgress 52 ((T "SplashLoadingStartupMgr"))
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.StartupManager.dll") `
                -GuardType "SysOpt.StartupManager.StartupEngine" -Label "StartupManager"
 
 # ── [DLL 8/8] Diagnostics — DiagnosticsEngine (análisis del sistema y puntuación) ──
 # Contiene: DiagInput, DiagItem, DiagResult, DiagnosticsEngine
-Set-SplashProgress 59 "Cargando Diagnostics..."
+Set-SplashProgress 59 ((T "SplashLoadingDiag"))
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.Diagnostics.dll") `
                -GuardType "SysOpt.Diagnostics.DiagnosticsEngine" -Label "Diagnostics"
+
+# ── [DLL 9/9] Toast — ToastManager (notificaciones toast temáticas) ──────────
+# Contiene: ToastType, ToastManager
+Set-SplashProgress 62 ((T "SplashLoadingToast"))
+Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.Toast.dll") `
+               -GuardType "SysOpt.Toast.ToastManager" -Label "Toast"
 
 # ── Inicializar CTK global ────────────────────────────────────────────────────
 # ScanTokenManager reemplaza el flag booleano ScanCtl211.Stop para cancelacion
 # limpia de runspaces. El token se crea aqui; cada operacion llama RequestNew().
 if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
     [ScanTokenManager]::RequestNew()
-    Write-Verbose "SysOpt: ScanTokenManager inicializado"
+    [ScanCtl211]::SetToken([ScanTokenManager]::Token)   # [CTK] bridge token → ScanCtl211.Stop
+    Write-Verbose "SysOpt: ScanTokenManager inicializado — bridge CTK activo"
 } else {
     Write-Warning "SysOpt: ScanTokenManager no disponible — CTK desactivado (Core.dll v3.1?)"
 }
@@ -214,25 +216,51 @@ Set-SplashProgress 70 "Ensamblados cargados."
 # ─────────────────────────────────────────────────────────────────────────────
 # [I18N] Variables globales de idioma y tema
 # ─────────────────────────────────────────────────────────────────────────────
-$script:LangDict       = @{}           # Diccionario clave→texto actual
+# [MOVED] LangDict — see early bootstrap above
 $script:CurrentLang    = "es-es"       # Código del idioma activo
 $script:CurrentTheme   = "default"     # Nombre del tema activo (sin extensión)
 $script:ThemesDir      = Join-Path $PSScriptRoot "assets\themes"
 $script:LangDir        = Join-Path $PSScriptRoot "assets\lang"
 
-# Función T() — traducción centralizada
-function T([string]$Key, [string]$Fallback = "") {
-    if ($script:LangDict.ContainsKey($Key)) { return $script:LangDict[$Key] }
-    if ($Fallback) { return $Fallback }
-    return $Key
-}
+# [MOVED] function T — see early bootstrap above
 
-function Get-TC {
+function global:Get-TC {
     param([string]$Key, [string]$Default = "#FFFFFF")
     if ($script:CurrentThemeColors -and $script:CurrentThemeColors.ContainsKey($Key)) {
         return $script:CurrentThemeColors[$Key]
     }
     return $Default
+}
+
+# ── [TOAST] Sincronizar tema del motor de toast y wrapper de envío ────────────
+function global:Sync-ToastTheme {
+    if (([System.Management.Automation.PSTypeName]"SysOpt.Toast.ToastManager").Type) {
+        $dict = New-Object 'System.Collections.Generic.Dictionary[string,string]'
+        if ($script:CurrentThemeColors) {
+            foreach ($kv in $script:CurrentThemeColors.GetEnumerator()) {
+                $dict[$kv.Key] = $kv.Value
+            }
+        }
+        [SysOpt.Toast.ToastManager]::SetTheme($dict)
+    }
+}
+
+function global:Show-Toast {
+    param(
+        [string]$Title,
+        [string]$Message = "",
+        [string]$Type = "Info",
+        [int]$DurationMs = 4000
+    )
+    if (-not ([System.Management.Automation.PSTypeName]"SysOpt.Toast.ToastManager").Type) { return }
+    if (-not [SysOpt.Toast.ToastManager]::Enabled) { return }
+    try {
+        $toastType = [SysOpt.Toast.ToastType]::$Type
+        [SysOpt.Toast.ToastManager]::Show($Title, $Message, $toastType, $DurationMs)
+        Write-Log "[TOAST] $Type → $Title" -Level "DBG" -NoUI
+    } catch {
+        Write-Log "[TOAST] Error: $($_.Exception.Message)" -Level "WARN" -NoUI
+    }
 }
 
 # ── Registro de ventanas flotantes que deben recibir el tema ─────────────────
@@ -245,7 +273,7 @@ $script:ThemedWindows = [System.Collections.Generic.List[System.Windows.Window]]
 # Genera un ResourceDictionary con todos los TB_* SolidColorBrushes del tema
 # actual clonados desde $window.Resources, listo para asignarse a una ventana
 # flotante y recibir actualizaciones posteriores de Apply-ThemeWithProgress.
-function New-ThemedWindowResources {
+function global:New-ThemedWindowResources {
     $rd = [System.Windows.ResourceDictionary]::new()
     foreach ($key in $window.Resources.Keys) {
         $keyStr = "$key"
@@ -259,7 +287,7 @@ function New-ThemedWindowResources {
     return $rd
 }
 
-function Update-DynamicThemeValues {
+function global:Update-DynamicThemeValues {
     $tc = $script:CurrentThemeColors
     if (-not $tc -or $tc.Count -eq 0) { return }
 
@@ -286,7 +314,7 @@ function Update-DynamicThemeValues {
 # Pool de 1 mín / 3 máx runspaces. Se abre una sola vez al inicio.
 # ─────────────────────────────────────────────────────────────────────────────
 $script:RunspacePool = $null
-function Initialize-RunspacePool {
+function global:Initialize-RunspacePool {
     if ($null -ne $script:RunspacePool -and $script:RunspacePool.RunspacePoolStateInfo.State -eq 'Opened') { return }
     try {
         $iss  = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault2()
@@ -304,7 +332,7 @@ function Initialize-RunspacePool {
 }
 
 # Helper para crear PowerShell asignado al pool (o runspace individual como fallback)
-function New-PooledPS {
+function global:New-PooledPS {
     Initialize-RunspacePool
     $ps = [System.Management.Automation.PowerShell]::Create()
     if ([SysOptFallbacks]::RunspacePoolAvailable -and $null -ne $script:RunspacePool) {
@@ -319,13 +347,13 @@ function New-PooledPS {
 }
 
 # Helper para dispose limpio de PS+RS (RS puede ser $null si usó pool)
-function Dispose-PooledPS($ctx) {
+function global:Dispose-PooledPS($ctx) {
     try { $ctx.PS.Dispose() } catch {}
     if ($null -ne $ctx.RS) { try { $ctx.RS.Close(); $ctx.RS.Dispose() } catch {} }
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-function Invoke-AggressiveGC {
+function global:Invoke-AggressiveGC {
     try {
         [Runtime.GCSettings]::LargeObjectHeapCompactionMode = `
             [Runtime.GCLargeObjectHeapCompactionMode]::CompactOnce
@@ -344,7 +372,7 @@ function Invoke-AggressiveGC {
 # ─────────────────────────────────────────────────────────────────────────────
 # Verificar permisos de administrador
 # ─────────────────────────────────────────────────────────────────────────────
-function Test-Administrator {
+function global:Test-Administrator {
     $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
     $principal   = New-Object Security.Principal.WindowsPrincipal($currentUser)
     return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -372,7 +400,7 @@ if (-not [SysOptFallbacks]::AcquireMutex()) {
     exit
 }
 
-Set-SplashProgress 74 "Analizando permisos..."
+Set-SplashProgress 74 (T "SplashAnalyzingPerms" "Analizando permisos...")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # XAML — Interfaz Gráfica v1.0
@@ -382,10 +410,10 @@ $xaml = [XamlLoader]::Load($script:XamlFolder, "MainWindow")
 # ─────────────────────────────────────────────────────────────────────────────
 # Cargar XAML y obtener controles
 # ─────────────────────────────────────────────────────────────────────────────
-Set-SplashProgress 82 "Construyendo interfaz gráfica..."
+Set-SplashProgress 82 (T "SplashBuildingUI" "Construyendo interfaz gráfica...")
 $reader = [System.Xml.XmlNodeReader]::new([xml]$xaml)
 $window = [Windows.Markup.XamlReader]::Load($reader)
-Set-SplashProgress 90 "Enlazando controles..."
+Set-SplashProgress 90 (T "SplashBindingControls" "Enlazando controles...")
 Initialize-RunspacePool
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -404,8 +432,8 @@ $script:UnhandledExHandler = [System.UnhandledExceptionEventHandler]{
     # Intentar mostrar diálogo si el Dispatcher sigue vivo
     try {
         $window.Dispatcher.Invoke([action]{
-            $body = "SysOpt ha detectado un error inesperado en un proceso en segundo plano.`n`n$msg`n`nLa aplicación intentará continuar. Si el problema persiste, revisa el log en .\logs\"
-            Show-ThemedDialog -Title "Error inesperado" -Message $body -Type "error"
+            $body = "$((T "BgErrorMsg"))`n`n$msg"
+            Show-ThemedDialog -Title (T "ErrUnexpectedTitle" "Error inesperado") -Message $body -Type "error"
         })
     } catch {}
 }
@@ -418,8 +446,8 @@ $script:DispatcherExHandler = [System.Windows.Threading.DispatcherUnhandledExcep
     $stack = if ($e.Exception.StackTrace) { "`n$($e.Exception.StackTrace)" } else { "" }
     try { Write-Log "[ERR-DISPATCHER] $msg$stack" -Level "CRIT" } catch {}
     try {
-        Show-ThemedDialog -Title "Error de interfaz" `
-            -Message "Error inesperado en la interfaz gráfica.`n`n$msg`n`nLa aplicación intentará continuar. Revisa el log en .\logs\" `
+        Show-ThemedDialog -Title (T "ErrUITitle" "Error de interfaz") `
+            -Message ((T "ErrUnexpectedUI" "Error inesperado en la interfaz gráfica.") + "`n`n$msg`n`n" + (T "ErrCheckLog" "La aplicación intentará continuar. Revisa el log en .\logs\")) `
             -Type "error"
     } catch {}
     $e.Handled = $true   # evitar que WPF cierre la ventana
@@ -471,7 +499,6 @@ $btnStart      = $window.FindName("btnStart")
 $btnCancel     = $window.FindName("btnCancel")
 $btnSaveLog    = $window.FindName("btnSaveLog")
 $btnExit       = $window.FindName("btnExit")
-$btnAbout      = $window.FindName("btnAbout")
 $btnOptions    = $window.FindName("btnOptions")
 
 # Output panel controls
@@ -485,7 +512,7 @@ $btnShowOutput    = $window.FindName("btnShowOutput")
 $script:OutputState   = "normal"   # "normal" | "minimized" | "hidden" | "expanded"
 $script:OutputNormalH = 200        # altura normal en píxeles
 
-function Set-OutputState {
+function global:Set-OutputState {
     param([string]$State)
     # Obtener el RowDefinition del Grid padre por índice 3
     $mainGrid = $OutputPanel.Parent
@@ -532,7 +559,7 @@ $btnShowOutput.Add_Click({ Set-OutputState "normal" })
 # DIÁLOGOS TEMÁTICOS — reemplazan MessageBox y InputBox del sistema
 # Tipos: "info" | "warning" | "error" | "success" | "question"
 # ─────────────────────────────────────────────────────────────────────────────
-function Show-ThemedDialog {
+function global:Show-ThemedDialog {
     param(
         [string]$Title,
         [string]$Message,
@@ -570,7 +597,7 @@ function Show-ThemedDialog {
     $Message = $Message -replace '&','&amp;' -replace '"','&quot;' -replace "'","&apos;" -replace '<','&lt;' -replace '>','&gt;'
 
     $btnOkXaml = if ($Buttons -eq "OK") {
-        "<Button Name=`"btnOK`" Content=`"Aceptar`" Width=`"100`" Height=`"34`" Margin=`"0`"
+        "<Button Name=`"btnOK`" Content=`"$((T 'DlgBtnOK' 'Aceptar'))`" Width=`"100`" Height=`"34`" Margin=`"0`"
                  Background=`"$accentColor`" Foreground=`"$(Get-TC 'BgDeep' '#0D0F1A')`" BorderThickness=`"0`"
                  FontWeight=`"Bold`" FontSize=`"12`" Cursor=`"Hand`" IsDefault=`"True`"/>"
     } else {
@@ -579,7 +606,7 @@ function Show-ThemedDialog {
                     Background=`"$(Get-TC 'BtnSecondaryBg' '#1A1E2F')`" Foreground=`"$(Get-TC 'TextMuted' '#7880A0')`"
                     BorderBrush=`"$(Get-TC 'BorderSubtle' '#252B40')`" BorderThickness=`"1`"
                     FontSize=`"12`" Cursor=`"Hand`" IsCancel=`"True`"/>
-            <Button Name=`"btnYes`" Content=`"Sí`"  Width=`"90`" Height=`"34`"
+            <Button Name=`"btnYes`" Content=`"$((T "DlgBtnYes"))`"  Width=`"90`" Height=`"34`"
                     Background=`"$accentColor`" Foreground=`"$(Get-TC 'BgDeep' '#0D0F1A')`" BorderThickness=`"0`"
                     FontWeight=`"Bold`" FontSize=`"12`" Cursor=`"Hand`" IsDefault=`"True`"/>
         </StackPanel>"
@@ -659,7 +686,7 @@ function Show-ThemedDialog {
     return $script:_dlgResult
 }
 
-function Show-ThemedInput {
+function global:Show-ThemedInput {
     param(
         [string]$Title,
         [string]$Prompt,
@@ -726,10 +753,10 @@ function Show-ThemedInput {
             <!-- Botones -->
             <Border Grid.Row="3" Padding="22,0,22,18">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Name="btnCancel" Content="Cancelar" Width="100" Height="34" Margin="0,0,8,0"
+                    <Button Name="btnCancel" Content="$(T 'BtnCancel' 'Cancelar')" Width="100" Height="34" Margin="0,0,8,0"
                             Background="$(Get-TC 'BgInput' '#1A1E2F')" Foreground="$(Get-TC 'TextMuted' '#7880A0')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1"
                             FontSize="12" Cursor="Hand" IsCancel="True"/>
-                    <Button Name="btnOK" Content="Aceptar" Width="100" Height="34"
+                    <Button Name="btnOK" Content="$(T 'DlgBtnOK' 'Aceptar')" Width="100" Height="34"
                             Background="$(Get-TC 'AccentBlue' '#5BA3FF')" Foreground="$(Get-TC 'BgDeep' '#0D0F1A')" BorderThickness="0"
                             FontWeight="Bold" FontSize="12" Cursor="Hand" IsDefault="True"/>
                 </StackPanel>
@@ -780,7 +807,7 @@ $script:AppDir = if ($PSScriptRoot -and $PSScriptRoot -ne '') {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Cargar logo desde .\assets\img\sysopt.png e icono de ventana desde .\assets\img\sysops.ico
+# Cargar logo desde .\assets\img\sysopt.png e icono de ventana desde .\assets\img\SysOpt.ico
 # ─────────────────────────────────────────────────────────────────────────────
 $imgLogo = $window.FindName("imgLogo")
 try {
@@ -797,9 +824,40 @@ try {
     Write-Verbose "SysOpt: No se pudo cargar el logo — $($_.Exception.Message)"
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# [DWM] Helper para barra de título temática — Windows 10 (dark mode) / 11 (colores)
+# Usa DwmSetWindowAttribute para pintar la barra de título nativa con los
+# colores del tema activo.  Fallback silencioso en OS anteriores a 1809.
+# ─────────────────────────────────────────────────────────────────────────────
+try {
+    Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public static class DwmHelper {
+    [DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int val, int size);
+    public static void SetDarkMode(IntPtr hwnd, bool dark) {
+        int v = dark ? 1 : 0;
+        // DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (Win10 1809+)
+        DwmSetWindowAttribute(hwnd, 20, ref v, 4);
+    }
+    public static void SetCaptionColor(IntPtr hwnd, byte r, byte g, byte b) {
+        // DWMWA_CAPTION_COLOR = 35 (Win11 22000+)
+        int c = (int)r | ((int)g << 8) | ((int)b << 16);
+        DwmSetWindowAttribute(hwnd, 35, ref c, 4);
+    }
+    public static void SetTextColor(IntPtr hwnd, byte r, byte g, byte b) {
+        // DWMWA_TEXT_COLOR = 36 (Win11 22000+)
+        int c = (int)r | ((int)g << 8) | ((int)b << 16);
+        DwmSetWindowAttribute(hwnd, 36, ref c, 4);
+    }
+}
+"@ -ErrorAction SilentlyContinue
+} catch {}
+
 # Icono de la ventana principal (barra de tareas y Alt+Tab)
 try {
-    $icoPath = Join-Path $script:AppDir "assets\img\sysops.ico"
+    $icoPath = Join-Path $script:AppDir "assets\img\SysOpt.ico"
     if (Test-Path $icoPath) {
         $window.Icon = [System.Windows.Media.Imaging.BitmapFrame]::Create(
             [Uri]::new($icoPath, [UriKind]::Absolute))
@@ -824,7 +882,7 @@ $script:WasCancelled = $false
 # el resto del script no necesite cambios.
 # ─────────────────────────────────────────────────────────────────────────────
 
-function Initialize-Logger {
+function global:Initialize-Logger {
     try {
         $logsDir = Join-Path $script:AppDir "logs"
         [LogEngine]::Initialize($logsDir)
@@ -834,7 +892,7 @@ function Initialize-Logger {
     }
 }
 
-function Write-Log {
+function global:Write-Log {
     param(
         [string]$Message,
         [ValidateSet("DBG","INFO","WARN","ERR","CRIT","UI")][string]$Level = "INFO",
@@ -855,7 +913,7 @@ function Write-Log {
 
 # Write-ConsoleMain — mensajes puramente visuales: van a la consola de pantalla pero NO
 # al archivo de log. Usa nivel "UI" para separar instrucciones decorativas de eventos reales.
-function Write-ConsoleMain {
+function global:Write-ConsoleMain {
     param([string]$Message)
     Write-Log -Message $Message -Level "UI"
 }
@@ -879,7 +937,8 @@ try {
         @{ Guard = 'WseTrim';            Dll = 'SysOpt.WseTrim.dll'       },
         @{ Guard = 'SysOpt.Optimizer.OptimizerEngine'; Dll = 'SysOpt.Optimizer.dll' },
         @{ Guard = 'SysOpt.StartupManager.StartupEngine'; Dll = 'SysOpt.StartupManager.dll' },
-        @{ Guard = 'SysOpt.Diagnostics.DiagnosticsEngine'; Dll = 'SysOpt.Diagnostics.dll' }
+        @{ Guard = 'SysOpt.Diagnostics.DiagnosticsEngine'; Dll = 'SysOpt.Diagnostics.dll' },
+        @{ Guard = 'SysOpt.Toast.ToastManager';              Dll = 'SysOpt.Toast.dll'        }
     )
 
     Write-Log "── Auditoría de ensamblados ──────────────────────────────" -Level "DBG" -NoUI
@@ -940,7 +999,7 @@ try {
 $script:TaskPool = [System.Collections.Concurrent.ConcurrentDictionary[string,object]]::new()
 $script:TaskIdSeq = 0
 
-function Register-Task {
+function global:Register-Task {
     param(
         [string]$Id,        # clave única (p.ej. "scan", "csv", "dedup")
         [string]$Name,      # nombre visible
@@ -968,7 +1027,7 @@ function Register-Task {
     return $task
 }
 
-function Complete-Task {
+function global:Complete-Task {
     param([string]$Id, [switch]$IsError, [string]$Detail = "")
     if ($script:TaskPool.ContainsKey($Id)) {
         $t = $script:TaskPool[$Id]
@@ -980,7 +1039,7 @@ function Complete-Task {
     }
 }
 
-function Update-Task {
+function global:Update-Task {
     param([string]$Id, [int]$Pct = -1, [string]$Detail = "")
     if ($script:TaskPool.ContainsKey($Id)) {
         $t = $script:TaskPool[$Id]
@@ -988,63 +1047,9 @@ function Update-Task {
         if ($Detail)     { $t.Detail = $Detail }
     }
 }
-# Todas las llamadas Get-CimInstance del hilo UI la reutilizan.
-# Si WMI está dañado o tarda más de 5 s, el timeout evita que la UI se congele.
-# La sesión se crea lazy al primer uso y se recrea automáticamente si muere.
-# ─────────────────────────────────────────────────────────────────────────────
-$script:CimSession = $null
-
-function Get-SharedCimSession {
-    if ($null -ne $script:CimSession) {
-        try {
-            # Comprobar que la sesión sigue viva con una consulta trivial
-            $null = Get-CimInstance -CimSession $script:CimSession `
-                        -ClassName Win32_LocalTime -ErrorAction Stop |
-                        Select-Object -First 1
-            return $script:CimSession
-        } catch {
-            try { $script:CimSession | Remove-CimSession -ErrorAction SilentlyContinue } catch {}
-            $script:CimSession = $null
-        }
-    }
-    try {
-        $opts = New-CimSessionOption -Protocol Dcom
-        $script:CimSession = New-CimSession -ComputerName localhost `
-                                -SessionOption $opts `
-                                -OperationTimeoutSec 5 `
-                                -ErrorAction Stop
-        Write-Log "[WMI] CimSession creada (timeout=5s)" -Level "DBG" -NoUI
-    } catch {
-        Write-Log "[WMI] No se pudo crear CimSession: $($_.Exception.Message)" -Level "WARN" -NoUI
-        $script:CimSession = $null
-    }
-    return $script:CimSession
-}
-
-# Helper: Get-CimInstance con sesión compartida y timeout — reemplaza las llamadas directas
-function Invoke-CimQuery {
-    param(
-        [string]$ClassName,
-        [string]$Filter       = "",
-        [string[]]$Property   = @(),
-        [switch]$SilentOnFail
-    )
-    $session = Get-SharedCimSession
-    $params  = @{ ClassName = $ClassName; ErrorAction = if ($SilentOnFail) { "SilentlyContinue" } else { "Stop" } }
-    if ($session)          { $params.CimSession = $session }
-    if ($Filter)           { $params.Filter     = $Filter  }
-    if ($Property.Count)   { $params.Property   = $Property }
-    try {
-        return Get-CimInstance @params
-    } catch {
-        Write-Log "[WMI] Error en $ClassName : $($_.Exception.Message)" -Level "WARN" -NoUI
-        # Invalidar sesión para que se recree en el próximo intento
-        try { $script:CimSession | Remove-CimSession -ErrorAction SilentlyContinue } catch {}
-        $script:CimSession = $null
-        if (-not $SilentOnFail) { throw }
-        return $null
-    }
-}
+# [DAL] WMI queries migradas a C# SystemDataCollector en SysOpt.Core.dll
+# Las funciones Get-SharedCimSession e Invoke-CimQuery fueron eliminadas en v3.2.1
+# Todas las consultas WMI ahora pasan por [SystemDataCollector]::Get*Snapshot()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Chart history buffers (60 samples each)
@@ -1063,7 +1068,7 @@ try {
 # ─────────────────────────────────────────────────────────────────────────────
 # Helper: Draw sparkline chart on a WPF Canvas
 # ─────────────────────────────────────────────────────────────────────────────
-function Draw-SparkLine {
+function global:Draw-SparkLine {
     param(
         [System.Windows.Controls.Canvas]$Canvas,
         [System.Collections.Generic.List[double]]$Data,
@@ -1160,7 +1165,7 @@ function Draw-SparkLine {
 #      Síncrono en el UI thread — igual que el original. Los CimInstance rápidos
 #      (<150 ms) no congelan la UI en un tick de 2 segundos.
 # ─────────────────────────────────────────────────────────────────────────────
-function Update-SystemInfo {
+function global:Update-SystemInfo {
     try {
         # SystemDataCollector snapshots — consolidates CIM queries
         $ramSnap  = [SystemDataCollector]::GetRamSnapshot()
@@ -1196,12 +1201,12 @@ function Update-SystemInfo {
 
         # Actualizar etiquetas del panel superior
         $InfoCPU.Text  = $cpuName
-        $InfoRAM.Text  = "$freeGB GB libre / $totalGB GB"
-        $InfoDisk.Text = "$diskFreeGB GB libre / $diskTotalGB GB"
+        $InfoRAM.Text  = "$freeGB $(T 'GbFree' 'GB libre') / $totalGB GB"
+        $InfoDisk.Text = "$diskFreeGB $(T 'GbFree' 'GB libre') / $diskTotalGB GB"
 
         $CpuPctText.Text  = "  $([int]$cpuLoad)%"
         $RamPctText.Text  = "  $usedPct%"
-        $DiskPctText.Text = "  $diskUsedPct% usado"
+        $DiskPctText.Text = "  $diskUsedPct% $(T 'PctUsed' 'usado')"
 
         # Dibujar gráficas sparkline
         Draw-SparkLine -Canvas $CpuChart  -Data $script:CpuHistory  -LineColor "#5BA3FF" -FillColor "#5BA3FF"
@@ -1209,9 +1214,9 @@ function Update-SystemInfo {
         Draw-SparkLine -Canvas $DiskChart -Data $script:DiskHistory -LineColor "#FFB547" -FillColor "#FFB547"
 
     } catch {
-        $InfoCPU.Text  = "No disponible"
-        $InfoRAM.Text  = "No disponible"
-        $InfoDisk.Text = "No disponible"
+        $InfoCPU.Text  = (T "NotAvailable" "No disponible")
+        $InfoRAM.Text  = (T "NotAvailable" "No disponible")
+        $InfoDisk.Text = (T "NotAvailable" "No disponible")
     }
 }
 
@@ -1227,9 +1232,9 @@ $chartTimer.Add_Tick({ Update-SystemInfo })
 #      WPF ignora Background en el ToggleButton interno a menos que se recorra
 #      explícitamente el árbol visual después de que el control está cargado.
 # ─────────────────────────────────────────────────────────────────────────────
-function Get-VisualChildren { param($Parent); return [ThemeApplier]::GetVisualChildren($Parent) }
+function global:Get-VisualChildren { param($Parent); return [ThemeApplier]::GetVisualChildren($Parent) }
 
-function Apply-ComboBoxDarkTheme {
+function global:Apply-ComboBoxDarkTheme {
     param([System.Windows.Controls.ComboBox]$ComboBox)
     [ThemeApplier]::ApplyComboBoxTheme(
         $ComboBox,
@@ -1240,12 +1245,28 @@ function Apply-ComboBoxDarkTheme {
     )
 }
 
+# [DWM] Aplicar tema a la barra de título cuando el HWND esté listo
+$window.Add_SourceInitialized({
+    Apply-TitleBarTheme
+    Write-Log "[DWM] Barra de título temática aplicada" -Level "INFO" -NoUI
+}.GetNewClosure())
+
 $window.Add_Loaded({
     try {
-        Set-SplashProgress 100 "Listo."
+        Set-SplashProgress 100 (T "SplashReady" "Listo.")
         $splashWin.Hide()
         $splashWin.Close()
     } catch {}
+
+    # [C3-APP] Ensure Application.Current exists for DynamicResource in popups
+    # PowerShell WPF apps don't always create an Application object automatically.
+    # Without it, DynamicResource lookups in popup ContextMenus fail silently.
+    if ($null -eq [System.Windows.Application]::Current) {
+        try {
+            $app = [System.Windows.Application]::new()
+            $app.ShutdownMode = [System.Windows.ShutdownMode]::OnExplicitShutdown
+        } catch {}
+    }
 
     # [C3-PRE] Copiar TB_* del Window al Application.Current.Resources
     # Los ContextMenu en Popups heredan Application.Resources pero NO Window.Resources.
@@ -1281,6 +1302,14 @@ $window.Add_Loaded({
     # Aplicar colores de tema a los botones nombrados
     try { Apply-ButtonTheme } catch {}
 
+    # [TOAST] Inicializar motor de notificaciones con tema y estado
+    try {
+        if (([System.Management.Automation.PSTypeName]"SysOpt.Toast.ToastManager").Type) {
+            Sync-ToastTheme
+            [SysOpt.Toast.ToastManager]::Debug = [LogEngine]::DebugEnabled
+        }
+    } catch {}
+
     $chartTimer.Start()
     Update-SystemInfo        # primera carga inmediata
     Update-PerformanceTab    # poblar pestana Rendimiento al arrancar
@@ -1314,58 +1343,50 @@ $window.Add_Loaded({
         Write-Log ("[ENV] Script root     : {0}" -f $PSScriptRoot)                                      -Level "INFO" -NoUI
         Write-Log ("[ENV] Working dir     : {0}" -f (Get-Location).Path)                                -Level "INFO" -NoUI
 
-        # ── Sistema operativo ─────────────────────────────────────────────────
+        # ── [DAL] Sistema — snapshot completo via C# (reemplaza 5 queries WMI) ─
         try {
-            $osInfo = Invoke-CimQuery -ClassName Win32_OperatingSystem -SilentOnFail
-            if ($osInfo) {
-                $totalRamGB = [math]::Round($osInfo.TotalVisibleMemorySize / 1MB, 1)
-                $freeRamGB  = [math]::Round($osInfo.FreePhysicalMemory     / 1MB, 1)
-                $usedRamPct = [math]::Round((($totalRamGB - $freeRamGB) / [math]::Max($totalRamGB,1)) * 100)
-                Write-Log ("[SYS] OS              : {0}  (Build {1})" -f $osInfo.Caption.Trim(), $osInfo.BuildNumber)  -Level "INFO" -NoUI
-                Write-Log ("[SYS] RAM             : {0} GB total  |  {1} GB libre  |  {2}% usado" -f $totalRamGB, $freeRamGB, $usedRamPct) -Level "INFO" -NoUI
-                Write-Log ("[SYS] Ultimo boot     : {0}" -f $osInfo.LastBootUpTime)                              -Level "INFO" -NoUI
-            }
-        } catch {}
+            $snap = [SystemDataCollector]::GetFullSnapshot()
 
-        # ── CPU ───────────────────────────────────────────────────────────────
-        try {
-            $cpuInfo = Invoke-CimQuery -ClassName Win32_Processor -SilentOnFail | Select-Object -First 1
-            if ($cpuInfo) {
-                Write-Log ("[SYS] CPU             : {0}  ({1} cores / {2} hilos)" -f $cpuInfo.Name.Trim(), $cpuInfo.NumberOfCores, $cpuInfo.NumberOfLogicalProcessors) -Level "INFO" -NoUI
-                Write-Log ("[SYS] CPU carga       : {0}%  @{1} MHz" -f $cpuInfo.LoadPercentage, $cpuInfo.CurrentClockSpeed) -Level "INFO" -NoUI
-            }
-        } catch {}
+            # OS
+            Write-Log ("[SYS] OS              : {0}  (Build {1})" -f $snap.OsCaption.Trim(), $snap.OsBuild) -Level "INFO" -NoUI
 
-        # ── Disco C: ──────────────────────────────────────────────────────────
-        try {
-            $diskC = Invoke-CimQuery -ClassName Win32_LogicalDisk -Filter "DeviceID='C:'" -SilentOnFail | Select-Object -First 1
+            # RAM (from DAL)
+            $totalRamGB = [math]::Round($snap.Ram.TotalBytes / 1GB, 1)
+            $freeRamGB  = [math]::Round($snap.Ram.FreeBytes  / 1GB, 1)
+            $usedRamPct = [math]::Round($snap.Ram.UsedPercent)
+            Write-Log ("[SYS] RAM             : {0} GB total  |  {1} GB libre  |  {2}% usado" -f $totalRamGB, $freeRamGB, $usedRamPct) -Level "INFO" -NoUI
+
+            # Boot time (from DAL)
+            if ($snap.BootTime -ne [datetime]::MinValue) {
+                Write-Log ("[SYS] Ultimo boot     : {0}" -f $snap.BootTime) -Level "INFO" -NoUI
+            }
+
+            # CPU (from DAL)
+            Write-Log ("[SYS] CPU             : {0}  ({1} cores / {2} hilos)" -f $snap.Cpu.Name.Trim(), $snap.Cpu.Cores, $snap.Cpu.LogicalProcessors) -Level "INFO" -NoUI
+            Write-Log ("[SYS] CPU carga       : {0}%  @{1} MHz" -f [int]$snap.Cpu.LoadPercent, [int]$snap.Cpu.ClockMhz) -Level "INFO" -NoUI
+
+            # Disco C: (from DAL)
+            $diskC = $snap.Disk.Volumes | Where-Object { $_.DeviceId -eq 'C:' } | Select-Object -First 1
             if ($diskC) {
-                $dTotalGB = [math]::Round($diskC.Size      / 1GB, 1)
-                $dFreeGB  = [math]::Round($diskC.FreeSpace / 1GB, 1)
-                $dUsedPct = [math]::Round((($dTotalGB - $dFreeGB) / [math]::Max($dTotalGB,1)) * 100)
+                $dTotalGB = [math]::Round($diskC.TotalBytes / 1GB, 1)
+                $dFreeGB  = [math]::Round($diskC.FreeBytes  / 1GB, 1)
+                $dUsedPct = [math]::Round($diskC.UsedPercent)
                 Write-Log ("[SYS] Disco C:        : {0} GB total  |  {1} GB libre  |  {2}% usado" -f $dTotalGB, $dFreeGB, $dUsedPct) -Level "INFO" -NoUI
             }
-        } catch {}
 
-        # ── Advertencias de arranque ──────────────────────────────────────────
-        # Detectar condiciones que pueden afectar al comportamiento de la app
-        try {
-            # RAM baja
-            $osInfo2 = Invoke-CimQuery -ClassName Win32_OperatingSystem -SilentOnFail
-            if ($osInfo2) {
-                $freeMB = [math]::Round($osInfo2.FreePhysicalMemory / 1KB)
-                if ($freeMB -lt 512) {
-                    Write-Log ("[WARN] RAM libre muy baja al arrancar: ${freeMB} MB — rendimiento puede verse afectado") -Level "WARN" -NoUI
-                }
-                # Disco C: casi lleno
-                $diskC2 = Invoke-CimQuery -ClassName Win32_LogicalDisk -Filter "DeviceID='C:'" -SilentOnFail | Select-Object -First 1
-                if ($diskC2) {
-                    $freeGBw = [math]::Round($diskC2.FreeSpace / 1GB, 1)
-                    if ($freeGBw -lt 5) {
-                        Write-Log ("[WARN] Disco C: con menos de 5 GB libres (${freeGBw} GB) — algunas operaciones pueden fallar") -Level "WARN" -NoUI
-                    }
+            # ── Advertencias (reutiliza datos DAL — 0 queries adicionales) ────
+            $freeMB = [math]::Round($snap.Ram.FreeBytes / 1MB)
+            if ($freeMB -lt 512) {
+                Write-Log ("[WARN] RAM libre muy baja al arrancar: ${freeMB} MB — rendimiento puede verse afectado") -Level "WARN" -NoUI
+            }
+            if ($diskC) {
+                $freeGBw = [math]::Round($diskC.FreeBytes / 1GB, 1)
+                if ($freeGBw -lt 5) {
+                    Write-Log ("[WARN] Disco C: con menos de 5 GB libres (${freeGBw} GB) — algunas operaciones pueden fallar") -Level "WARN" -NoUI
                 }
             }
+        } catch {}
+        try {
             # Tema no encontrado (se cargó settings.json pero el .theme ya no existe)
             if ($script:CurrentTheme -ne "default") {
                 $themePath = Join-Path $script:ThemesDir "$($script:CurrentTheme).theme"
@@ -1411,14 +1432,14 @@ $icRamModules     = $window.FindName("icRamModules")
 $icSmartDisks     = $window.FindName("icSmartDisks")
 $icNetAdapters    = $window.FindName("icNetAdapters")
 
-function Format-Bytes { param([long]$Bytes); return [Formatter]::FormatBytes($Bytes) }
+function global:Format-Bytes { param([long]$Bytes); return [Formatter]::FormatBytes($Bytes) }
 
 # causando fallo de resolución de nombre "OUL" al invocarse desde el dispatcher WPF)
-function Format-Rate { param([double]$bps); return [Formatter]::FormatRate($bps) }
+function global:Format-Rate { param([double]$bps); return [Formatter]::FormatRate($bps) }
 
-function Get-LinkBps { param($raw); return [Formatter]::ParseLinkBps("$raw") }
+function global:Get-LinkBps { param($raw); return [Formatter]::ParseLinkBps("$raw") }
 
-function Update-PerformanceTab {
+function global:Update-PerformanceTab {
     if ($script:AppClosing) { return }
     $txtPerfStatus.Text = "Recopilando datos…"
 
@@ -1426,21 +1447,19 @@ function Update-PerformanceTab {
     try { Import-Module NetAdapter -ErrorAction SilentlyContinue } catch {}
     try { Import-Module NetTCPIP   -ErrorAction SilentlyContinue } catch {}
 
-    # ── CPU Cores ──────────────────────────────────────────────
+    # ── CPU Cores ── [DAL] GetCpuSnapshot reemplaza 2 queries WMI ───
     try {
-        $cpuObj = Invoke-CimQuery -ClassName Win32_Processor | Select-Object -First 1
-        $txtCpuName.Text = "$($cpuObj.Name)  |  $($cpuObj.NumberOfCores) núcleos  /  $($cpuObj.NumberOfLogicalProcessors) lógicos"
+        $cpuSnap = [SystemDataCollector]::GetCpuSnapshot()
+        $txtCpuName.Text = "$($cpuSnap.Name)  |  $($cpuSnap.Cores) $((T "CpuCoresLabel"))  /  $($cpuSnap.LogicalProcessors) $((T "CpuLogicalLabel"))"
 
         $coreItems = [System.Collections.Generic.List[object]]::new()
         try {
-            $cpuPerf = Invoke-CimQuery -ClassName Win32_PerfFormattedData_PerfOS_Processor -SilentOnFail |
-                       Where-Object { $_.Name -ne '_Total' } |
-                       Sort-Object { [int]($_.Name -replace '\D','0') }
-            if ($cpuPerf) {
-                foreach ($core in $cpuPerf) {
-                    $val = [math]::Round([double]$core.PercentProcessorTime, 1)
+            $cpuPerf = $cpuSnap.CoreLoads
+            if ($cpuPerf -and $cpuPerf.Count -gt 0) {
+                for ($ci = 0; $ci -lt $cpuPerf.Count; $ci++) {
+                    $val = [math]::Round($cpuPerf[$ci], 1)
                     $coreItems.Add([PSCustomObject]@{
-                        CoreLabel = "Core $($core.Name)"
+                        CoreLabel = "Core $ci"
                         Usage     = "$val%"
                         UsageNum  = $val
                         Freq      = "$([math]::Round($cpuObj.CurrentClockSpeed / 1000.0, 2)) GHz"
@@ -1449,27 +1468,27 @@ function Update-PerformanceTab {
             } else {
                 $val = [double]$cpuObj.LoadPercentage
                 $coreItems.Add([PSCustomObject]@{
-                    CoreLabel = "CPU Total"; Usage = "$val%"; UsageNum = $val
+                    CoreLabel = (T "CpuTotal" "CPU Total"); Usage = "$val%"; UsageNum = $val
                     Freq      = "$([math]::Round($cpuObj.CurrentClockSpeed / 1000.0, 2)) GHz"
                 })
             }
         } catch {
             $coreItems.Add([PSCustomObject]@{
-                CoreLabel = "CPU Total"; Usage = "$($cpuObj.LoadPercentage)%"
-                UsageNum  = [double]$cpuObj.LoadPercentage
-                Freq      = "$([math]::Round($cpuObj.CurrentClockSpeed / 1000.0, 2)) GHz"
+                CoreLabel = (T "CpuTotal" "CPU Total"); Usage = "$([int]$cpuSnap.LoadPercent)%"
+                UsageNum  = $cpuSnap.LoadPercent
+                Freq      = "$([math]::Round($cpuSnap.ClockMhz / 1000.0, 2)) GHz"
             })
         }
         $icCpuCores.ItemsSource = $coreItems
-    } catch { $txtCpuName.Text = "No disponible" }
+    } catch { $txtCpuName.Text = (T "NotAvailable" "No disponible") }
 
-    # ── RAM Detallada ──────────────────────────────────────────
+    # ── RAM Detallada ── [DAL] GetRamSnapshot reemplaza 2 queries WMI ──
     try {
-        $os     = Invoke-CimQuery -ClassName Win32_OperatingSystem
-        $totalB = $os.TotalVisibleMemorySize * 1KB
-        $freeB  = $os.FreePhysicalMemory     * 1KB
-        $usedB  = $totalB - $freeB
-        $pct    = [math]::Round($usedB / $totalB * 100)
+        $ramSnap = [SystemDataCollector]::GetRamSnapshot()
+        $totalB  = $ramSnap.TotalBytes
+        $freeB   = $ramSnap.FreeBytes
+        $usedB   = $ramSnap.UsedBytes
+        $pct     = [math]::Round($ramSnap.UsedPercent)
 
         $fmt = { param($b) return [Formatter]::FormatBytes([long]$b) }
 
@@ -1480,14 +1499,11 @@ function Update-PerformanceTab {
         $pbRam.Value      = $pct
 
         $modItems = [System.Collections.Generic.List[object]]::new()
-        foreach ($mod in (Invoke-CimQuery -ClassName Win32_PhysicalMemory -SilentOnFail)) {
-            $type = switch ($mod.SMBIOSMemoryType) {
-                26 { "DDR4" } 34 { "DDR5" } 21 { "DDR2" } 24 { "DDR3" } default { "DDR" }
-            }
+        foreach ($mod in $ramSnap.Modules) {
             $modItems.Add([PSCustomObject]@{
-                Slot = if ($mod.DeviceLocator) { $mod.DeviceLocator } else { "Ranura" }
-                Info = "$type  •  $(if($mod.Speed){"$($mod.Speed) MHz"}else{"—"})  •  Mfg: $(if($mod.Manufacturer){$mod.Manufacturer}else{"N/A"})"
-                Size = & $fmt ([long]$mod.Capacity)
+                Slot = if ($mod.Slot) { $mod.Slot } else { "Ranura" }
+                Info = "$($mod.Type)  •  $(if($mod.SpeedMhz){"$($mod.SpeedMhz) MHz"}else{"—"})  •  Mfg: $(if($mod.Manufacturer){$mod.Manufacturer}else{"N/A"})"
+                Size = & $fmt ([long]$mod.CapacityBytes)
             })
         }
         $icRamModules.ItemsSource = $modItems
@@ -1514,8 +1530,8 @@ function Update-PerformanceTab {
 
             $attrs = [System.Collections.Generic.List[object]]::new()
             $sz = if ($disk.Size -ge 1GB) { "{0:N1} GB" -f ($disk.Size / 1GB) } else { "{0:N0} MB" -f ($disk.Size / 1MB) }
-            $attrs.Add([PSCustomObject]@{ Name="Tipo";    Value=$disk.MediaType; ValueColor=(Get-TC 'TextSecondary' '#B0BACC') })
-            $attrs.Add([PSCustomObject]@{ Name="Tamaño";  Value=$sz;             ValueColor=(Get-TC 'AccentBlue'    '#5BA3FF') })
+            $attrs.Add([PSCustomObject]@{ Name=(T "SmartType" "Tipo");    Value=$disk.MediaType; ValueColor=(Get-TC 'TextSecondary' '#B0BACC') })
+            $attrs.Add([PSCustomObject]@{ Name=(T "SmartSize" "Tamaño");  Value=$sz;             ValueColor=(Get-TC 'AccentBlue'    '#5BA3FF') })
             $attrs.Add([PSCustomObject]@{ Name="Bus";     Value=$disk.BusType;   ValueColor=(Get-TC 'TextSecondary' '#B0BACC') })
             if ($rel) {
                 if ($null -ne $rel.PowerOnHours) {
@@ -1524,15 +1540,15 @@ function Update-PerformanceTab {
                 if ($null -ne $rel.Temperature) {
                     $tc = $rel.Temperature
                     $tc2 = if ($tc -ge 55) { Get-TC 'FgStatusErr' '#FF6B84' } elseif ($tc -ge 45) { Get-TC 'FgStatusWarn' '#FFB547' } else { Get-TC 'FgStatusOk' '#4AE896' }
-                    $attrs.Add([PSCustomObject]@{ Name="Temperatura"; Value="${tc}°C"; ValueColor=$tc2 })
+                    $attrs.Add([PSCustomObject]@{ Name=(T "SmartTemp" "Temperatura"); Value="${tc}°C"; ValueColor=$tc2 })
                 }
                 if ($null -ne $rel.ReadErrorsTotal) {
-                    $attrs.Add([PSCustomObject]@{ Name="Errores lect."; Value=$rel.ReadErrorsTotal
+                    $attrs.Add([PSCustomObject]@{ Name=(T "SmartReadErr" "Errores lect."); Value=$rel.ReadErrorsTotal
                         ValueColor=if($rel.ReadErrorsTotal -gt 0){ Get-TC 'FgStatusErr' '#FF6B84' }else{ Get-TC 'FgStatusOk' '#4AE896' } })
                 }
                 if ($null -ne $rel.Wear) {
                     $wc = if ($rel.Wear -ge 80) { Get-TC 'FgStatusErr' '#FF6B84' } elseif ($rel.Wear -ge 50) { Get-TC 'FgStatusWarn' '#FFB547' } else { Get-TC 'FgStatusOk' '#4AE896' }
-                    $attrs.Add([PSCustomObject]@{ Name="Desgaste"; Value="$($rel.Wear)%"; ValueColor=$wc })
+                    $attrs.Add([PSCustomObject]@{ Name=(T "SmartWear" "Desgaste"); Value="$($rel.Wear)%"; ValueColor=$wc })
                 }
             }
             $smartItems.Add([PSCustomObject]@{
@@ -1542,25 +1558,24 @@ function Update-PerformanceTab {
         $icSmartDisks.ItemsSource = $smartItems
     } catch {
         $icSmartDisks.ItemsSource = @([PSCustomObject]@{
-            DiskName="Error al leer SMART"; Status="N/A"; StatusBg=(Get-TC 'BgStatusErr' '#2A1018'); StatusFg=(Get-TC 'FgStatusErr' '#FF6B84'); Attributes=@()
+            DiskName=((T "SmartReadErrorMsg")); Status="N/A"; StatusBg=(Get-TC 'BgStatusErr' '#2A1018'); StatusFg=(Get-TC 'FgStatusErr' '#FF6B84'); Attributes=@()
         })
     }
 
     # ── Tarjetas de Red ────────────────────────────────────────
     try {
-        # Tabla de velocidades WMI para calcular rx/tx en tiempo real
+        # [DAL] Tabla de velocidades via GetNetworkSnapshot (reemplaza query WMI directa)
+        $netSnap = [SystemDataCollector]::GetNetworkSnapshot()
         $wmiTable = @{}
-        try {
-            foreach ($row in (Invoke-CimQuery -ClassName Win32_PerfFormattedData_Tcpip_NetworkInterface -SilentOnFail)) {
-                $norm = ($row.Name -replace '\s*#\d+$','' -replace '_',' ').ToLower().Trim()
-                $wmiTable[$norm] = $row
-            }
-        } catch {}
+        foreach ($adapter in $netSnap.Adapters) {
+            $norm = ($adapter.Name -replace '\s*#\d+$','' -replace '_',' ').ToLower().Trim()
+            $wmiTable[$norm] = $adapter
+        }
 
         # Funciones de formato inline (sin scriptblock para evitar problemas de scope)
-        function Format-NetRate  { param([double]$b); return [Formatter]::FormatRate($b) }
-        function Format-NetBytes { param([double]$b); return [Formatter]::FormatBytes([long]$b) }
-        function Format-LinkBps  { param([uint64]$bps); return [Formatter]::FormatLinkSpeed($bps) }
+        function global:Format-NetRate  { param([double]$b); return [Formatter]::FormatRate($b) }
+        function global:Format-NetBytes { param([double]$b); return [Formatter]::FormatBytes([long]$b) }
+        function global:Format-LinkBps  { param([uint64]$bps); return [Formatter]::FormatLinkSpeed($bps) }
 
         $netItems = [System.Collections.Generic.List[object]]::new()
 
@@ -1572,7 +1587,7 @@ function Update-PerformanceTab {
 
             foreach ($a in $adapters) {
                 # IP
-                $ip = "Sin IP"
+                $ip = ((T "NetNoIP"))
                 try {
                     $ipObj = Get-NetIPAddress -InterfaceIndex $a.InterfaceIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue | Select-Object -First 1
                     if ($ipObj -and $ipObj.IPAddress) { $ip = $ipObj.IPAddress }
@@ -1610,13 +1625,13 @@ function Update-PerformanceTab {
                     }
                 }
                 $rxBps = 0.0; $txBps = 0.0
-                if ($null -ne $wmiRow) { $rxBps = [double]$wmiRow.BytesReceivedPersec; $txBps = [double]$wmiRow.BytesSentPersec }
+                if ($null -ne $wmiRow) { $rxBps = [double]$wmiRow.RxBytesPerSec; $txBps = [double]$wmiRow.TxBytesPerSec }
 
                 # Bytes totales
                 $ioStr = ""
                 try {
                     $stats = Get-NetAdapterStatistics -Name $a.Name -ErrorAction SilentlyContinue
-                    if ($stats) { $ioStr = "Total ↓ $(Format-NetBytes $stats.ReceivedBytes)  ↑ $(Format-NetBytes $stats.SentBytes)" }
+                    if ($stats) { $ioStr = "$(T 'NetTotal' 'Total') ↓ $(Format-NetBytes $stats.ReceivedBytes)  ↑ $(Format-NetBytes $stats.SentBytes)" }
                 } catch {}
 
                 # Color de estado
@@ -1635,33 +1650,29 @@ function Update-PerformanceTab {
             }
         } catch {}
 
-        # ── Fallback WMI puro si Get-NetAdapter no está disponible ───────
+        # ── [DAL] Fallback via GetNetworkSnapshot (reemplaza 2 queries WMI) ──
         if (-not $gotNetAdapter -or $netItems.Count -eq 0) {
             try {
-                foreach ($nic in (Invoke-CimQuery -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled=True" -SilentOnFail)) {
-                    $nicName = (Invoke-CimQuery -ClassName Win32_NetworkAdapter -Filter "DeviceID='$($nic.Index)'" -SilentOnFail).NetConnectionID
-                    if (-not $nicName) { $nicName = $nic.Description }
-                    $ip  = if ($nic.IPAddress)    { $nic.IPAddress[0]    } else { "Sin IP" }
-                    $mac = if ($nic.MACAddress)   { $nic.MACAddress      } else { "—" }
-                    $gw  = if ($nic.DefaultIPGateway) { $nic.DefaultIPGateway[0] } else { "Sin GW" }
-
-                    $adType = "🔌 Ethernet"
-                    if ($nic.Description -match 'Wi.?Fi|Wireless|WLAN|802\.11') { $adType = "📶 WiFi" }
-                    elseif ($nic.Description -match 'Hyper-V|VMware|VirtualBox|TAP|TUN|VPN') { $adType = "🔷 Virtual" }
-
+                foreach ($ad in $netSnap.Adapters) {
+                    if (-not $ad.IsUp) { continue }
+                    $adType = switch ($ad.Type) {
+                        "WiFi"    { "📶 WiFi" }
+                        "Virtual" { "🔷 Virtual" }
+                        default   { "🔌 Ethernet" }
+                    }
                     $netItems.Add([PSCustomObject]@{
-                        Name        = "$adType  $nicName"
-                        IP          = "IP: $ip  |  MAC: $mac"
-                        MAC         = $nic.Description
-                        Speed       = "—"
-                        Status      = "Activa  ↓ —  ↑ —  |  GW: $gw"
+                        Name        = "$adType  $($ad.Name)"
+                        IP          = "IP: $(if($ad.IpAddress){$ad.IpAddress}else{(T "NetNoIP")})  |  MAC: $(if($ad.MacAddress){$ad.MacAddress}else{'—'})"
+                        MAC         = $ad.Description
+                        Speed       = Format-LinkBps ([uint64]$ad.SpeedBps)
+                        Status      = "$(T 'NicActive' 'Activa')  ↓ $(Format-NetRate $ad.RxBytesPerSec)  ↑ $(Format-NetRate $ad.TxBytesPerSec)  |  GW: $(if($ad.Gateway){$ad.Gateway}else{T 'NicNoGW' 'Sin GW'})"
                         StatusColor = "#4AE896"
-                        BytesIO     = ""
+                        BytesIO     = "↓ $(Format-NetBytes $ad.TotalRxBytes)  ↑ $(Format-NetBytes $ad.TotalTxBytes)"
                     })
                 }
             } catch {
                 $netItems.Add([PSCustomObject]@{
-                    Name="⚠ Error WMI al leer red"; IP=$_.Exception.Message
+                    Name="⚠ Error DAL al leer red"; IP=$_.Exception.Message
                     MAC=""; Speed=""; Status="Error"; StatusColor="#FF6B84"; BytesIO=""
                 })
             }
@@ -1669,7 +1680,7 @@ function Update-PerformanceTab {
 
         if ($netItems.Count -eq 0) {
             $netItems.Add([PSCustomObject]@{
-                Name="ℹ Sin adaptadores activos"; IP="No se detectaron tarjetas de red activas"
+                Name="ℹ $(T 'NicNoAdapters' 'Sin adaptadores activos')"; IP=(T "NicNoAdaptersDesc" "No se detectaron tarjetas de red activas")
                 MAC=""; Speed=""; Status="—"; StatusColor="#7880A0"; BytesIO=""
             })
         }
@@ -1678,13 +1689,13 @@ function Update-PerformanceTab {
 
     } catch {
         $icNetAdapters.ItemsSource = @([PSCustomObject]@{
-            Name="⚠ Error al leer adaptadores"
+            Name="⚠ $((T "NetErrorAdapters"))"
             IP="[$($_.Exception.GetType().Name)] $($_.Exception.Message)"
             MAC=""; Speed=""; Status="Error"; StatusColor="#FF6B84"; BytesIO=""
         })
     }
 
-    $txtPerfStatus.Text = "Actualizado: $(Get-Date -Format 'HH:mm:ss')"
+    $txtPerfStatus.Text = "$(T 'PerfUpdated' 'Actualizado'): $(Get-Date -Format 'HH:mm:ss')"
 }
 
 $btnRefreshPerf.Add_Click({ Update-PerformanceTab })
@@ -1693,7 +1704,7 @@ $btnRefreshPerf.Add_Click({ Update-PerformanceTab })
 # Handler único compartido — evita Add_Tick duplicado si se recrea el timer
 $script:AutoRefreshTick = { Update-PerformanceTab }.GetNewClosure()
 
-function Start-AutoRefreshTimer {
+function global:Start-AutoRefreshTimer {
     $secs = 5
     $sel  = $cmbRefreshInterval.SelectedItem
     if ($sel -and $sel.Tag) { $secs = [int]$sel.Tag }
@@ -1701,13 +1712,13 @@ function Start-AutoRefreshTimer {
     $script:AutoRefreshTimer.Interval = [TimeSpan]::FromSeconds($secs)
     $script:AutoRefreshTimer.Add_Tick($script:AutoRefreshTick)
     $script:AutoRefreshTimer.Start()
-    $txtPerfStatus.Text = "  Auto-refresco cada $secs s activo"
+    $txtPerfStatus.Text = "  $(T 'PerfAutoRefresh' 'Auto-refresco cada') $secs s $(T 'PerfAutoRefreshActive' 'activo')"
 }
 
 $chkAutoRefresh.Add_Checked({ Start-AutoRefreshTimer })
 $chkAutoRefresh.Add_Unchecked({
     if ($null -ne $script:AutoRefreshTimer) { $script:AutoRefreshTimer.Stop(); $script:AutoRefreshTimer = $null }
-    $txtPerfStatus.Text = "  Auto-refresco desactivado"
+    $txtPerfStatus.Text = "  $((T "AutoRefreshDisabled"))"
 })
 $cmbRefreshInterval.Add_SelectionChanged({
     if ($chkAutoRefresh.IsChecked -eq $true) {
@@ -1758,7 +1769,7 @@ $script:LiveIndexMap     = [System.Collections.Generic.Dictionary[string,int]]::
 # ─────────────────────────────────────────────────────────────────────────────
 # [NEW-01] Debounce timer: evita rebuilds múltiples en ráfagas del scanner
 $script:_diskViewDebounce = $null
-function Request-DiskViewRefresh {
+function global:Request-DiskViewRefresh {
     param([switch]$RebuildMap)
     # Si viene con RebuildMap o no hay timer activo, disparar inmediatamente
     # (los colapsos manuales necesitan respuesta inmediata)
@@ -1783,7 +1794,7 @@ function Request-DiskViewRefresh {
     $dt.Start()
 }
 
-function Refresh-DiskView {
+function global:Refresh-DiskView {
     param([switch]$RebuildMap)
     if ($null -eq $script:LiveList) { return }
 
@@ -1865,11 +1876,11 @@ function Refresh-DiskView {
 }
 
 # Invalida el childMap cacheado; llamar cuando el escáner emita nuevos datos
-function Invalidate-DiskViewCache {
+function global:Invalidate-DiskViewCache {
     $script:CachedChildMap = $null
 }
 
-function Get-SizeColor {
+function global:Get-SizeColor {
     param([long]$Bytes)
     if ($Bytes -ge 10GB) { return "#FF6B84" }
     if ($Bytes -ge 1GB)  { return "#FFB547" }
@@ -1880,12 +1891,12 @@ function Get-SizeColor {
 # Get-SizeColorFromStr es alias de Get-SizeColor (eliminado duplicado)
 Set-Alias -Name Get-SizeColorFromStr -Value Get-SizeColor -Scope Script
 
-function Start-DiskScan {
+function global:Start-DiskScan {
     param([string]$RootPath)
 
     if (-not (Test-Path $RootPath -ErrorAction SilentlyContinue)) {
         Write-Log "[SCAN] Ruta no encontrada: $RootPath" -Level "WARN" -NoUI
-        Show-ThemedDialog -Title "Ruta no encontrada" -Message "Ruta no encontrada: $RootPath" -Type "error"
+        Show-ThemedDialog -Title (T "DiskPathNotFound" "Ruta no encontrada") -Message "$(T 'DiskPathNotFound' 'Ruta no encontrada'): $RootPath" -Type "error"
         return
     }
     Write-Log ("[SCAN] Iniciando escaneo de disco: {0}" -f $RootPath) -Level "INFO" -NoUI
@@ -1893,19 +1904,15 @@ function Start-DiskScan {
     # Señalizar parada al runspace anterior y esperar a que confirme la parada
     # WaitOne(500) bloquea máximo 500ms hasta que el handle complete — evita
     # que Reset() se ejecute con el hilo de escaneo anterior todavía activo.
-    # [CTK] ScanTokenManager.Cancel() notifica el token; ScanCtl211.Stop mantiene
-    # compatibilidad con PScanner211 que todavía lee el flag booleano.
-    [ScanCtl211]::Stop = $true
-    if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
-        [ScanTokenManager]::Cancel()
-    }
+    # [CTK] Cancel() señaliza el token → ScanCtl211.Stop bridge devuelve true
+    # PScanner211 lee ScanCtl211.Stop que ahora revisa _token.IsCancellationRequested
+    [ScanTokenManager]::Cancel()
     if ($null -ne $script:DiskScanAsync -and -not $script:DiskScanAsync.IsCompleted) {
         $script:DiskScanAsync.AsyncWaitHandle.WaitOne(500) | Out-Null
     }
     [ScanCtl211]::Reset()
-    if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
-        [ScanTokenManager]::RequestNew()   # token limpio para el nuevo escaneo
-    }
+    [ScanTokenManager]::RequestNew()
+    [ScanCtl211]::SetToken([ScanTokenManager]::Token)   # bridge nuevo token
 
     $script:CollapsedPaths.Clear()
     $script:CachedChildMap = $null      # Invalidar caché al iniciar nuevo escaneo
@@ -1914,7 +1921,7 @@ function Start-DiskScan {
 
     $btnDiskScan.IsEnabled  = $false
     $btnDiskStop.IsEnabled  = $true
-    $txtDiskScanStatus.Text = "Iniciando escaneo de $RootPath …"
+    $txtDiskScanStatus.Text = "$((T "ScanStartingMsg")) $RootPath …"
     if ($null -ne $btnSnapshotSave) {
         $btnSnapshotSave.IsEnabled = $false
         $txtSnapshotName.IsEnabled = $false
@@ -1988,29 +1995,26 @@ function Start-DiskScan {
     $script:DiskScanAsync = $ps.BeginInvoke()
 
     # ── Registrar tarea con hooks de control ─────────────────────────────────
-    $scanTask = Register-Task -Id "diskscan" -Name "Escaneo: $RootPath" -Icon "💾" -IconBg (Get-TC 'BgStatusInfo' '#1A2F4A')
+    $scanTask = Register-Task -Id "diskscan" -Name "$(T 'DiskScanTask' 'Escaneo'): $RootPath" -Icon "💾" -IconBg (Get-TC 'BgStatusInfo' '#1A2F4A')
     $scanTask.CancelFn = {
-        [ScanCtl211]::Stop = $true
-        if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
-            [ScanTokenManager]::Cancel()
-        }
+        [ScanTokenManager]::Cancel()   # bridge → ScanCtl211.Stop = true automático
         if ($null -ne $script:btnDiskStop) {
             try { $script:btnDiskStop.IsEnabled = $false } catch {}
         }
-        $script:txtDiskScanStatus.Text = "⏹ Cancelado desde panel de tareas…"
+        $script:txtDiskScanStatus.Text = "⏹ $((T "ScanCancelledFromPanel"))"
     }
     $scanTask.PauseFn = {
         $script:ScanPauseState.Paused = $true
-        $script:txtDiskScanStatus.Text = "⏸ Escaneo pausado"
+        $script:txtDiskScanStatus.Text = "⏸ $(T 'DiskScanPaused' 'Escaneo pausado')"
         if ($null -ne $script:btnDiskStop) {
-            try { $script:btnDiskStop.Content = "▶  Reanudar" } catch {}
+            try { $script:btnDiskStop.Content = "▶  " + (T "BtnResume" "Reanudar") } catch {}
         }
     }
     $scanTask.ResumeFn = {
         $script:ScanPauseState.Paused = $false
-        $script:txtDiskScanStatus.Text = "Escaneando…"
+        $script:txtDiskScanStatus.Text = "$((T "ScanDefaultName"))…"
         if ($null -ne $script:btnDiskStop) {
-            try { $script:btnDiskStop.Content = "⏹  Detener" } catch {}
+            try { $script:btnDiskStop.Content = "⏹  $((T "BtnStop"))" } catch {}
         }
     }
 
@@ -2190,8 +2194,8 @@ function Start-DiskScan {
             $cnt = $script:AllScannedItems.Count
             $tot = [ScanCtl211]::Total; $don = [ScanCtl211]::Done
             $pctScan = if ($tot -gt 0) { [int]([math]::Min(99, $don * 100 / $tot)) } else { 0 }
-            Update-Task -Id "diskscan" -Pct $pctScan -Detail "$cnt carpetas · $don/$tot"
-            $txtDiskScanStatus.Text = "Escaneando$([char]0x2026)  $cnt carpetas  $([char]0x00B7)  $don/$tot  $([char]0x00B7)  $cur"
+            Update-Task -Id "diskscan" -Pct $pctScan -Detail "$cnt $(T 'Folders' 'carpetas') · $don/$tot"
+            $txtDiskScanStatus.Text = "$((T "ScanDefaultName"))$([char]0x2026)  $cnt $((T "DiskFolders"))  $([char]0x00B7)  $don/$tot  $([char]0x00B7)  $cur"
         }
 
         # ¿Terminó el runspace?
@@ -2309,7 +2313,7 @@ $script:DiskUiTimer.Stop()
             $btnDedup.IsEnabled        = $true
             $btnSnapshotSave.IsEnabled    = $true
             $txtSnapshotName.IsEnabled    = $true
-            $txtSnapshotName.Text         = "Escaneo $(Get-Date -Format 'dd/MM/yyyy HH:mm')"
+            $txtSnapshotName.Text         = "$((T "ScanDefaultName")) $(Get-Date -Format 'dd/MM/yyyy HH:mm')"
             $txtSnapshotName.SelectAll()
 
             $gtStr2 = [Formatter]::FormatBytes([long]$gt2)
@@ -2325,7 +2329,7 @@ $script:DiskUiTimer.Start()
 $btnDiskBrowse.Add_Click({
     $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
     try {
-        $dlg.Description  = "Selecciona la carpeta a escanear"
+        $dlg.Description  = (T "ScanSelectFolder")
         $dlg.RootFolder   = "MyComputer"
         $dlg.SelectedPath = $txtDiskScanPath.Text
         if ($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
@@ -2340,12 +2344,9 @@ $btnDiskScan.Add_Click({
 })
 
 $btnDiskStop.Add_Click({
-    [ScanCtl211]::Stop = $true
-    if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
-        [ScanTokenManager]::Cancel()   # [CTK] cancelación limpia via token
-    }
+    [ScanTokenManager]::Cancel()   # [CTK] bridge → ScanCtl211.Stop = true automático
     $btnDiskStop.IsEnabled = $false
-    $txtDiskScanStatus.Text = "⏹ Cancelando — espera a que termine la carpeta actual…"
+    $txtDiskScanStatus.Text = "⏹ $((T "ScanCancelling"))"
 })
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2354,7 +2355,7 @@ $btnDiskStop.Add_Click({
 $script:SettingsPath = [System.IO.Path]::Combine(
     [Environment]::GetFolderPath("ApplicationData"), "SysOpt", "settings.json")
 
-function Save-Settings {
+function global:Save-Settings {
     try {
         $dir = [System.IO.Path]::GetDirectoryName($script:SettingsPath)
         if (-not (Test-Path $dir)) { [System.IO.Directory]::CreateDirectory($dir) | Out-Null }
@@ -2366,6 +2367,7 @@ function Save-Settings {
             Theme              = $script:CurrentTheme
             Language           = $script:CurrentLang
             DebugLog           = [LogEngine]::DebugEnabled
+            ToastEnabled       = if (([System.Management.Automation.PSTypeName]"SysOpt.Toast.ToastManager").Type) { [SysOpt.Toast.ToastManager]::Enabled } else { $true }
         }
         $json = $cfg | ConvertTo-Json
         # Escritura atómica: temp → Move evita file-lock conflicts
@@ -2378,7 +2380,7 @@ function Save-Settings {
     }
 }
 
-function Load-Settings {
+function global:Load-Settings {
     try {
         if (Test-Path $script:SettingsPath) {
             $cfg = Get-Content -Path $script:SettingsPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -2404,6 +2406,12 @@ function Load-Settings {
             if ($cfg.PSObject.Properties['DebugLog'] -and $cfg.DebugLog -eq $true) {
                 [LogEngine]::DebugEnabled = $true
             }
+            # Toast notifications toggle
+            if ($cfg.PSObject.Properties['ToastEnabled']) {
+                if (([System.Management.Automation.PSTypeName]"SysOpt.Toast.ToastManager").Type) {
+                    [SysOpt.Toast.ToastManager]::Enabled = ($cfg.ToastEnabled -ne $false)
+                }
+            }
         }
     } catch {}
 }
@@ -2411,7 +2419,7 @@ function Load-Settings {
 # ─────────────────────────────────────────────────────────────────────────────
 # [I18N] Cargar idioma y aplicar a toda la UI
 # ─────────────────────────────────────────────────────────────────────────────
-function Load-Language {
+function global:Load-Language {
     param([string]$LangCode)
     $langPath = Join-Path $script:LangDir "$LangCode.lang"
     if (-not (Test-Path $langPath)) {
@@ -2430,32 +2438,86 @@ function Load-Language {
 
     # Aplicar textos a controles conocidos
     Apply-LanguageToUI
+
+    # ── Sync localization to C# DLLs ─────────────────────────────────
+    try {
+        $dictGeneric = New-Object 'System.Collections.Generic.Dictionary[string,string]'([System.StringComparer]::OrdinalIgnoreCase)
+        foreach ($k in $script:LangDict.Keys) { $dictGeneric[$k] = $script:LangDict[$k] }
+        [Loc]::SetDict($dictGeneric)
+        if ('SysOpt.Diagnostics.Loc' -as [type]) { [SysOpt.Diagnostics.Loc]::SetDict($dictGeneric) }
+        if ('SysOpt.Optimizer.Loc'   -as [type]) { [SysOpt.Optimizer.Loc]::SetDict($dictGeneric)   }
+    } catch { Write-Log "WARN" "Loc.SetDict failed: $_" }
 }
 
-function Apply-LanguageToUI {
+# ─────────────────────────────────────────────────────────────────────────────
+# [DWM] Apply-TitleBarTheme — pinta la barra de título nativa con colores
+# del tema activo.  En Win11 → fondo + texto custom.  En Win10 → dark mode.
+# Se invoca al iniciar, al cambiar tema y al cambiar idioma.
+# ─────────────────────────────────────────────────────────────────────────────
+function global:Apply-TitleBarTheme {
+    try {
+        $hwnd = [System.Windows.Interop.WindowInteropHelper]::new($window).Handle
+        if ($hwnd -eq [IntPtr]::Zero) { return }
+        # Dark mode (Win10 1809+)
+        [DwmHelper]::SetDarkMode($hwnd, $true)
+        # Caption background = BgDeep (Win11 22000+)
+        $bg = Get-TC 'BgDeep' '#0D0F1A'
+        if ($bg -and $bg.Length -ge 7) {
+            [DwmHelper]::SetCaptionColor($hwnd,
+                [Convert]::ToByte($bg.Substring(1,2), 16),
+                [Convert]::ToByte($bg.Substring(3,2), 16),
+                [Convert]::ToByte($bg.Substring(5,2), 16))
+        }
+        # Caption text = TextPrimary (Win11 22000+)
+        $fg = Get-TC 'TextPrimary' '#E8ECF4'
+        if ($fg -and $fg.Length -ge 7) {
+            [DwmHelper]::SetTextColor($hwnd,
+                [Convert]::ToByte($fg.Substring(1,2), 16),
+                [Convert]::ToByte($fg.Substring(3,2), 16),
+                [Convert]::ToByte($fg.Substring(5,2), 16))
+        }
+    } catch {
+        Write-Log "[DWM] Error aplicando tema a title bar: $_" -Level "DBG" -NoUI
+    }
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [TITLE] Update-WindowTitle — título dinámico con badge [DEBUG MODE]
+# ─────────────────────────────────────────────────────────────────────────────
+function global:Update-WindowTitle {
+    $title = "SysOpt — $(T 'AppSubtitle' 'Windows Optimizer GUI') v$($script:AppVersion)"
+    try {
+        if ([LogEngine]::DebugEnabled) {
+            $title += "  [DEBUG MODE]"
+        }
+    } catch {}
+    $window.Title = $title
+}
+
+function global:Apply-LanguageToUI {
     $d = $script:LangDict
     if ($d.Count -eq 0) { return }
 
-    # Título de ventana
-    $window.Title = "SysOpt - $(T 'AppSubtitle' 'Windows Optimizer GUI') v$($script:AppVersion)"
+    # ── Window title ──────────────────────────────────────────────────────
+    Update-WindowTitle
+    Apply-TitleBarTheme
 
-    # StatusText
+    # ── Status bar ────────────────────────────────────────────────────────
     if ($null -ne $StatusText -and $StatusText.Text -match 'Listo|Ready|Pronto') {
         $StatusText.Text = T 'StatusReady' 'Listo para optimizar'
     }
 
-    # Tooltips
-    if ($null -ne $btnShowTasks) { $btnShowTasks.ToolTip = T 'TooltipTasks'   'Tareas en segundo plano' }
-    if ($null -ne $btnOptions)   { $btnOptions.ToolTip   = T 'TooltipOptions' 'Opciones' }
-    if ($null -ne $btnAbout)     { $btnAbout.ToolTip     = T 'TooltipAbout'   'Acerca de SysOpt' }
-    if ($null -ne $btnRefreshInfo) { $btnRefreshInfo.ToolTip = T 'TooltipRefreshInfo' 'Actualizar información del sistema' }
+    # ── Top bar tooltips ──────────────────────────────────────────────────
+    if ($null -ne $btnShowTasks)  { $btnShowTasks.ToolTip  = T 'TooltipTasks'       'Tareas en segundo plano' }
+    if ($null -ne $btnOptions)    { $btnOptions.ToolTip    = T 'TooltipOptions'     'Opciones — Tema e Idioma' }
+    if ($null -ne $btnRefreshInfo){ $btnRefreshInfo.ToolTip= T 'TooltipRefreshInfo' 'Actualizar información del sistema' }
 
-    # DryRun label
+    # ── DryRun label ──────────────────────────────────────────────────────
     if ($null -ne $chkDryRun -and $null -ne $chkDryRun.Content) {
         try { $chkDryRun.Content.Text = T 'DryRunLabel' 'MODO ANÁLISIS  (sin cambios)' } catch {}
     }
 
-    # Tab headers
+    # ── Tab headers ───────────────────────────────────────────────────────
     $tabs = $window.FindName("tabMain")
     if ($null -ne $tabs -and $tabs.Items.Count -ge 4) {
         $tabs.Items[0].Header = T 'TabOptimization' '⚙  Optimización'
@@ -2464,7 +2526,7 @@ function Apply-LanguageToUI {
         $tabs.Items[3].Header = T 'TabHistory'      '🕒  Historial'
     }
 
-    # Checkboxes de optimización
+    # ── Checkboxes de optimización ────────────────────────────────────────
     $chkMap = @{
         chkOptimizeDisks  = 'ChkOptimizeDisks'
         chkRecycleBin     = 'ChkRecycleBin'
@@ -2490,7 +2552,7 @@ function Apply-LanguageToUI {
         }
     }
 
-    # Botones principales
+    # ── Bottom buttons ────────────────────────────────────────────────────
     if ($null -ne $btnStart)     { $btnStart.Content     = T 'BtnStart'     '▶  Iniciar optimización' }
     if ($null -ne $btnDryRun)    { $btnDryRun.Content    = T 'BtnDryRun'    'Analizar' }
     if ($null -ne $btnSelectAll) { $btnSelectAll.Content  = T 'BtnSelectAll' 'Seleccionar todo' }
@@ -2500,13 +2562,193 @@ function Apply-LanguageToUI {
     if ($null -ne $btnSaveLog)   { $btnSaveLog.Content   = T 'BtnSaveLog'  'Guardar log' }
     if ($null -ne $btnExit)      { $btnExit.Content      = T 'BtnExit'     'Salir' }
 
-    # CheckBox reiniciar
+    # ── CheckBox reiniciar ────────────────────────────────────────────────
     if ($null -ne $chkAutoRestart) {
         try { $chkAutoRestart.Content.Text = T 'ChkAutoRestart' 'Reiniciar al finalizar' } catch {
             $chkAutoRestart.Content = T 'ChkAutoRestart' 'Reiniciar al finalizar'
         }
     }
+
+    # ── Section headers (Optimization tab) ────────────────────────────────
+    $hdrMap = @{
+        txtHdrDisks      = 'HdrDisksFiles'
+        txtHdrMemProc    = 'HdrMemoryProc'
+        txtHdrNetBrowser = 'HdrNetBrowsers'
+        txtHdrRegistry   = 'HdrRegistry'
+        txtHdrSysVerify  = 'HdrSysVerify'
+        txtHdrEventLogs  = 'HdrEventLogs'
+        txtHdrStartup    = 'HdrStartupPrograms'
+    }
+    foreach ($entry in $hdrMap.GetEnumerator()) {
+        $ctrl = $window.FindName($entry.Key)
+        if ($null -ne $ctrl -and $d.ContainsKey($entry.Value)) { $ctrl.Text = $d[$entry.Value] }
+    }
+
+    # ── Optimization notes ────────────────────────────────────────────────
+    $noteMap = @{
+        txtSecurityNote = 'NoteSecurityLog'
+        txtStartupNote  = 'NoteStartupManage'
+    }
+    foreach ($entry in $noteMap.GetEnumerator()) {
+        $ctrl = $window.FindName($entry.Key)
+        if ($null -ne $ctrl -and $d.ContainsKey($entry.Value)) { $ctrl.Text = $d[$entry.Value] }
+    }
+
+    # ── Section headers (Performance tab) ─────────────────────────────────
+    $perfHdrMap = @{
+        txtHdrCpuCores = 'HdrCpuCores'
+        txtHdrRam      = 'HdrMemoryRam'
+        txtHdrSmart    = 'HdrSmartDisk'
+        txtHdrNic      = 'HdrNetCards'
+        txtHdrDiskC    = 'HdrDiskC'
+        txtHdrDetail   = 'HdrDetail'
+        txtHdrOutput   = 'HdrOutput'
+    }
+    foreach ($entry in $perfHdrMap.GetEnumerator()) {
+        $ctrl = $window.FindName($entry.Key)
+        if ($null -ne $ctrl -and $d.ContainsKey($entry.Value)) { $ctrl.Text = $d[$entry.Value] }
+    }
+
+    # ── RAM sub-labels ────────────────────────────────────────────────────
+    $ramMap = @{
+        txtRamLblTotal = 'RamLblTotal'
+        txtRamLblUsed  = 'RamLblUsed'
+        txtRamLblFree  = 'RamLblFree'
+        txtRamLblPct   = 'RamLblUsePct'
+    }
+    foreach ($entry in $ramMap.GetEnumerator()) {
+        $ctrl = $window.FindName($entry.Key)
+        if ($null -ne $ctrl -and $d.ContainsKey($entry.Value)) { $ctrl.Text = $d[$entry.Value] }
+    }
+
+    # ── Performance controls ──────────────────────────────────────────────
+    $btnRP = $window.FindName('btnRefreshPerf')
+    if ($null -ne $btnRP) { $btnRP.Content = "↻  " + (T 'PerfBtnRefresh' 'Actualizar') }
+
+    $txtARL = $window.FindName('txtAutoRefreshLabel')
+    if ($null -ne $txtARL) { $txtARL.Text = T 'PerfAutoRefresh' 'Auto-refresco' }
+
+    if ($null -ne $txtPerfStatus -and $txtPerfStatus.Text -match 'Haz clic|Click|Clique') {
+        $txtPerfStatus.Text = "  " + (T 'PerfClickRefresh' 'Haz clic en Actualizar para cargar datos')
+    }
+
+    # ── Console panel tooltips ────────────────────────────────────────────
+    if ($null -ne $btnOutputClose)    { $btnOutputClose.ToolTip    = T 'TipOutputClose'    'Ocultar output' }
+    if ($null -ne $btnOutputMinimize) { $btnOutputMinimize.ToolTip = T 'TipOutputMinimize' 'Minimizar output' }
+    if ($null -ne $btnOutputExpand)   { $btnOutputExpand.ToolTip   = T 'TipOutputExpand'   'Expandir output' }
+
+    # ── Disk Explorer — labels ────────────────────────────────────────────
+    $diskLblMap = @{
+        txtLblPath        = 'DiskLblPath'
+        txtLblFilter      = 'DiskLblFilter'
+        txtColName        = 'DiskColName'
+        txtColSize        = 'DiskColSize'
+        txtColFiles       = 'DiskColFiles'
+        txtLblDetailSize  = 'DiskDetailSize'
+        txtLblDetailFiles = 'DiskDetailFiles'
+        txtLblDetailDirs  = 'DiskDetailDirs'
+        txtLblDetailPct   = 'DiskDetailPctParent'
+        txtHdrTop10       = 'DiskHdrTop10'
+    }
+    foreach ($entry in $diskLblMap.GetEnumerator()) {
+        $ctrl = $window.FindName($entry.Key)
+        if ($null -ne $ctrl -and $d.ContainsKey($entry.Value)) { $ctrl.Text = $d[$entry.Value] }
+    }
+
+    # ── Disk Explorer — buttons ───────────────────────────────────────────
+    $btnScan = $window.FindName('btnDiskScan')
+    if ($null -ne $btnScan) { $btnScan.Content = "🔍  " + (T 'DiskBtnScan' 'Escanear') }
+    $btnStop = $window.FindName('btnDiskStop')
+    if ($null -ne $btnStop -and $btnStop.IsEnabled -eq $false) { $btnStop.Content = "⏹  " + (T 'DiskBtnStop' 'Detener') }
+    $btnBrowse = $window.FindName('btnDiskBrowse')
+    if ($null -ne $btnBrowse) { $btnBrowse.ToolTip = T 'DiskBrowseTip' 'Seleccionar carpeta' }
+    $btnFltClr = $window.FindName('btnDiskFilterClear')
+    if ($null -ne $btnFltClr) { $btnFltClr.ToolTip = T 'DiskFilterClearTip' 'Limpiar filtro' }
+
+    # Disk bottom buttons
+    $btnDed = $window.FindName('btnDedup')
+    if ($null -ne $btnDed) {
+        $btnDed.Content = "🔍  " + (T 'DiskBtnDedup' 'Duplicados')
+        $btnDed.ToolTip = T 'DiskDedupTip' 'Busca archivos duplicados por SHA256 (>10 MB) en el escaneo actual'
+    }
+    $btnExpCSV = $window.FindName('btnExportCsv')
+    if ($null -ne $btnExpCSV) {
+        $btnExpCSV.Content = "📄  " + (T 'DiskBtnExportCsv' 'Exportar CSV')
+        $btnExpCSV.ToolTip = T 'DiskExportCsvTip' 'Exportar resultados a CSV'
+    }
+    $btnHtmlR = $window.FindName('btnDiskReport')
+    if ($null -ne $btnHtmlR) {
+        $btnHtmlR.Content = "🌐  " + (T 'DiskBtnHtmlReport' 'Informe HTML')
+        $btnHtmlR.ToolTip = T 'DiskHtmlReportTip' 'Genera informe HTML visual del escaneo'
+    }
+
+    # Disk scan status
+    $txtDSS = $window.FindName('txtDiskScanStatus')
+    if ($null -ne $txtDSS -and $txtDSS.Text -match 'Listo|Ready|Pronto') {
+        $txtDSS.Text = T 'DiskStatusReady' 'Listo'
+    }
+
+    # ── Disk Explorer — context menu ──────────────────────────────────────
+    $ctxMap = @{
+        ctxOpen       = @("📂  ", 'CtxOpenExplorer',  'Abrir en Explorador')
+        ctxCopy       = @("📋  ", 'CtxCopyPath',      'Copiar ruta')
+        ctxScanFolder = @("🔍  ", 'CtxScanFolder',    'Escanear carpeta')
+        ctxDelete     = @("🗑  ", 'CtxDeleteFolder',  'Eliminar carpeta...')
+        ctxShowOutput = @("🖥  ", 'CtxShowOutput',    'Mostrar Output')
+    }
+    foreach ($entry in $ctxMap.GetEnumerator()) {
+        $ctrl = $window.FindName($entry.Key)
+        if ($null -ne $ctrl) {
+            $icon = $entry.Value[0]
+            $key  = $entry.Value[1]
+            $fb   = $entry.Value[2]
+            $ctrl.Header = $icon + (T $key $fb)
+        }
+    }
+
+    # Filter tooltip
+    $txtFilter = $window.FindName('txtDiskFilter')
+    if ($null -ne $txtFilter) { $txtFilter.ToolTip = T 'DiskFilterTip' 'Filtra carpetas por nombre en tiempo real' }
+
+    # ── History tab ───────────────────────────────────────────────────────
+    $txtSNL = $window.FindName('txtSnapNameLabel')
+    if ($null -ne $txtSNL) { $txtSNL.Text = T 'SnapLblName' 'Nombre:' }
+
+    $btnSnapSave = $window.FindName('btnSnapshotSave')
+    if ($null -ne $btnSnapSave) { $btnSnapSave.Content = "💾  " + (T 'SnapBtnSave' 'Guardar') }
+
+    $chkSnapAll = $window.FindName('chkSnapshotSelectAll')
+    if ($null -ne $chkSnapAll) { $chkSnapAll.Content = T 'SnapChkAll' 'Todo' }
+
+    $txtSnapSel = $window.FindName('txtSnapshotSelCount')
+    if ($null -ne $txtSnapSel -and $txtSnapSel.Text -match 'guardados|saved|salvos') {
+        $txtSnapSel.Text = T 'SnapSavedStatus' 'Snapshots guardados'
+    }
+
+    $btnSnapCmp = $window.FindName('btnSnapshotCompare')
+    if ($null -ne $btnSnapCmp) {
+        $btnSnapCmp.Content = "📊  " + (T 'SnapBtnCompare' 'Comparar')
+        $btnSnapCmp.ToolTip = T 'SnapCompareTip' 'Compara los snapshots marcados entre sí o contra el escaneo actual'
+    }
+
+    $btnSnapDel = $window.FindName('btnSnapshotDelete')
+    if ($null -ne $btnSnapDel) {
+        $btnSnapDel.Content = "🗑  " + (T 'SnapBtnDelete' 'Eliminar')
+        $btnSnapDel.ToolTip = T 'SnapDeleteTip' 'Elimina todos los snapshots marcados'
+    }
+
+    $txtSnapDT = $window.FindName('txtSnapshotDetailTitle')
+    if ($null -ne $txtSnapDT -and $txtSnapDT.Text -match 'Selecciona|Select|Selecione') {
+        $txtSnapDT.Text = T 'SnapSelectPrompt' 'Selecciona un snapshot'
+    }
+
+    $txtSnapSt = $window.FindName('txtSnapshotStatus')
+    if ($null -ne $txtSnapSt -and $txtSnapSt.Text -match 'Sin snapshots|No snapshots|Sem snapshots') {
+        $txtSnapSt.Text = T 'SnapNoSnapshots' 'Sin snapshots guardados.'
+    }
 }
+
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [THEME] Aplicar tema con barra de progreso + subproceso para parsing
@@ -2597,11 +2839,11 @@ $script:ThemeColorMap = @{
 # ventana principal usando las claves del tema activo. Complementa el sistema
 # TB_RRGGBB (DynamicResource) para botones con colores asignados directamente.
 # ─────────────────────────────────────────────────────────────────────────────
-function Apply-ButtonTheme {
+function global:Apply-ButtonTheme {
     $bc = [System.Windows.Media.BrushConverter]::new()
 
     # Helper: clave de tema → SolidColorBrush
-    function Local:Brush([string]$key, [string]$fallback) {
+    function global:Local:Brush([string]$key, [string]$fallback) {
         $bc.ConvertFromString((Get-TC $key $fallback))
     }
 
@@ -2627,7 +2869,6 @@ function Apply-ButtonTheme {
         # ── Header (barra superior) ───────────────────────────────────────────
         "btnShowTasks"       = "Ghost"      # ⚡ Tareas
         "btnOptions"         = "Ghost"      # ⚙ Opciones
-        "btnAbout"           = "Ghost"      # ℹ About
         "btnRefreshInfo"     = "Ghost"      # 🔄 Actualizar info del sistema
         # ── Tab Rendimiento ───────────────────────────────────────────────────
         "btnRefreshPerf"     = "Cyan"       # ↺ Actualizar
@@ -2654,7 +2895,7 @@ function Apply-ButtonTheme {
     }
 }
 
-function Apply-ThemeWithProgress {
+function global:Apply-ThemeWithProgress {
     param([string]$ThemeName)
 
     $themePath = Join-Path $script:ThemesDir "$ThemeName.theme"
@@ -2742,7 +2983,7 @@ function Apply-ThemeWithProgress {
     } catch {
         $progWin.Close()
         Show-ThemedDialog -Title (T 'DlgError' 'Error') `
-            -Message "Error al cargar tema: $($_.Exception.Message)" -Type "error"
+            -Message "$((T "ThemeLoadError")): $($_.Exception.Message)" -Type "error"
         return
     }
     if ($newColors.Count -eq 0) { $progWin.Close(); return }
@@ -2830,6 +3071,9 @@ function Apply-ThemeWithProgress {
     # Compute derived colors (status, etc.)
     Update-DynamicThemeValues
 
+    # [TOAST] Sincronizar colores del tema con el motor de toast
+    try { Sync-ToastTheme } catch {}
+
     # Update ComboBox themes
     try {
         $allCombos = Get-VisualChildren $window | Where-Object { $_ -is [System.Windows.Controls.ComboBox] }
@@ -2840,6 +3084,7 @@ function Apply-ThemeWithProgress {
 
     # -- PASS 4: Repaint named buttons that use direct colors (not DynamicResource) --
     try { Apply-ButtonTheme } catch {}
+    Apply-TitleBarTheme
 
     # -- PASS 5: Refresh tasks panel so IconBg/StatusBg recalculate with new theme --
     try { Refresh-TasksPanel } catch {}
@@ -2864,9 +3109,10 @@ function Apply-ThemeWithProgress {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [OPTIONS] Ventana de Opciones — Tema e Idioma
+# [OPTIONS] Ventana de Configuración — Win11 Settings style
 # ─────────────────────────────────────────────────────────────────────────────
-function Show-OptionsWindow {
+function global:Show-OptionsWindow {
+    param([string]$StartPage = "interface")
     $optXaml = [XamlLoader]::Load($script:XamlFolder, "OptionsWindow")
     $optXaml = $ExecutionContext.InvokeCommand.ExpandString($optXaml)
     try {
@@ -2874,13 +3120,212 @@ function Show-OptionsWindow {
         $optWin    = [Windows.Markup.XamlReader]::Load($optReader)
         $optWin.Owner = $window
 
-        $cmbTheme    = $optWin.FindName("cmbTheme")
-        $cmbLang     = $optWin.FindName("cmbLang")
-        $tglDebugLog = $optWin.FindName("tglDebugLog")
+        # ── FindName all controls ──
+        $cmbTheme       = $optWin.FindName("cmbTheme")
+        $cmbLang        = $optWin.FindName("cmbLang")
+        $tglDebugLog    = $optWin.FindName("tglDebugLog")
+        $tglToast       = $optWin.FindName("tglToast")
+        $btnNavInterface= $optWin.FindName("btnNavInterface")
+        $btnNavBehavior = $optWin.FindName("btnNavBehavior")
+        $txtNavInterface= $optWin.FindName("txtNavInterface")
+        $txtNavBehavior = $optWin.FindName("txtNavBehavior")
+        $pageInterface  = $optWin.FindName("pageInterface")
+        $pageBehavior   = $optWin.FindName("pageBehavior")
+        $btnToastTest   = $optWin.FindName("btnToastTest")
 
-        # Sincronizar checkbox con estado actual de LogEngine
+        # Named elements for dynamic theming
+        $borderSidebar  = $optWin.FindName("borderSidebar")
+        $optBgRect      = $optWin.FindName("optBgRect")
+        $cardTheme      = $optWin.FindName("cardTheme")
+        $cardLang       = $optWin.FindName("cardLang")
+        $cardToast      = $optWin.FindName("cardToast")
+        $cardToastTest  = $optWin.FindName("cardToastTest")
+        $cardDebug      = $optWin.FindName("cardDebug")
+        $txtOptHeader   = $optWin.FindName("txtOptHeader")
+        $txtThemeSection= $optWin.FindName("txtThemeSection")
+        $txtLangSection = $optWin.FindName("txtLangSection")
+        $txtToastSection= $optWin.FindName("txtToastSection")
+        $txtDebugSection= $optWin.FindName("txtDebugSection")
+        $txtThemeLabel  = $optWin.FindName("txtThemeLabel")
+        $txtLangLabel   = $optWin.FindName("txtLangLabel")
+        $txtToastLabel  = $optWin.FindName("txtToastLabel")
+        $txtToastDesc   = $optWin.FindName("txtToastDesc")
+        $txtDebugLabel  = $optWin.FindName("txtDebugLabel")
+        $txtDebugDesc   = $optWin.FindName("txtDebugDesc")
+        $txtOptHint     = $optWin.FindName("txtOptHint")
+        $txtToastTestLabel = $optWin.FindName("txtToastTestLabel")
+        $txtToastTestDesc  = $optWin.FindName("txtToastTestDesc")
+        $btnOptApply    = $optWin.FindName("btnOptApply")
+        $btnOptClose    = $optWin.FindName("btnOptClose")
+        # ── About section controls ──
+        $pageAbout      = $optWin.FindName("pageAbout")
+        $btnNavAbout    = $optWin.FindName("btnNavAbout")
+        $txtNavAbout    = $optWin.FindName("txtNavAbout")
+        $runNavAbout    = $optWin.FindName("runNavAbout")
+        $aboutLogoOpt   = $optWin.FindName("aboutLogoOpt")
+        $txtAboutSubtitle = $optWin.FindName("txtAboutSubtitle")
+        $txtAboutDeveloper= $optWin.FindName("txtAboutDeveloper")
+        $lnkGithubOpt   = $optWin.FindName("lnkGithubOpt")
+        $txtAboutCopyright= $optWin.FindName("txtAboutCopyright")
+        $btnChangelog   = $optWin.FindName("btnChangelog")
+        $buttonsPanel   = $optWin.FindName("buttonsPanel")
+
+        $bc = [System.Windows.Media.BrushConverter]::new()
+
+        # ── Sync toggles with current state ──
         if ($null -ne $tglDebugLog) {
             $tglDebugLog.IsChecked = [LogEngine]::DebugEnabled
+        }
+        if ($null -ne $tglToast) {
+            $tglToast.IsChecked = if (([System.Management.Automation.PSTypeName]"SysOpt.Toast.ToastManager").Type) {
+                [SysOpt.Toast.ToastManager]::Enabled
+            } else { $true }
+        }
+
+        # ── Navigation: page switching ──
+        $script:_optCurrentPage = $StartPage
+
+        $selectNav = {
+            param([string]$Page)
+            $script:_optCurrentPage = $Page
+            # Reset all pages and nav buttons
+            $pageInterface.Visibility = "Collapsed"
+            $pageBehavior.Visibility  = "Collapsed"
+            if ($pageAbout) { $pageAbout.Visibility = "Collapsed" }
+            # Hide Aplicar/Cerrar on About page
+            if ($buttonsPanel) {
+                $buttonsPanel.Visibility = if ($Page -eq "about") { "Collapsed" } else { "Visible" }
+            }
+            foreach ($btn in @($btnNavInterface, $btnNavBehavior, $btnNavAbout)) {
+                if ($btn) { $btn.Background = [System.Windows.Media.Brushes]::Transparent }
+            }
+            foreach ($txt in @($txtNavInterface, $txtNavBehavior, $txtNavAbout)) {
+                if ($txt) {
+                    $txt.Foreground = $bc.ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0'))
+                    $txt.FontWeight = [System.Windows.FontWeights]::Normal
+                }
+            }
+            # Activate selected page
+            switch ($Page) {
+                "interface" {
+                    $pageInterface.Visibility = "Visible"
+                    $btnNavInterface.Background = $bc.ConvertFromString((Get-TC 'ComboSelected' '#1E3060'))
+                    $txtNavInterface.Foreground = $bc.ConvertFromString((Get-TC 'AccentBlue' '#5BA3FF'))
+                    $txtNavInterface.FontWeight = [System.Windows.FontWeights]::SemiBold
+                }
+                "behavior" {
+                    $pageBehavior.Visibility = "Visible"
+                    $btnNavBehavior.Background = $bc.ConvertFromString((Get-TC 'ComboSelected' '#1E3060'))
+                    $txtNavBehavior.Foreground = $bc.ConvertFromString((Get-TC 'AccentBlue' '#5BA3FF'))
+                    $txtNavBehavior.FontWeight = [System.Windows.FontWeights]::SemiBold
+                }
+                "about" {
+                    if ($pageAbout) { $pageAbout.Visibility = "Visible" }
+                    if ($btnNavAbout) { $btnNavAbout.Background = $bc.ConvertFromString((Get-TC 'ComboSelected' '#1E3060')) }
+                    if ($txtNavAbout) {
+                        $txtNavAbout.Foreground = $bc.ConvertFromString((Get-TC 'AccentBlue' '#5BA3FF'))
+                        $txtNavAbout.FontWeight = [System.Windows.FontWeights]::SemiBold
+                    }
+                }
+            }
+        }.GetNewClosure()
+        & $selectNav $StartPage
+
+        $btnNavInterface.Add_MouseLeftButtonDown({
+            & $selectNav "interface"
+        }.GetNewClosure())
+        $btnNavBehavior.Add_MouseLeftButtonDown({
+            & $selectNav "behavior"
+        }.GetNewClosure())
+
+        # ── About nav handler ──
+        if ($btnNavAbout) {
+            $btnNavAbout.Add_MouseLeftButtonDown({
+                & $selectNav "about"
+            }.GetNewClosure())
+        }
+
+        # ── About section wiring ──
+        # Load logo from main window
+        if ($null -ne $aboutLogoOpt -and $null -ne $imgLogo -and $null -ne $imgLogo.Source) {
+            $aboutLogoOpt.Source = $imgLogo.Source
+        }
+        # GitHub link handler
+        if ($null -ne $lnkGithubOpt) {
+            $lnkGithubOpt.Add_RequestNavigate({
+                param($sender, $e)
+                Start-Process $e.Uri.AbsoluteUri
+                $e.Handled = $true
+            })
+        }
+        # Changelog button handler — pre-capture script-scope vars for closure
+        if ($null -ne $btnChangelog) {
+            $_xf = $script:XamlFolder
+            # Pre-format AppNotes hashtable → readable string
+            $_an = ""
+            if ($null -ne $script:AppNotes -and $script:AppNotes.Cambios) {
+                $sb  = [System.Text.StringBuilder]::new()
+                $bw  = 56  # box inner width
+                $sep = [string]::new([char]'━', $bw + 2)
+                foreach ($ver in $script:AppNotes.Cambios.Keys) {
+                    $entry  = $script:AppNotes.Cambios[$ver]
+                    $header = "  📦 $ver — $($entry.Titulo)  "
+                    if ($header.Length -lt $bw) { $header = $header.PadRight($bw) }
+
+                    # ── Version box ──
+                    [void]$sb.AppendLine("╔$([string]::new([char]'═', $bw))╗")
+                    [void]$sb.AppendLine("║$header║")
+                    [void]$sb.AppendLine("╚$([string]::new([char]'═', $bw))╝")
+                    [void]$sb.AppendLine("")
+
+                    # ── Group items by [TAG] ──
+                    $groups = [ordered]@{}
+                    foreach ($item in $entry.Items) {
+                        if ($item -match '^\[([^\]]+)\]\s*(.+)$') {
+                            $tag  = $Matches[1]
+                            $text = $Matches[2]
+                        } else {
+                            $tag  = 'MISC'
+                            $text = $item
+                        }
+                        if (-not $groups.Contains($tag)) { $groups[$tag] = [System.Collections.Generic.List[string]]::new() }
+                        $groups[$tag].Add($text)
+                    }
+
+                    foreach ($tag in $groups.Keys) {
+                        $tagLabel = "─ $tag "
+                        $fill     = [Math]::Max(1, $bw - $tagLabel.Length - 1)
+                        [void]$sb.AppendLine("  ┌$tagLabel$([string]::new([char]'─', $fill))")
+                        foreach ($it in $groups[$tag]) {
+                            [void]$sb.AppendLine("  │  • $it")
+                        }
+                        [void]$sb.AppendLine("  │")
+                    }
+                    [void]$sb.AppendLine($sep)
+                    [void]$sb.AppendLine("")
+                }
+                $_an = $sb.ToString()
+            }
+            $btnChangelog.Add_Click({
+                try {
+                    $clXaml = [XamlLoader]::Load($_xf, "ChangelogWindow")
+                    $clXaml = $ExecutionContext.InvokeCommand.ExpandString($clXaml)
+                    $clReader = [System.Xml.XmlNodeReader]::new([xml]$clXaml)
+                    $clWin    = [Windows.Markup.XamlReader]::Load($clReader)
+                    $clWin.Owner = $optWin
+                    $clTxt = $clWin.FindName("txtCLContent")
+                    if ($null -ne $clTxt) {
+                        $clTxt.Text = $_an
+                    }
+                    $clClose = $clWin.FindName("btnCLClose")
+                    if ($null -ne $clClose) {
+                        $clClose.Add_Click({ $clWin.Close() }.GetNewClosure())
+                    }
+                    [void]$clWin.ShowDialog()
+                } catch {
+                    Write-Log ("[OPTIONS] " + (T 'ErrOpenChangelog' 'Error opening changelog') + " $_") -Level ERR
+                }
+            }.GetNewClosure())
         }
 
         # ── Poblar ComboBox de temas ──
@@ -2913,8 +3358,67 @@ function Show-OptionsWindow {
             $cmbLang.SelectedIndex = 0
         }
 
+        # ── Helper: Apply theme to Options window dynamically ──
+        $applyOptTheme = {
+            $bcc = [System.Windows.Media.BrushConverter]::new()
+            try { $optBgRect.Fill        = $bcc.ConvertFromString((Get-TC 'BgDeep'        '#0D0F1A')) } catch {}
+            try { $optWin.Background     = $bcc.ConvertFromString((Get-TC 'BgDeep'        '#0D0F1A')) } catch {}
+            try { $borderSidebar.Background = $bcc.ConvertFromString((Get-TC 'BgCard'     '#161925')) } catch {}
+            foreach ($card in @($cardTheme, $cardLang, $cardToast, $cardToastTest, $cardDebug)) {
+                try { if ($card) { $card.Background = $bcc.ConvertFromString((Get-TC 'BgCard' '#161925')) } } catch {}
+            }
+            # Section headers
+            foreach ($tb in @($txtThemeSection, $txtLangSection, $txtToastSection, $txtDebugSection, $txtOptHint)) {
+                try { if ($tb) { $tb.Foreground = $bcc.ConvertFromString((Get-TC 'TextMuted' '#6B7494')) } } catch {}
+            }
+            # Labels primary
+            foreach ($tb in @($txtThemeLabel, $txtLangLabel, $txtToastLabel, $txtDebugLabel, $txtToastTestLabel)) {
+                try { if ($tb) { $tb.Foreground = $bcc.ConvertFromString((Get-TC 'TextPrimary' '#E8EAF6')) } } catch {}
+            }
+            # Labels secondary
+            foreach ($tb in @($txtToastDesc, $txtDebugDesc, $txtToastTestDesc)) {
+                try { if ($tb) { $tb.Foreground = $bcc.ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0')) } } catch {}
+            }
+            # About section theming
+            foreach ($tb in @($txtAboutSubtitle, $txtAboutCopyright)) {
+                try { if ($tb) { $tb.Foreground = $bcc.ConvertFromString((Get-TC 'TextMuted' '#6B7494')) } } catch {}
+            }
+            try { if ($txtAboutDeveloper) { $txtAboutDeveloper.Foreground = $bcc.ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0')) } } catch {}
+            try {
+                if ($btnChangelog) {
+                    $btnChangelog.Background  = $bcc.ConvertFromString((Get-TC 'BtnSecondaryBg' '#1E2235'))
+                    $btnChangelog.BorderBrush = $bcc.ConvertFromString((Get-TC 'AccentBlue'     '#5BA3FF'))
+                    $btnChangelog.Foreground  = $bcc.ConvertFromString((Get-TC 'AccentBlue'     '#5BA3FF'))
+                }
+            } catch {}
+            # Title
+            try { $txtOptHeader.Foreground = $bcc.ConvertFromString((Get-TC 'TextPrimary' '#E8EAF6')) } catch {}
+            # Buttons
+            try {
+                $btnOptApply.Background  = $bcc.ConvertFromString((Get-TC 'BtnSecondaryBg' '#1E2235'))
+                $btnOptApply.BorderBrush = $bcc.ConvertFromString((Get-TC 'AccentBlue'     '#5BA3FF'))
+                $btnOptApply.Foreground  = $bcc.ConvertFromString((Get-TC 'AccentBlue'     '#5BA3FF'))
+            } catch {}
+            try {
+                $btnOptClose.Background  = $bcc.ConvertFromString((Get-TC 'HdrBtnBg'      '#1E2235'))
+                $btnOptClose.BorderBrush = $bcc.ConvertFromString((Get-TC 'HdrBtnBorder'  '#2A2F48'))
+                $btnOptClose.Foreground  = $bcc.ConvertFromString((Get-TC 'TextSecondary' '#9BA4C0'))
+            } catch {}
+            try {
+                $btnToastTest.Background  = $bcc.ConvertFromString((Get-TC 'BtnSecondaryBg' '#1E2235'))
+                $btnToastTest.BorderBrush = $bcc.ConvertFromString((Get-TC 'AccentBlue'     '#5BA3FF'))
+                $btnToastTest.Foreground  = $bcc.ConvertFromString((Get-TC 'AccentBlue'     '#5BA3FF'))
+            } catch {}
+            # Re-select current nav
+            & $selectNav $script:_optCurrentPage
+            # ComboBoxes
+            try {
+                $allCbs = Get-VisualChildren $optWin | Where-Object { $_ -is [System.Windows.Controls.ComboBox] }
+                foreach ($cb in $allCbs) { Apply-ComboBoxDarkTheme $cb }
+            } catch {}
+        }.GetNewClosure()
+
         # ── Botón Aplicar ──
-        $btnOptApply = $optWin.FindName("btnOptApply")
         $btnOptApply.Add_Click({
             $selectedTheme = $cmbTheme.SelectedItem.Tag
             $selectedLang  = $cmbLang.SelectedItem.Tag
@@ -2925,29 +3429,51 @@ function Show-OptionsWindow {
                 Load-Language -LangCode $selectedLang
             }
 
-            # Aplicar tema si cambió — con barra de progreso
+            # Aplicar tema si cambió
             if ($selectedTheme -ne $script:CurrentTheme) {
                 Write-Log ("[CFG] Tema cambiado: {0} → {1}" -f $script:CurrentTheme, $selectedTheme) -Level "INFO" -NoUI
                 $optWin.Hide()
                 Apply-ThemeWithProgress -ThemeName $selectedTheme
                 $optWin.Show()
+                # [THEME] Aplicar tema dinámicamente a la ventana de opciones
+                & $applyOptTheme
             }
 
             # Aplicar debug toggle
             if ($null -ne $tglDebugLog) {
-                [LogEngine]::DebugEnabled = ($tglDebugLog.IsChecked -eq $true)
-                Write-Log ("[CFG] Debug logging: {0}" -f $(if ([LogEngine]::DebugEnabled) {"ON"} else {"OFF"})) -Level "INFO" -NoUI
+                $newDebug = ($tglDebugLog.IsChecked -eq $true)
+                [LogEngine]::DebugEnabled = $newDebug
+                Update-WindowTitle
+                # Sync toast debug flag
+                if (([System.Management.Automation.PSTypeName]"SysOpt.Toast.ToastManager").Type) {
+                    [SysOpt.Toast.ToastManager]::Debug = $newDebug
+                }
+                Write-Log ("[CFG] Debug logging: {0}" -f $(if ($newDebug) {"ON"} else {"OFF"})) -Level "INFO" -NoUI
+            }
+
+            # Aplicar toast toggle
+            if ($null -ne $tglToast) {
+                $toastOn = ($tglToast.IsChecked -eq $true)
+                if (([System.Management.Automation.PSTypeName]"SysOpt.Toast.ToastManager").Type) {
+                    [SysOpt.Toast.ToastManager]::Enabled = $toastOn
+                }
+                Write-Log ("[CFG] Toast notifications: {0}" -f $(if ($toastOn) {"ON"} else {"OFF"})) -Level "INFO" -NoUI
             }
 
             try { Save-Settings } catch {}
         }.GetNewClosure())
 
+        # ── Botón Test Toast ──
+        if ($null -ne $btnToastTest) {
+            $btnToastTest.Add_Click({
+                Show-Toast -Title (T 'ToastTestTitle') -Message (T 'ToastTestMsg') -Type "Info"
+            }.GetNewClosure())
+        }
+
         # ── Botón Cerrar ──
-        $btnOptClose = $optWin.FindName("btnOptClose")
         $btnOptClose.Add_Click({ $optWin.Close() }.GetNewClosure())
 
-
-        # ── Tematizar ComboBoxes del diálogo de opciones ──
+        # ── Tematizar ComboBoxes al cargar ──
         $optWin.Add_Loaded({
             try {
                 $allCbs = Get-VisualChildren $optWin | Where-Object { $_ -is [System.Windows.Controls.ComboBox] }
@@ -2962,7 +3488,7 @@ function Show-OptionsWindow {
     }
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+
 $script:SnapshotDir = Join-Path $script:AppDir "snapshots"
 $script:LogsDir     = Join-Path $script:AppDir "logs"
 
@@ -2980,28 +3506,28 @@ $txtSnapshotDetailMeta  = $window.FindName("txtSnapshotDetailMeta")
 $txtSnapshotStatus      = $window.FindName("txtSnapshotStatus")
 
 # ── Helpers de formato ───────────────────────────────────────────────────────
-function Format-SnapshotSize([long]$bytes) { return [Formatter]::FormatBytes($bytes) }
+function global:Format-SnapshotSize([long]$bytes) { return [Formatter]::FormatBytes($bytes) }
 
 # ── Actualizar contador y estado de botones según checks ─────────────────────
-function Update-SnapshotCheckState {
+function global:Update-SnapshotCheckState {
     $all     = @($lbSnapshots.ItemsSource)
     $checked = @($all | Where-Object { $_.IsChecked })
     $n       = $checked.Count
     $total   = $all.Count
 
     $txtSnapshotSelCount.Text = if ($n -eq 0) {
-        if ($total -eq 0) { "Sin snapshots guardados." } else { "$total snapshot(s) disponibles." }
+        if ($total -eq 0) { T "SnapNoSnapshots" "Sin snapshots guardados." } else { "$total $(T 'SnapAvailable' 'snapshot(s) disponibles.')" }
     } else {
-        "$n de $total seleccionados"
+        "$n $(T 'Of' 'de') $total $(T 'SnapSelected' 'seleccionados')"
     }
 
     $btnSnapshotDelete.IsEnabled  = ($n -gt 0)
     $hasCurrentScan = ($null -ne $script:AllScannedItems -and $script:AllScannedItems.Count -gt 0)
     $btnSnapshotCompare.IsEnabled = ($n -eq 2) -or ($n -eq 1 -and $hasCurrentScan)
     $btnSnapshotCompare.Content   = if ($n -eq 2) {
-        ([char]::ConvertFromUtf32(0x1F4CA) + "  Comparar 2")
+        ([char]::ConvertFromUtf32(0x1F4CA) + "  " + (T "BtnCompare" "Comparar") + " 2")
     } else {
-        ([char]::ConvertFromUtf32(0x1F4CA) + "  Comparar")
+        ([char]::ConvertFromUtf32(0x1F4CA) + "  " + (T "BtnCompare" "Comparar"))
     }
 }
 
@@ -3010,8 +3536,8 @@ function Update-SnapshotCheckState {
 #            exportar CSV, exportar HTML.
 # El botón "Poner en segundo plano" oculta la ventana pero NO detiene el proceso
 # ni el DispatcherTimer — al completarse se cierra sola igual.
-function Show-ExportProgressDialog {
-    param([string]$OperationTitle = "Procesando...")
+function global:Show-ExportProgressDialog {
+    param([string]$OperationTitle = (T "Processing" "Procesando..."))
 
     # ── Construir la ventana 100% programáticamente — sin FindName, sin Name= en XAML ──
     # FindName falla con WindowStyle=None + AllowsTransparency=True antes de Show().
@@ -3064,7 +3590,7 @@ function Show-ExportProgressDialog {
     $iconBorder.Child = $tbIcon
 
     $tbTitle = New-Object System.Windows.Controls.TextBlock
-    $tbTitle.Text = "Procesando..."; $tbTitle.FontSize = 14; $tbTitle.FontWeight = "Bold"
+    $tbTitle.Text = (T "SnapProcessing"); $tbTitle.FontSize = 14; $tbTitle.FontWeight = "Bold"
     $tbTitle.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'TextPrimary' '#E8ECF4'))
     $tbTitle.VerticalAlignment = "Center"
     $tbTitle.FontFamily = [System.Windows.Media.FontFamily]::new("Segoe UI")
@@ -3074,7 +3600,7 @@ function Show-ExportProgressDialog {
 
     # — Fase —
     $tbPhase = New-Object System.Windows.Controls.TextBlock
-    $tbPhase.Text = "Iniciando..."; $tbPhase.FontSize = 11.5
+    $tbPhase.Text = (T "SnapInitializing"); $tbPhase.FontSize = 11.5
     $tbPhase.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'TextMuted' '#7880A0'))
     $tbPhase.TextTrimming = "CharacterEllipsis"
     $tbPhase.Margin = [System.Windows.Thickness]::new(0,0,0,10)
@@ -3126,7 +3652,7 @@ function Show-ExportProgressDialog {
 
     # — Botón segundo plano —
     $btn = New-Object System.Windows.Controls.Button
-    $btn.Content = [string]([char]0x2193) + "  Poner en segundo plano"
+    $btn.Content = [string]([char]0x2193) + "  " + (T "SnapPutBackground" "Poner en segundo plano")
     $btn.Height = 32
     $btn.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'BgInput' '#1A1E2F'))
     $btn.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString((Get-TC 'TextMuted' '#7880A0'))
@@ -3171,12 +3697,12 @@ function Show-ExportProgressDialog {
 }
 
 # Helper interno: cierra la ventana de progreso (visible u oculta en 2do plano)
-function Close-ProgressDialog($prog) {
+function global:Close-ProgressDialog($prog) {
     try { $prog.Window.Close() } catch {}
 }
 
 # Helper: actualiza el diálogo de progreso de forma null-safe
-function Update-ProgressDialog($prog, [int]$pct, [string]$phase, [string]$count) {
+function global:Update-ProgressDialog($prog, [int]$pct, [string]$phase, [string]$count) {
     if ($null -eq $prog) { return }
     try {
         if ($null -ne $prog.Phase)   { $prog.Phase.Text    = $phase }
@@ -3193,7 +3719,8 @@ $script:ExportState = [hashtable]::Synchronized(@{
 })
 
 # ── Cargar lista de snapshots en background ──────────────────────────────────
-function Load-SnapshotList {
+function global:Load-SnapshotList {
+    Write-Log "[SNAP] Load-SnapshotList invocada" -Level "DBG"
     $snapDir   = $script:SnapshotDir
     $jsonFiles = @()
     if (Test-Path $snapDir) {
@@ -3203,32 +3730,39 @@ function Load-SnapshotList {
 
     if ($jsonFiles.Count -eq 0) {
         $lbSnapshots.ItemsSource        = [System.Collections.Generic.List[object]]::new()
-        $txtSnapshotDetailTitle.Text    = "Selecciona un snapshot para ver sus carpetas"
+        $txtSnapshotDetailTitle.Text    = (T "SnapSelectToView")
         $txtSnapshotDetailMeta.Text     = ""
         $lbSnapshotDetail.ItemsSource   = $null
         $chkSnapshotSelectAll.IsChecked = $false
-        $txtSnapshotStatus.Text         = "Sin snapshots guardados."
+        $txtSnapshotStatus.Text         = (T "SnapNoneSaved")
         Update-SnapshotCheckState
         return
     }
 
-    $txtSnapshotStatus.Text = "⏳ Cargando historial..."
-    Register-Task -Id "snap-list" -Name "Cargando historial de snapshots" -Icon "🕒" -IconBg (Get-TC 'HdrBtnBg' '#1A2040') | Out-Null
+    $txtSnapshotStatus.Text = "⏳ $((T "SnapLoadingMsg"))"
+    Register-Task -Id "snap-list" -Name (T "SnapLoadingHistory") -Icon "🕒" -IconBg (Get-TC 'HdrBtnBg' '#1A2040') | Out-Null
 
     $filePaths = [System.Collections.Generic.List[string]]::new()
     foreach ($f in $jsonFiles) { $filePaths.Add($f.FullName) }
 
     $script:LoadSnapState = [hashtable]::Synchronized(@{
-        Phase = "Iniciando..."; Progress = 0; ItemsDone = 0; ItemsTotal = $filePaths.Count
+        Phase = (T "PhaseStarting" "Iniciando..."); Progress = 0; ItemsDone = 0; ItemsTotal = $filePaths.Count
         Done = $false; Error = ""
         Results = [System.Collections.Concurrent.ConcurrentBag[object]]::new()
     })
 
+    # [i18n] Pre-resolve T() — background runspaces cannot access T()
+    $_bgL = @{
+        RootFolders = (T 'SnapRootFolders' 'carpetas raíz')
+        Completed   = (T 'PhaseCompleted' 'Completado')
+        Reading     = (T 'SnapReadingFile' 'Leyendo')
+    }
+
     $bgLoad = {
-        param($State, $FilePaths)
-        function FmtB([long]$b) { return [Formatter]::FormatBytes($b) }
+        param($State, $FilePaths, $_bgL)
+        function global:FmtB([long]$b) { return [Formatter]::FormatBytes($b) }
         # ── [RAM-04] JsonTextReader: leer solo metadatos sin cargar Entries ──
-        function Read-SnapshotMeta([string]$fp) {
+        function global:Read-SnapshotMeta([string]$fp) {
             $meta = @{ Label=""; RootPath=""; Date=""; EntryCount=0; TotalBytes=0L; RootCount=0 }
             $fs = $null; $jr = $null
             try {
@@ -3308,7 +3842,7 @@ function Load-SnapshotList {
             $total = $FilePaths.Count
             for ($i = 0; $i -lt $total; $i++) {
                 $fp = $FilePaths[$i]
-                $State.Phase     = "Leyendo $([System.IO.Path]::GetFileName($fp))..."
+                $State.Phase     = "$($_bgL.Reading) $([System.IO.Path]::GetFileName($fp))..."
                 $State.ItemsDone = $i
                 $State.Progress  = [int](($i / $total) * 92)
                 try {
@@ -3321,11 +3855,11 @@ function Load-SnapshotList {
                         EntryCount = $m.EntryCount
                         TotalBytes = $m.TotalBytes
                         RootCount  = $m.RootCount
-                        SummaryStr = "$($m.RootCount) carpetas raíz · $($m.EntryCount) total · $(FmtB $m.TotalBytes)"
+                        SummaryStr = "$($m.RootCount) $($_bgL.RootFolders) · $($m.EntryCount) total · $(FmtB $m.TotalBytes)"
                     })
                 } catch {}
             }
-            $State.Phase = "Completado"; $State.Progress = 100; $State.ItemsDone = $total
+            $State.Phase = $_bgL.Completed; $State.Progress = 100; $State.ItemsDone = $total
             $State.Done = $true
         } catch { $State.Error = $_.Exception.Message; $State.Done = $true }
     }
@@ -3335,13 +3869,15 @@ function Load-SnapshotList {
     [void]$ps.AddScript($bgLoad)
     [void]$ps.AddParameter("State",     $script:LoadSnapState)
     [void]$ps.AddParameter("FilePaths", $filePaths)
+    [void]$ps.AddParameter("_bgL",      $_bgL)
     $async = $ps.BeginInvoke()
 
     $prog = Show-ExportProgressDialog
-    if ($null -ne $prog.Title)  { $prog.Title.Text = "Cargando historial de snapshots" }
-    if ($null -ne $prog.Phase)  { $prog.Phase.Text = "Leyendo archivos..." }
+    if ($null -ne $prog.Title)  { $prog.Title.Text = (T "SnapLoadingHistory" "Cargando historial de snapshots") }
+    if ($null -ne $prog.Phase)  { $prog.Phase.Text = (T "SnapReadingFiles") }
     $prog.Window.Show()
 
+    Write-Log "[SNAP] Encontrados $($filePaths.Count) archivos snapshot" -Level "DBG"
     if ($null -ne $script:_loadTimer) { try { $script:_loadTimer.Stop() } catch {} }
     $t = New-Object System.Windows.Threading.DispatcherTimer
     $t.Interval = [TimeSpan]::FromMilliseconds(150)
@@ -3383,19 +3919,19 @@ function Load-SnapshotList {
                 }
             }
             $lbSnapshots.ItemsSource        = $ordered
-            $txtSnapshotDetailTitle.Text    = "Selecciona un snapshot para ver sus carpetas"
+            $txtSnapshotDetailTitle.Text    = (T "SnapSelectToView" "Selecciona un snapshot para ver sus carpetas")
             $txtSnapshotDetailMeta.Text     = ""
             $lbSnapshotDetail.ItemsSource   = $null
             $chkSnapshotSelectAll.IsChecked = $false
             $n = $ordered.Count
-            $txtSnapshotStatus.Text = if ($n -eq 0) { "Sin snapshots guardados." } else { "$n snapshot(s) disponibles." }
+            $txtSnapshotStatus.Text = if ($n -eq 0) { (T "SnapNoneSaved") } else { "$n $((T "SnapAvailable"))" }
             Update-SnapshotCheckState
             Invoke-AggressiveGC
             if ($st.Error -ne "") {
-                $txtSnapshotStatus.Text = "Error al cargar: $($st.Error)"
+                $txtSnapshotStatus.Text = "$((T "SnapLoadError")): $($st.Error)"
                 Complete-Task -Id "snap-list" -IsError -Detail $st.Error
             } else {
-                Complete-Task -Id "snap-list" -Detail "$n snapshot(s) cargados"
+                Complete-Task -Id "snap-list" -Detail "$n $(T 'SnapLoaded' 'snapshot(s) cargados')"
             }
         }
     })
@@ -3405,10 +3941,10 @@ function Load-SnapshotList {
 # ── Leer entries de un snapshot en background ────────────────────────────────
 # $OnComplete: scriptblock { param($entries) ... }   entries = List[hashtable]
 # $OnError:   scriptblock { param($msg) ... }
-function Get-SnapshotEntriesAsync {
+function global:Get-SnapshotEntriesAsync {
     param(
         [string]$FilePath,
-        [string]$OperationTitle = "Cargando snapshot...",
+        [string]$OperationTitle = ((T "SnapLoadingMsg")),
         [scriptblock]$OnComplete,
         [scriptblock]$OnError
     )
@@ -3417,7 +3953,7 @@ function Get-SnapshotEntriesAsync {
     # su DispatcherTimer haya terminado. $script:ExportState era compartido y se
     # reiniciaba aquí, corrompiendo la condición de parada del timer anterior.
     $localExportState = [hashtable]::Synchronized(@{
-        Phase      = "Leyendo archivo..."
+        Phase      = ((T "SnapReadingFile"))
         Progress   = 0
         ItemsDone  = 0
         ItemsTotal = 0
@@ -3439,16 +3975,25 @@ function Get-SnapshotEntriesAsync {
         Total    = 0   # estimado, desconocido hasta parsear
     })
 
+    # [i18n] Pre-resolve T() for bgEnt background runspace
+    $_bgE = @{
+        ReadingFile    = (T 'SnapReadingFile' 'Leyendo archivo')
+        Deserializing  = (T 'PhaseDeserializing' 'Deserializando...')
+        QueuingEntries = (T 'PhaseQueuingEntries' 'Encolando entradas...')
+        Queuing        = (T 'PhaseQueuing' 'Encolando...')
+        Completed      = (T 'PhaseCompleted' 'Completado')
+    }
+
     $bgEnt = {
-        param($EntState, $ExportState, $FilePath)
+        param($EntState, $ExportState, $FilePath, $_bgE)
         # ConvertFrom-Json es un cmdlet interno (System.Management.Automation) y esta
         # disponible en todos los runspaces sin cargar assemblies externos.
         # Deserializamos el JSON completo y encolamos los entries uno a uno (FIFO),
         # liberando cada referencia inmediatamente tras encolar.
         try {
-            $ExportState.Phase = "Leyendo archivo..."; $ExportState.Progress = 10
+            $ExportState.Phase = $_bgE.ReadingFile; $ExportState.Progress = 10
             $raw  = [System.IO.File]::ReadAllText($FilePath, [System.Text.Encoding]::UTF8)
-            $ExportState.Phase = "Deserializando...";  $ExportState.Progress = 30
+            $ExportState.Phase = $_bgE.Deserializing;  $ExportState.Progress = 30
             try   { $data = $raw | ConvertFrom-Json }
             catch { throw "JSON inválido en '$FilePath': $_" }
             $raw  = $null   # liberar el string JSON inmediatamente tras parsear
@@ -3457,7 +4002,7 @@ function Get-SnapshotEntriesAsync {
             $data    = $null   # liberar el objeto raiz — solo necesitamos $entries
             $total   = if ($null -ne $entries) { @($entries).Count } else { 0 }
             $ExportState.ItemsTotal = $total
-            $ExportState.Phase = "Encolando entradas..."; $ExportState.Progress = 50
+            $ExportState.Phase = $_bgE.QueuingEntries; $ExportState.Progress = 50
 
             $i = 0
             foreach ($e in $entries) {
@@ -3472,13 +4017,13 @@ function Get-SnapshotEntriesAsync {
                 if ($i % 500 -eq 0) {
                     $ExportState.ItemsDone = $i
                     $ExportState.Progress  = [int](50 + ($i / [Math]::Max(1,$total)) * 46)
-                    $ExportState.Phase     = "Encolando... ($i / $total)"
+                    $ExportState.Phase     = "$($_bgE.Queuing) ($i / $total)"
                 }
             }
             $entries = $null
 
             $ExportState.ItemsDone = $i; $ExportState.ItemsTotal = $i
-            $ExportState.Progress  = 100; $ExportState.Phase = "Completado"
+            $ExportState.Progress  = 100; $ExportState.Phase = $_bgE.Completed
         } catch {
             $EntState.Error    = $_.Exception.Message
             $ExportState.Error = $_.Exception.Message
@@ -3494,6 +4039,7 @@ function Get-SnapshotEntriesAsync {
     [void]$ps.AddParameter("EntState",    $entState)
     [void]$ps.AddParameter("ExportState", $localExportState)
     [void]$ps.AddParameter("FilePath",    $FilePath)
+    [void]$ps.AddParameter("_bgE",        $_bgE)
     $async = $ps.BeginInvoke()
 
     $prog = Show-ExportProgressDialog
@@ -3539,7 +4085,7 @@ function Get-SnapshotEntriesAsync {
             }
         }
 
-        $cntStr = "$($localAccum.Count) entradas leídas"
+        $cntStr = "$($localAccum.Count) $(T 'SnapEntriesRead' 'entradas leídas')"
         Update-ProgressDialog $pg $pct $st.Phase $cntStr
         Update-Task -Id $localTaskId -Pct $pct -Detail $cntStr
 
@@ -3561,7 +4107,7 @@ function Get-SnapshotEntriesAsync {
                 if ($null -ne $localOnError) { & $localOnError $st.Error }
             } else {
                 $nEnt = $localAccum.Count
-                Complete-Task -Id $localTaskId -Detail "$nEnt entradas cargadas"
+                Complete-Task -Id $localTaskId -Detail "$nEnt $((T 'SnapEntriesLoaded' 'entradas cargadas'))"
                 if ($null -ne $localOnComplete) { & $localOnComplete $localAccum }
             }
         }
@@ -3574,13 +4120,13 @@ function Get-SnapshotEntriesAsync {
 $btnSnapshotSave.Add_Click({
     if ($null -eq $script:AllScannedItems -or $script:AllScannedItems.Count -eq 0) { return }
     $label = $txtSnapshotName.Text.Trim()
-    if ($label -eq '') { $label = "Escaneo $(Get-Date -Format 'dd/MM/yyyy HH:mm')" }
+    if ($label -eq '') { $label = "$(T 'SnapScanLabel' 'Escaneo') $(Get-Date -Format 'dd/MM/yyyy HH:mm')" }
 
     $btnSnapshotSave.IsEnabled = $false
-    $txtSnapshotStatus.Text    = "⏳ Guardando snapshot..."
-    Register-Task -Id "snap-save" -Name "Guardando snapshot: $label" -Icon "💾" -IconBg (Get-TC 'BgStatusOk' '#1A2A1E') | Out-Null
+    $txtSnapshotStatus.Text    = "⏳ $((T "SnapSavingMsg"))"
+    Register-Task -Id "snap-save" -Name "$(T 'SnapSaving' 'Guardando snapshot'): $label" -Icon "💾" -IconBg (Get-TC 'BgStatusOk' '#1A2A1E') | Out-Null
 
-    $script:ExportState.Phase     = "Preparando..."; $script:ExportState.Progress = 0
+    $script:ExportState.Phase     = (T "PhasePreparingShort" "Preparando..."); $script:ExportState.Progress = 0
     $script:ExportState.ItemsDone = 0; $script:ExportState.ItemsTotal = $script:AllScannedItems.Count
     $script:ExportState.Done      = $false; $script:ExportState.Error = ""; $script:ExportState.Result = $null
 
@@ -3596,11 +4142,19 @@ $btnSnapshotSave.Add_Click({
     $saveDir   = $script:SnapshotDir
 
     # Script background: drena Queue con StreamWriter JSON manual — sin dependencia Newtonsoft
+    # [i18n] Pre-resolve T() for bgSave background runspace
+    $_bgS = @{
+        PreparingDir   = (T 'PhasePreparingDir' 'Preparando directorio...')
+        WritingEntries = (T 'PhaseWritingEntries' 'Escribiendo entradas...')
+        Writing        = (T 'PhaseWriting' 'Escribiendo...')
+        Completed      = (T 'PhaseCompleted' 'Completado')
+    }
+
     $bgSave = {
-        param($State, $ExportState, $Label, $RootPath, $SnapshotDir)
+        param($State, $ExportState, $Label, $RootPath, $SnapshotDir, $_bgS)
         $fs = $null; $sw = $null
         try {
-            $ExportState.Phase = "Preparando directorio..."; $ExportState.Progress = 5
+            $ExportState.Phase = $_bgS.PreparingDir; $ExportState.Progress = 5
             if (-not (Test-Path $SnapshotDir)) {
                 [System.IO.Directory]::CreateDirectory($SnapshotDir) | Out-Null
             }
@@ -3625,7 +4179,7 @@ $btnSnapshotSave.Add_Click({
             $sw.WriteLine("  `"RootPath`": `"$root`",")
             $sw.WriteLine('  "Entries": [')
 
-            $ExportState.Phase = "Escribiendo entradas..."; $ExportState.Progress = 10
+            $ExportState.Phase = $_bgS.WritingEntries; $ExportState.Progress = 10
             $total   = $State.Total
             $written = 0
             $item    = $null
@@ -3652,7 +4206,7 @@ $btnSnapshotSave.Add_Click({
                         $sw.Flush()   # flush periódico al disco — evita buffers grandes
                         $ExportState.ItemsDone = $written
                         $ExportState.Progress  = if ($total -gt 0) { [int](10 + ($written / $total) * 85) } else { 50 }
-                        $ExportState.Phase     = "Escribiendo... ($written / $total)"
+                        $ExportState.Phase     = "$($_bgS.Writing) ($written / $total)"
                     }
                 }
                 if (-not $State.FeedDone) { [System.Threading.Thread]::Sleep(5) }
@@ -3664,7 +4218,7 @@ $btnSnapshotSave.Add_Click({
             $sw.Flush()
 
             $ExportState.Result = $Label; $ExportState.Progress = 100
-            $ExportState.Phase  = "Completado"; $ExportState.ItemsDone = $written
+            $ExportState.Phase  = $_bgS.Completed; $ExportState.ItemsDone = $written
             $ExportState.Done   = $true
         } catch {
             $ExportState.Error = $_.Exception.Message; $ExportState.Done = $true
@@ -3685,6 +4239,7 @@ $btnSnapshotSave.Add_Click({
     [void]$ps.AddParameter("Label",       $saveLabel)
     [void]$ps.AddParameter("RootPath",    $saveRoot)
     [void]$ps.AddParameter("SnapshotDir", $saveDir)
+    [void]$ps.AddParameter("_bgS",        $_bgS)
     $async = $ps.BeginInvoke()
 
     # [FIFO] Producir: encolar AllScannedItems item a item sin construir lista intermedia
@@ -3700,7 +4255,7 @@ $btnSnapshotSave.Add_Click({
     $saveState.FeedDone = $true   # señalizar al background que no hay más items
 
     $prog = Show-ExportProgressDialog
-    if ($null -ne $prog.Title) { $prog.Title.Text = "Guardando snapshot" }
+    if ($null -ne $prog.Title) { $prog.Title.Text = (T "SnapSavingMsg") }
     $prog.Window.Show()
 
     if ($null -ne $script:_saveTimer) { try { $script:_saveTimer.Stop() } catch {} }
@@ -3711,7 +4266,7 @@ $btnSnapshotSave.Add_Click({
 
     $t.Add_Tick({
         $st  = $script:ExportState; $pg = $script:_saveProg; $pct = [int]$st.Progress
-        $cntStr = if ($st.ItemsTotal -gt 0) { "$($st.ItemsDone) / $($st.ItemsTotal) entradas" } else { "" }
+        $cntStr = if ($st.ItemsTotal -gt 0) { "$($st.ItemsDone) / $($st.ItemsTotal) $(T 'SnapEntries' 'entradas')" } else { "" }
         Update-ProgressDialog $pg $pct $st.Phase $cntStr
         Update-Task -Id "snap-save" -Pct $pct -Detail $cntStr
         if ($st.Done) {
@@ -3729,13 +4284,14 @@ $btnSnapshotSave.Add_Click({
             } catch {}
             $btnSnapshotSave.IsEnabled = $true
             if ($st.Error -ne "") {
-                $txtSnapshotStatus.Text = "Error al guardar: $($st.Error)"
+                $txtSnapshotStatus.Text = "$((T "SnapSaveError")): $($st.Error)"
                 Complete-Task -Id "snap-save" -IsError -Detail $st.Error
             } else {
                 $snapFile = if ($st.Result) { [string]$st.Result } else { "" }
                 $snapLeaf = if ($snapFile) { Split-Path $snapFile -Leaf } else { "snapshot" }
-                $txtSnapshotStatus.Text = "✅ Snapshot guardado: $snapLeaf"
+                $txtSnapshotStatus.Text = "✅ $((T "SnapSavedMsg")): $snapLeaf"
                 Complete-Task -Id "snap-save" -Detail $snapLeaf
+                Show-Toast -Title (T "ToastSnapSavedTitle") -Message "$((T 'ToastSnapSavedMsg')) $snapLeaf" -Type "Success"
                 Load-SnapshotList
             }
         }
@@ -3765,13 +4321,13 @@ $lbSnapshots.Add_SelectionChanged({
 
     $txtSnapshotDetailTitle.Text = $sel.Label
     $txtSnapshotDetailMeta.Text  = "$($sel.DateStr)  ·  $($sel.RootPath)"
-    $txtSnapshotStatus.Text      = "⏳ Cargando entradas del snapshot..."
+    $txtSnapshotStatus.Text      = "⏳ $((T "SnapLoadingEntries"))"
     $lbSnapshotDetail.ItemsSource = $null
 
     $selLabel = $sel.Label
 
     Get-SnapshotEntriesAsync -FilePath $sel.FilePath `
-        -OperationTitle "Cargando snapshot — $($sel.Label)" `
+        -OperationTitle "$(T 'SnapLoading' 'Cargando snapshot') — $($sel.Label)" `
         -OnComplete {
             param($entries)
             $detailItems = [System.Collections.Generic.List[object]]::new()
@@ -3786,12 +4342,12 @@ $lbSnapshots.Add_SelectionChanged({
                 })
             }
             $lbSnapshotDetail.ItemsSource = $detailItems
-            $txtSnapshotStatus.Text       = "$($detailItems.Count) entradas en el snapshot."
+            $txtSnapshotStatus.Text       = "$($detailItems.Count) $((T "SnapEntriesInSnapshot"))"
             Update-SnapshotCheckState
         } `
         -OnError {
             param($msg)
-            $txtSnapshotStatus.Text = "Error al cargar snapshot: $msg"
+            $txtSnapshotStatus.Text = "$((T "SnapLoadError")): $msg"
             Update-SnapshotCheckState
         }
 })
@@ -3805,8 +4361,8 @@ $btnSnapshotCompare.Add_Click({
     if ($checked.Count -eq 2) {
         # ── Modo A vs B ───────────────────────────────────────────────────────
         $snapA = $checked[0]; $snapB = $checked[1]
-        $txtSnapshotStatus.Text      = "⏳ Cargando snapshot A..."
-        $txtSnapshotDetailTitle.Text = "Comparando: $($snapA.Label)  vs  $($snapB.Label)"
+        $txtSnapshotStatus.Text      = "⏳ $((T "SnapLoadingAMsg"))"
+        $txtSnapshotDetailTitle.Text = "$((T "SnapComparing")): $($snapA.Label)  vs  $($snapB.Label)"
         $txtSnapshotDetailMeta.Text  = "$($snapA.DateStr)  vs  $($snapB.DateStr)"
         $lbSnapshotDetail.ItemsSource = $null
 
@@ -3814,14 +4370,14 @@ $btnSnapshotCompare.Add_Click({
 
         # Primero cargamos A; en su callback cargamos B; en el de B cruzamos datos
         Get-SnapshotEntriesAsync -FilePath $snapA.FilePath `
-            -OperationTitle "Comparar — cargando $($snapA.Label)" `
+            -OperationTitle "$(T 'BtnCompare' 'Comparar') — $(T 'SnapLoadingShort' 'cargando') $($snapA.Label)" `
             -OnComplete {
                 param($entriesA)
                 $script:_cmpEntriesA = $entriesA
-                $txtSnapshotStatus.Text = "⏳ Cargando snapshot B..."
+                $txtSnapshotStatus.Text = "⏳ $((T "SnapLoadingBMsg"))"
 
                 Get-SnapshotEntriesAsync -FilePath $script:_cmpSnapB.FilePath `
-                    -OperationTitle "Comparar — cargando $($script:_cmpSnapB.Label)" `
+                    -OperationTitle "$(T 'BtnCompare' 'Comparar') — $(T 'SnapLoadingShort' 'cargando') $($script:_cmpSnapB.Label)" `
                     -OnComplete {
                         param($entriesB)
                         # Cruce de datos (rápido, en hilo UI)
@@ -3838,7 +4394,7 @@ $btnSnapshotCompare.Add_Click({
                             $old = [long]$e.SizeBytes
                             $new = if ($mapB.ContainsKey($e.FullPath)) { $mapB[$e.FullPath] } else { -1L }
                             $d   = if ($new -ge 0) { $new - $old } else { $null }
-                            $ds  = if ($null -eq $d) { "eliminada" } elseif ($d -eq 0) { "sin cambio" } `
+                            $ds  = if ($null -eq $d) { T "SnapDeleted" "eliminada" } elseif ($d -eq 0) { T "SnapNoChange" "sin cambio" } `
                                    elseif ($d -gt 0) { "+$(Format-SnapshotSize $d)" } else { "-$(Format-SnapshotSize ([Math]::Abs($d)))" }
                             $dc  = if ($null -eq $d -or $d -eq 0) { "#7880A0" } elseif ($d -gt 0) { "#FF6B84" } else { "#4AE896" }
                             $sz  = if ($new -ge 0) { $new } else { $old }
@@ -3860,22 +4416,22 @@ $btnSnapshotCompare.Add_Click({
                             }
                         }
                         $lbSnapshotDetail.ItemsSource = $detailItems
-                        $txtSnapshotStatus.Text = "Comparación completada — $($detailItems.Count) carpetas."
+                        $txtSnapshotStatus.Text = "$((T "SnapCompDone")) — $($detailItems.Count) $((T "DiskFolders"))."
                     } `
-                    -OnError { param($msg); $txtSnapshotStatus.Text = "Error cargando snapshot B: $msg" }
+                    -OnError { param($msg); $txtSnapshotStatus.Text = "$((T "SnapLoadError")) B: $msg" }
             } `
-            -OnError { param($msg); $txtSnapshotStatus.Text = "Error cargando snapshot A: $msg" }
+            -OnError { param($msg); $txtSnapshotStatus.Text = "$((T "SnapLoadError")) A: $msg" }
 
     } elseif ($checked.Count -eq 1 -and $null -ne $script:AllScannedItems -and $script:AllScannedItems.Count -gt 0) {
         # ── Modo snapshot vs escaneo actual ───────────────────────────────────
         $sel = $checked[0]
-        $txtSnapshotStatus.Text      = "⏳ Cargando snapshot para comparar..."
-        $txtSnapshotDetailTitle.Text = "Comparando: $($sel.Label)  →  Escaneo actual"
+        $txtSnapshotStatus.Text      = "⏳ $((T "SnapLoadingCompareMsg"))"
+        $txtSnapshotDetailTitle.Text = "$((T "SnapComparing")): $($sel.Label)  →  $((T "SnapCompareVsCurrent"))"
         $txtSnapshotDetailMeta.Text  = "$($sel.DateStr)  vs  $(Get-Date -Format 'dd/MM/yyyy HH:mm')"
         $lbSnapshotDetail.ItemsSource = $null
 
         Get-SnapshotEntriesAsync -FilePath $sel.FilePath `
-            -OperationTitle "Comparar — cargando $($sel.Label)" `
+            -OperationTitle "$(T 'BtnCompare' 'Comparar') — $(T 'SnapLoadingShort' 'cargando') $($sel.Label)" `
             -OnComplete {
                 param($snapEntries)
                 $currentMap = [System.Collections.Generic.Dictionary[string,long]]::new(
@@ -3892,7 +4448,7 @@ $btnSnapshotCompare.Add_Click({
                     $old = [long]$e.SizeBytes
                     $new = if ($currentMap.ContainsKey($e.FullPath)) { $currentMap[$e.FullPath] } else { -1L }
                     $d   = if ($new -ge 0) { $new - $old } else { $null }
-                    $ds  = if ($null -eq $d) { "eliminada" } elseif ($d -eq 0) { "sin cambio" } `
+                    $ds  = if ($null -eq $d) { T "SnapDeleted" "eliminada" } elseif ($d -eq 0) { T "SnapNoChange" "sin cambio" } `
                            elseif ($d -gt 0) { "+$(Format-SnapshotSize $d)" } else { "-$(Format-SnapshotSize ([Math]::Abs($d)))" }
                     $dc  = if ($null -eq $d -or $d -eq 0) { "#7880A0" } elseif ($d -gt 0) { "#FF6B84" } else { "#4AE896" }
                     $sz  = if ($new -ge 0) { $new } else { $old }
@@ -3915,9 +4471,9 @@ $btnSnapshotCompare.Add_Click({
                     }
                 }
                 $lbSnapshotDetail.ItemsSource = $detailItems
-                $txtSnapshotStatus.Text = "Comparación completada — $($detailItems.Count) carpetas analizadas."
+                $txtSnapshotStatus.Text = "$((T "SnapCompDone")) — $($detailItems.Count) $((T "DiskFolders"))."
             } `
-            -OnError { param($msg); $txtSnapshotStatus.Text = "Error al comparar: $msg" }
+            -OnError { param($msg); $txtSnapshotStatus.Text = "$((T "SnapCompareError")): $msg" }
     }
 })
 
@@ -3926,16 +4482,16 @@ $btnSnapshotDelete.Add_Click({
     $checked = @($lbSnapshots.ItemsSource | Where-Object { $_.IsChecked })
     if ($checked.Count -eq 0) { return }
     $nombres = ($checked | ForEach-Object { $_.Label }) -join "`n  - "
-    $msg = if ($checked.Count -eq 1) { "Eliminar el snapshot:`n  - $nombres" } `
-           else { "Eliminar $($checked.Count) snapshots:`n  - $nombres" }
-    $confirm = Show-ThemedDialog -Title "Confirmar eliminación" -Message $msg -Type "warning" -Buttons "YesNo"
+    $msg = if ($checked.Count -eq 1) { "$(T 'SnapDeleteOne' 'Eliminar el snapshot'):`n  - $nombres" } `
+           else { "$(T 'SnapDeleteMulti' 'Eliminar') $($checked.Count) snapshots:`n  - $nombres" }
+    $confirm = Show-ThemedDialog -Title ((T "DlgConfirmDeleteTitle")) -Message $msg -Type "warning" -Buttons "YesNo"
     if ($confirm) {
         $errors = 0
         foreach ($snap in $checked) {
             try { Remove-Item -Path $snap.FilePath -Force -ErrorAction Stop } catch { $errors++ }
         }
         Load-SnapshotList
-        if ($errors -gt 0) { $txtSnapshotStatus.Text = "Eliminados con $errors errores." }
+        if ($errors -gt 0) { $txtSnapshotStatus.Text = "$((T "SnapDeletedWithErrors")) $errors" }
     }
 })
 
@@ -3962,7 +4518,7 @@ $txtTasksSubtitle    = $null
 $txtTasksStatus      = $null
 $btnTasksClearDone   = $null
 
-function Show-TasksWindow {
+function global:Show-TasksWindow {
     # Si ya está abierta, traerla al frente
     if ($null -ne $script:TasksWin -and $script:TasksWin.IsVisible) {
         try { $script:TasksWin.Activate() } catch {}
@@ -3973,6 +4529,27 @@ function Show-TasksWindow {
     $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($twXaml))
     $tw     = [System.Windows.Markup.XamlReader]::Load($reader)
     try { $tw.Owner = $window } catch {}
+
+    # ── Apply translations to TasksWindow ─────────────────────────────
+    $tw.Title = (T 'TasksWindowTitle' 'Tareas en Segundo Plano') + " — SysOpt"
+    # Header title
+    $twTitle = $tw.FindName('txtTasksTitle')
+    if ($null -ne $twTitle) { $twTitle.Text = "⚡  " + (T 'TasksWindowTitle' 'Tareas en Segundo Plano') }
+    # Subtitle
+    $twSub = $tw.FindName('txtTasksSubtitle')
+    if ($null -ne $twSub) { $twSub.Text = T 'TasksNoActive' 'Sin tareas activas' }
+    # Clear button
+    $btnClearT = $tw.FindName('btnTasksClearDone')
+    if ($null -ne $btnClearT) {
+        $btnClearT.Content = "🧹  " + (T 'TasksClearCompleted' 'Limpiar completadas')
+        $btnClearT.ToolTip = T 'TasksClearTip' 'Elimina las tareas ya completadas o fallidas'
+    }
+    # Status bar
+    $twStatus = $tw.FindName('txtTasksStatus')
+    if ($null -ne $twStatus) {
+        $twStatus.Text = "Pool: 0 " + (T 'TaskActive' 'activa(s)') + " · 0 " + (T 'TaskCompletedShort' 'completada(s)')
+    }
+
 
     # ── Inyectar TB_* brushes del tema actual ─────────────────────────────────
     $themedRd = New-ThemedWindowResources
@@ -4029,6 +4606,34 @@ function Show-TasksWindow {
                 }
                 if ($null -eq $border -or $null -eq $border.ContextMenu) { return }
                 $cm = $border.ContextMenu
+                # Apply theme brushes to ContextMenu popup (fallback if DynamicResource fails)
+                try {
+                    $appRes = [System.Windows.Application]::Current.Resources
+                    $bg = $appRes["TB_1A1E2F"]; if ($null -ne $bg) { $cm.Background = $bg }
+                    $bd = $appRes["TB_3A4468"]; if ($null -ne $bd) { $cm.BorderBrush = $bd }
+                    $fg = $appRes["TB_E8ECF4"]
+                    foreach ($mi in $cm.Items) {
+                        if ($mi -is [System.Windows.Controls.MenuItem] -and $null -ne $fg) {
+                            # Only set if not already colored by theme style
+                            if ($null -eq $mi.ReadLocalValue([System.Windows.Controls.Control]::ForegroundProperty) -or
+                                $mi.ReadLocalValue([System.Windows.Controls.Control]::ForegroundProperty) -eq [System.Windows.DependencyProperty]::UnsetValue) {
+                                $mi.Foreground = $fg
+                            }
+                        }
+                    }
+                } catch {}
+                # Translate menu items by index (0=Pause, 1=Resume, skip separator, 2=Cancel)
+                $miIdx = 0
+                foreach ($mi in $cm.Items) {
+                    if ($mi -is [System.Windows.Controls.MenuItem]) {
+                        switch ($miIdx) {
+                            0 { $mi.Header = "⏸   " + (T "TaskPause" "Pausar tarea") }
+                            1 { $mi.Header = "▶  " + (T "TaskResume" "Reanudar tarea") }
+                            2 { $mi.Header = "⊘  " + (T "TaskCancel" "Cancelar tarea") }
+                        }
+                        $miIdx++
+                    }
+                }
 
                 # Propagar Id de la tarea al Tag del CM y de cada MenuItem
                 $dc     = $border.DataContext
@@ -4056,8 +4661,8 @@ function Show-TasksWindow {
                 { $_ -like "*Cancelar*" }  {
                     $t = $null
                     $tName = if ($script:TaskPool.TryGetValue($taskId, [ref]$t) -and $null -ne $t) { $t.Name } else { $taskId }
-                    $ok = Show-ThemedDialog -Title "Confirmar cancelación" `
-                        -Message "¿Cancelar la tarea '$tName'?" -Type "confirm"
+                    $ok = Show-ThemedDialog -Title ((T "TaskConfirmCancelTitle")) `
+                        -Message "$((T "TaskConfirmCancelMsg")) '$tName'?" -Type "confirm"
                     if ($ok) { Cancel-Task -Id $taskId }
                 }
             }
@@ -4095,7 +4700,7 @@ $script:TaskIconMap = @{
 }
 
 # ── Helpers de control de tareas invocados desde el menú contextual ───────────
-function Cancel-Task([string]$Id) {
+function global:Cancel-Task([string]$Id) {
     $t = $null
     if (-not $script:TaskPool.TryGetValue($Id, [ref]$t) -or $null -eq $t) { return }
     if ($t.Status -notin @("running","paused")) { return }
@@ -4113,7 +4718,7 @@ function Cancel-Task([string]$Id) {
     Refresh-TasksPanel
 }
 
-function Pause-Task([string]$Id) {
+function global:Pause-Task([string]$Id) {
     $t = $null
     if (-not $script:TaskPool.TryGetValue($Id, [ref]$t) -or $null -eq $t) { return }
     if ($t.Status -ne "running" -or $null -eq $t.PauseFn) { return }
@@ -4124,7 +4729,7 @@ function Pause-Task([string]$Id) {
     Refresh-TasksPanel
 }
 
-function Resume-Task([string]$Id) {
+function global:Resume-Task([string]$Id) {
     $t = $null
     if (-not $script:TaskPool.TryGetValue($Id, [ref]$t) -or $null -eq $t) { return }
     if ($t.Status -ne "paused" -or $null -eq $t.ResumeFn) { return }
@@ -4135,7 +4740,7 @@ function Resume-Task([string]$Id) {
     Refresh-TasksPanel
 }
 
-function Refresh-TasksPanel {
+function global:Refresh-TasksPanel {
     $bc_ = [System.Windows.Media.BrushConverter]::new()
     $lbTasks          = $script:lbTasksWin
     $txtTasksSubtitle = $script:txtTasksSubtitleWin
@@ -4216,13 +4821,13 @@ function Refresh-TasksPanel {
 
     if ($null -ne $txtTasksSubtitle) {
         $txtTasksSubtitle.Text = if ($nActive -eq 0) {
-            if ($nDone -eq 0) { "Sin tareas" } else { "$nDone tarea(s) completada(s)" }
+            if ($nDone -eq 0) { T "TaskNone" "Sin tareas" } else { "$nDone $(T 'TaskCompleted' 'tarea(s) completada(s)')" }
         } else {
-            "$nActive tarea(s) en curso · $nDone completada(s)"
+            "$nActive $(T 'TaskInProgress' 'tarea(s) en curso') · $nDone $(T 'TaskCompletedShort' 'completada(s)')"
         }
     }
     if ($null -ne $txtTasksStatus) {
-        $txtTasksStatus.Text = "Pool: $nActive activa(s) · $nDone completada(s)/error"
+        $txtTasksStatus.Text = "Pool: $nActive $((T "TaskActiveSummary")) · $nDone $((T "TaskDoneSummary"))"
     }
 }
 
@@ -4238,7 +4843,7 @@ $script:TaskTimer.Start()
 # ─────────────────────────────────────────────────────────────────────────────
 $script:FilterText = ""
 
-function Apply-DiskFilter {
+function global:Apply-DiskFilter {
     param([string]$Filter)
     $script:FilterText = $Filter.Trim()
     if ($null -eq $script:AllScannedItems -or $script:AllScannedItems.Count -eq 0) { return }
@@ -4292,15 +4897,15 @@ $ctxCopy.Add_Click({
     $sel = $lbDiskTree.SelectedItem
     if ($null -ne $sel) {
         [System.Windows.Clipboard]::SetText($sel.FullPath)
-        $txtDiskScanStatus.Text = "✅ Ruta copiada: $($sel.FullPath)"
+        $txtDiskScanStatus.Text = "✅ $(T 'DiskPathCopied' 'Ruta copiada'): $($sel.FullPath)"
     }
 })
 
 $ctxDelete.Add_Click({
     $sel = $lbDiskTree.SelectedItem
     if ($null -eq $sel -or -not $sel.IsDir) { return }
-    $confirm = Show-ThemedDialog -Title "Confirmar eliminación" `
-        -Message "¿Eliminar permanentemente esta carpeta?`n`n$($sel.FullPath)`n`nTamaño: $($sel.SizeStr)`n`nEsta acción no se puede deshacer." `
+    $confirm = Show-ThemedDialog -Title ((T "DlgConfirmDeleteTitle")) `
+        -Message "$((T "DlgConfirmDeleteFolderMsg"))`n`n$($sel.FullPath)`n`n$((T "DlgSize")): $($sel.SizeStr)`n`n$((T "DlgCannotUndo"))" `
         -Type "warning" -Buttons "YesNo"
     if ($confirm) {
         try {
@@ -4311,10 +4916,10 @@ $ctxDelete.Add_Click({
             }
             foreach ($r in @($toRemove)) { $script:AllScannedItems.Remove($r) | Out-Null }
             Refresh-DiskView -RebuildMap
-            $txtDiskScanStatus.Text = "🗑 Eliminado: $($sel.FullPath)"
+            $txtDiskScanStatus.Text = "🗑 $(T 'Deleted' 'Eliminado'): $($sel.FullPath)"
         } catch {
-            Show-ThemedDialog -Title "Error al eliminar" `
-                -Message "Error al eliminar:`n$($_.Exception.Message)" -Type "error"
+            Show-ThemedDialog -Title ((T "DlgDeleteError")) `
+                -Message "$((T "DlgDeleteError")):`n$($_.Exception.Message)" -Type "error"
         }
     }
 })
@@ -4337,13 +4942,13 @@ $ctxScanFolder.Add_Click({
 $btnExportCsv.Add_Click({
     if ($null -eq $script:AllScannedItems -or $script:AllScannedItems.Count -eq 0) {
         Show-ThemedDialog -Title "Sin datos" `
-            -Message "No hay datos de escaneo. Realiza un escaneo primero." -Type "info"
+            -Message (T "DiskNoScanData" "No hay datos de escaneo. Realiza un escaneo primero.") -Type "info"
         return
     }
     $dlgFile = New-Object System.Windows.Forms.SaveFileDialog
     try {
-        $dlgFile.Title      = "Exportar resultados del explorador"
-        $dlgFile.Filter     = "CSV (*.csv)|*.csv|Todos los archivos|*.*"
+        $dlgFile.Title      = (T "DlgExportExplorerTitle")
+        $dlgFile.Filter     = "CSV (*.csv)|*.csv|$((T "DlgAllFilesFilter"))|*.*"
         $dlgFile.DefaultExt = "csv"
         $dlgFile.FileName   = "SysOpt_Disco_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
         $dlgFile.InitialDirectory = [Environment]::GetFolderPath("Desktop")
@@ -4352,10 +4957,10 @@ $btnExportCsv.Add_Click({
     } finally { $dlgFile.Dispose() }
 
     $btnExportCsv.IsEnabled  = $false
-    $txtDiskScanStatus.Text  = "⏳ Exportando CSV en segundo plano..."
-    Register-Task -Id "csv" -Name "Exportar CSV: $([System.IO.Path]::GetFileName($csvPath))" -Icon "📄" -IconBg (Get-TC 'BgStatusOk' '#1A2A1E') | Out-Null
+    $txtDiskScanStatus.Text  = "⏳ $(T 'DiskExportingCSV' 'Exportando CSV en segundo plano...')"
+    Register-Task -Id "csv" -Name "$(T 'DiskExportCSV' 'Exportar CSV'): $([System.IO.Path]::GetFileName($csvPath))" -Icon "📄" -IconBg (Get-TC 'BgStatusOk' '#1A2A1E') | Out-Null
 
-    $script:ExportState.Phase     = "Preparando datos..."
+    $script:ExportState.Phase     = (T "PhasePreparingData" "Preparando datos...")
     $script:ExportState.Progress  = 0
     $script:ExportState.ItemsDone = 0
     $script:ExportState.ItemsTotal= $script:AllScannedItems.Count
@@ -4367,24 +4972,41 @@ $btnExportCsv.Add_Click({
     $script:ExportState.DataRef  = $script:AllScannedItems
     $script:ExportState.CsvPath2 = $csvPath
 
+    # [i18n] Pre-resolve T() for bgCsvScript background runspace
+    $_bgC = @{
+        SortingData = (T 'PhaseSortingData' 'Ordenando datos...')
+        WritingCsv  = (T 'PhaseWritingCsv' 'Escribiendo CSV...')
+        CsvPath     = (T 'CsvPath' 'Ruta')
+        CsvSize     = (T 'CsvSize' 'Tamaño')
+        CsvFiles    = (T 'CsvFiles' 'Archivos')
+        CsvFolders  = (T 'CsvFolders' 'Carpetas')
+        CsvPctTotal = (T 'CsvPctTotal' '% del total')
+        CsvType     = (T 'CsvType' 'Tipo')
+        TypeFolder  = (T 'TypeFolder' 'Carpeta')
+        TypeFile    = (T 'TypeFile' 'Archivo')
+        WritingRow  = (T 'PhaseWritingRow' 'Escribiendo fila')
+        Of          = (T 'Of' 'de')
+        Completed   = (T 'PhaseCompleted' 'Completado')
+    }
+
     $bgCsvScript = {
-        param($State, $CsvPath)
+        param($State, $CsvPath, $_bgC)
         try {
             $Items = $State.DataRef
-            $State.Phase    = "Ordenando datos..."
+            $State.Phase    = $_bgC.SortingData
             $State.Progress = 5
             # Ordenar in-place sin crear lista nueva — usar Array.Sort con comparer
             $sorted = [System.Linq.Enumerable]::OrderByDescending(
                 [System.Collections.Generic.IEnumerable[object]]$Items,
                 [Func[object,long]]{ param($x) if ($x.SizeBytes -ge 0) { $x.SizeBytes } else { 0L } }
             )
-            $State.Phase    = "Escribiendo CSV..."
+            $State.Phase    = $_bgC.WritingCsv
             $State.Progress = 10
             $total = $Items.Count
             $State.ItemsTotal = $total
             $sw = [System.IO.StreamWriter]::new($CsvPath, $false, [System.Text.Encoding]::UTF8, 65536)
             try {
-                $sw.WriteLine('"Ruta","Tamaño","Bytes","Archivos","Carpetas","% del total","Tipo"')
+                $sw.WriteLine('"' + $_bgC.CsvPath + '","' + $_bgC.CsvSize + '","Bytes","' + $_bgC.CsvFiles + '","' + $_bgC.CsvFolders + '","' + $_bgC.CsvPctTotal + '","' + $_bgC.CsvType + '"')
                 $i = 0
                 foreach ($r in $sorted) {
                     if ($r.SizeBytes -lt 0) { $i++; continue }
@@ -4392,21 +5014,21 @@ $btnExportCsv.Add_Click({
                     $tam   = [string]$r.SizeStr   -replace '"','""'
                     $arch  = [string]$r.FileCount -replace '"','""'
                     $pct   = [string]$r.PctStr    -replace '"','""'
-                    $tipo  = if ($r.IsDir) { "Carpeta" } else { "Archivo" }
+                    $tipo  = if ($r.IsDir) { $_bgC.TypeFolder } else { $_bgC.TypeFile }
                     $sw.WriteLine('"' + $ruta + '","' + $tam + '",' + $r.SizeBytes + ',"' + $arch + '",' + $r.DirCount + ',"' + $pct + '","' + $tipo + '"')
                     $i++
                     if ($i % 1000 -eq 0) {
                         $sw.Flush()
                         $State.ItemsDone = $i
                         $State.Progress  = [int](10 + ($i / [math]::Max(1,$total)) * 85)
-                        $State.Phase     = "Escribiendo fila $i de $total..."
+                        $State.Phase     = "$($_bgC.WritingRow) $i $($_bgC.Of) $total..."
                     }
                 }
                 $sw.Flush()
             } finally { $sw.Close(); $sw.Dispose() }
             $State.Result    = $CsvPath
             $State.Progress  = 100
-            $State.Phase     = "Completado"
+            $State.Phase     = $_bgC.Completed
             $State.ItemsDone = $total
             $State.Done      = $true
         } catch {
@@ -4420,10 +5042,11 @@ $btnExportCsv.Add_Click({
     [void]$ps4.AddScript($bgCsvScript)
     [void]$ps4.AddParameter("State",   $script:ExportState)
     [void]$ps4.AddParameter("CsvPath", $csvPath)
+    [void]$ps4.AddParameter("_bgC",    $_bgC)
     $asyncCsv = $ps4.BeginInvoke()
 
     $progCsv = Show-ExportProgressDialog
-    if ($null -ne $progCsv.Title) { $progCsv.Title.Text = "Exportando CSV" }
+    if ($null -ne $progCsv.Title) { $progCsv.Title.Text = (T "CsvExporting" "Exportando CSV") }
     $progCsv.Window.Show()
 
     $csvTimer = New-Object System.Windows.Threading.DispatcherTimer
@@ -4439,7 +5062,7 @@ $btnExportCsv.Add_Click({
     if ($script:TaskPool.TryGetValue("csv", [ref]$csvTask) -and $null -ne $csvTask) {
         $csvTask.CancelFn = {
             $script:ExportState.Done  = $true
-            $script:ExportState.Error = "Cancelado por el usuario"
+            $script:ExportState.Error = (T "CancelledByUser" "Cancelado por el usuario")
             if ($null -ne $script:_csvTimer) { try { $script:_csvTimer.Stop() } catch {} }
             try { $script:_csvPs.Stop() } catch {}
             Dispose-PooledPS $script:_csvCtx
@@ -4452,7 +5075,7 @@ $btnExportCsv.Add_Click({
         $st   = $script:ExportState
         $prog = $script:_csvProg
         $pct  = [int]$st.Progress
-        $cntStr = if ($st.ItemsTotal -gt 0) { "$($st.ItemsDone) / $($st.ItemsTotal) filas" } else { "" }
+        $cntStr = if ($st.ItemsTotal -gt 0) { "$($st.ItemsDone) / $($st.ItemsTotal) $(T 'Rows' 'filas')" } else { "" }
         Update-ProgressDialog $prog $pct $st.Phase $cntStr
         Update-Task -Id "csv" -Pct $pct -Detail "$($st.Phase) $cntStr"
         if ($st.Done) {
@@ -4463,15 +5086,16 @@ $btnExportCsv.Add_Click({
             $btnExportCsv.IsEnabled = $true
             if ($st.Error -ne "") {
                 Complete-Task -Id "csv" -IsError -Detail $st.Error
-                Show-ThemedDialog -Title "Error al exportar" -Message "Error:`n$($st.Error)" -Type "error"
+                Show-ThemedDialog -Title ((T "DlgExportError")) -Message "$((T "DlgExportError")):`n$($st.Error)" -Type "error"
             } else {
                 $f     = if ($st.Result) { [string]$st.Result } else { "" }
                 $fLeaf = if ($f) { Split-Path $f -Leaf } else { "export.csv" }
                 Complete-Task -Id "csv" -Detail $fLeaf
-                $txtDiskScanStatus.Text = "✅ CSV exportado: $fLeaf"
+                $txtDiskScanStatus.Text = "✅ $((T "CsvExportedMsg")): $fLeaf"
                 $n = $script:AllScannedItems.Count
-                Show-ThemedDialog -Title "Exportación completada" `
-                    -Message "CSV guardado en:`n$f`n`n$n elementos." -Type "success"
+                Show-ThemedDialog -Title ((T "DlgExportDoneTitle")) `
+                    -Message "$((T "DlgCsvSavedFmt")) $f`n`n$n $((T "DlgElements"))." -Type "success"
+                Show-Toast -Title (T "ToastExportDoneTitle") -Message (T "ToastExportDoneMsg") -Type "Success"
                 Invoke-AggressiveGC
             }
         }
@@ -4486,21 +5110,21 @@ $btnExportCsv.Add_Click({
 $btnDiskReport.Add_Click({
     if ($null -eq $script:AllScannedItems -or $script:AllScannedItems.Count -eq 0) {
         Show-ThemedDialog -Title "Sin datos" `
-            -Message "No hay datos de escaneo. Realiza un escaneo primero." -Type "info"
+            -Message (T "DiskNoScanData" "No hay datos de escaneo. Realiza un escaneo primero.") -Type "info"
         return
     }
     $templatePath = Join-Path $script:AppDir "assets\templates\diskreport.html"
     if (-not (Test-Path $templatePath)) {
         Show-ThemedDialog -Title "Template no encontrado" `
-            -Message "No se encontro el archivo de plantilla:`n$templatePath" -Type "error"
+            -Message "$((T "HtmlTemplateNotFound")):`n$templatePath" -Type "error"
         return
     }
 
     $btnDiskReport.IsEnabled = $false
-    $txtDiskScanStatus.Text  = "⏳ Generando informe HTML en segundo plano..."
-    Register-Task -Id "html" -Name "Informe HTML: $($txtDiskScanPath.Text)" -Icon "🌐" -IconBg (Get-TC 'BgInput' '#1A2030') | Out-Null
+    $txtDiskScanStatus.Text  = "⏳ $((T "HtmlGeneratingBg"))"
+    Register-Task -Id "html" -Name "$(T 'DiskHtmlReport' 'Informe HTML'): $($txtDiskScanPath.Text)" -Icon "🌐" -IconBg (Get-TC 'BgInput' '#1A2030') | Out-Null
 
-    $script:ExportState.Phase     = "Preparando datos..."
+    $script:ExportState.Phase     = (T "PhasePreparingData" "Preparando datos...")
     $script:ExportState.Progress  = 0
     $script:ExportState.ItemsDone = 0
     $script:ExportState.ItemsTotal= $script:AllScannedItems.Count
@@ -4519,14 +5143,31 @@ $btnDiskReport.Add_Click({
         AppDir       = $script:AppDir
     }
 
-    $bgExportScript = {
-        param($State, $TemplatePath, $ScanPath, $AppDir)
+    # [i18n] Pre-resolve T() for bgExportScript background runspace
+    $_bgH = @{
+        ReadingTemplate = (T 'PhaseReadingTemplate' 'Leyendo plantilla...')
+        LoadingLogo     = (T 'HtmlLoadingLogo' 'Cargando logo...')
+        CalcStats       = (T 'PhaseCalcStats' 'Calculando estadísticas...')
+        GenPieChart     = (T 'PhaseGenPieChart' 'Generando gráfico de sectores...')
+        DiskTotalDrive  = (T 'DiskTotalDrive' 'Total unidad')
+        FreeSpace       = (T 'DiskFreeSpace' 'Espacio libre')
+        DiskUsage       = (T 'DiskUsage' 'Uso de disco')
+        OtherFolders    = (T 'OtherFolders' 'Otras carpetas')
+        GenFolderTable  = (T 'PhaseGenFolderTable' 'Generando tabla de carpetas...')
+        GenHtmlRows     = (T 'PhaseGenHtmlRows' 'Generando filas HTML...')
+        AssemblingHtml  = (T 'PhaseAssemblingHtml' 'Ensamblando HTML...')
+        WritingFile     = (T 'PhaseWritingFile' 'Escribiendo archivo...')
+        Completed       = (T 'PhaseCompleted' 'Completado')
+    }
 
-        function SafeHtml([string]$s) {
+    $bgExportScript = {
+        param($State, $TemplatePath, $ScanPath, $AppDir, $_bgH)
+
+        function global:SafeHtml([string]$s) {
             $s -replace '&','&amp;' -replace '<','&lt;' -replace '>','&gt;' `
                -replace '"','&quot;' -replace "'","&#39;"
         }
-        function FmtSize([long]$bytes) {
+        function global:FmtSize([long]$bytes) {
             if ($bytes -ge 1GB) { "{0:N2} GB" -f ($bytes/1GB) }
             elseif ($bytes -ge 1MB) { "{0:N1} MB" -f ($bytes/1MB) }
             elseif ($bytes -ge 1KB) { "{0:N0} KB" -f ($bytes/1KB) }
@@ -4536,10 +5177,10 @@ $btnDiskReport.Add_Click({
         $DataSnapshot = $State.DataRef
 
         try {
-            $State.Phase = "Leyendo plantilla..."; $State.Progress = 2
+            $State.Phase = $_bgH.ReadingTemplate; $State.Progress = 2
             $tpl = [System.IO.File]::ReadAllText($TemplatePath, [System.Text.Encoding]::UTF8)
 
-            $State.Phase = "Cargando logo..."; $State.Progress = 5
+            $State.Phase = $_bgH.LoadingLogo; $State.Progress = 5
             $logoB64 = ""
             $logoPath = Join-Path $AppDir "assets\img\sysopt.png"
             if (Test-Path $logoPath) {
@@ -4549,7 +5190,7 @@ $btnDiskReport.Add_Click({
                 "<img src='data:image/png;base64,$logoB64' alt='SysOpt' class='logo-img'/>"
             } else { "<div class='logo-fallback'>&#9881;</div>" }
 
-            $State.Phase = "Calculando estadisticas..."; $State.Progress = 10
+            $State.Phase = $_bgH.CalcStats; $State.Progress = 10
             $now        = Get-Date
             $reportDate = $now.ToString('yyyyMMddHHmm')
             $dateLong   = $now.ToString('dd/MM/yyyy HH:mm:ss')
@@ -4573,12 +5214,12 @@ $btnDiskReport.Add_Click({
                     $dTot = $di.TotalSize; $dFree = $di.AvailableFreeSpace
                     $dUsed= $dTot - $dFree
                     $dPct = [math]::Round($dUsed / $dTot * 100, 1)
-                    $diskStatsExtra = "<div class=`"stat-box`"><div class=`"stat-lbl`">Total unidad $drive</div><div class=`"stat-val c-cyan`">$(FmtSize $dTot)</div></div><div class=`"stat-box`"><div class=`"stat-lbl`">Espacio libre</div><div class=`"stat-val c-green`">$(FmtSize $dFree)</div></div><div class=`"stat-box`"><div class=`"stat-lbl`">Uso de disco</div><div class=`"stat-val c-red`">$dPct%</div></div>"
+                    $diskStatsExtra = "<div class=`"stat-box`"><div class=`"stat-lbl`">$($_bgH.DiskTotalDrive) $drive</div><div class=`"stat-val c-cyan`">$(FmtSize $dTot)</div></div><div class=`"stat-box`"><div class=`"stat-lbl`">$($_bgH.FreeSpace)</div><div class=`"stat-val c-green`">$(FmtSize $dFree)</div></div><div class=`"stat-box`"><div class=`"stat-lbl`">$($_bgH.DiskUsage)</div><div class=`"stat-val c-red`">$dPct%</div></div>"
                     $diskUsageBar   = "<div class=`"disk-bar-wrap`"><div class=`"disk-bar-fill`" style=`"width:$dPct%`"></div></div><div class=`"disk-bar-label`">$dPct% utilizado &mdash; $(FmtSize $dUsed) de $(FmtSize $dTot)</div>"
                 }
             } catch {}
 
-            $State.Phase = "Generando grafico de sectores..."; $State.Progress = 18
+            $State.Phase = $_bgH.GenPieChart; $State.Progress = 18
             $pal = @('#5BA3FF','#4AE896','#FFB547','#FF6B84','#9B7EFF','#2EDFBF',
                      '#FF9F43','#54A0FF','#5F27CD','#01CBC6','#FFC312','#C4E538',
                      '#12CBC4','#FDA7DF','#ED4C67','#F79F1F','#A29BFE','#74B9FF')
@@ -4614,11 +5255,11 @@ $btnDiskReport.Add_Click({
                 $y1=[math]::Round($cy+$r*[math]::Sin($startAngle*[math]::PI/180),3)
                 $x2=[math]::Round($cx+$r*[math]::Cos($endA*[math]::PI/180),3)
                 $y2=[math]::Round($cy+$r*[math]::Sin($endA*[math]::PI/180),3)
-                $slicesSvg += "<path d='M$cx,$cy L$x1,$y1 A$r,$r 0 $large,1 $x2,$y2 Z' fill='$col' opacity='0.7' class='slice' data-name='Otras carpetas' data-size='$szStr' data-pct='$pctLbl%'/>`n"
-                $legendHtml += "<div class='legend-item'><span class='legend-dot' style='background:$col'></span><span class='legend-name'>Otras carpetas</span><span class='legend-size'>$szStr</span><span class='legend-pct'>$pctLbl%</span></div>`n"
+                $slicesSvg += "<path d='M$cx,$cy L$x1,$y1 A$r,$r 0 $large,1 $x2,$y2 Z' fill='$col' opacity='0.7' class='slice' data-name='$($_bgH.OtherFolders)' data-size='$szStr' data-pct='$pctLbl%'/>`n"
+                $legendHtml += "<div class='legend-item'><span class='legend-dot' style='background:$col'></span><span class='legend-name'>$($_bgH.OtherFolders)</span><span class='legend-size'>$szStr</span><span class='legend-pct'>$pctLbl%</span></div>`n"
             }
 
-            $State.Phase = "Generando tabla de carpetas..."; $State.Progress = 25
+            $State.Phase = $_bgH.GenFolderTable; $State.Progress = 25
             $State.ItemsTotal = $validItems.Count
             # El StringBuilder ya no crece ilimitado en memoria
             $tmpRowsFile = [System.IO.Path]::GetTempFileName()
@@ -4649,7 +5290,7 @@ $btnDiskReport.Add_Click({
                         $State.Progress = [int](25 + $pctTable * 55)
                         if ($elapsed -gt 0.5 -and $pctTable -gt 0.01) {
                             $eta = [int](($elapsed / $pctTable) * (1 - $pctTable))
-                            $State.Phase = "Generando filas HTML... (ETA: ${eta}s)"
+                            $State.Phase = "$($_bgH.GenHtmlRows) (ETA: ${eta}s)"
                         }
                     }
                 }
@@ -4657,7 +5298,7 @@ $btnDiskReport.Add_Click({
             } finally { $swRows.Close(); $swRows.Dispose() }
             $State.ItemsDone = $total_items; $State.Progress = 82
 
-            $State.Phase = "Ensamblando HTML..."; $State.Progress = 85
+            $State.Phase = $_bgH.AssemblingHtml; $State.Progress = 85
             $scanPathEsc = SafeHtml $ScanPath
             # Leer las filas del archivo temporal
             $tableRowsStr = [System.IO.File]::ReadAllText($tmpRowsFile, [System.Text.Encoding]::UTF8)
@@ -4679,14 +5320,14 @@ $btnDiskReport.Add_Click({
                 -replace '{{TABLE_ROWS}}',        $tableRowsStr
             $tableRowsStr = $null  # liberar ref
 
-            $State.Phase = "Escribiendo archivo..."; $State.Progress = 95
+            $State.Phase = $_bgH.WritingFile; $State.Progress = 95
             $outDir = Join-Path $AppDir "output"
             if (-not (Test-Path $outDir)) { [System.IO.Directory]::CreateDirectory($outDir) | Out-Null }
             $outFile = Join-Path $outDir "diskreport_$reportDate.html"
             [System.IO.File]::WriteAllText($outFile, $html, [System.Text.Encoding]::UTF8)
 
             $State.Result = $outFile; $State.Progress = 100
-            $State.Phase  = "Completado"; $State.Done = $true
+            $State.Phase  = $_bgH.Completed; $State.Done = $true
         } catch {
             $State.Error = $_.Exception.Message; $State.Done = $true
         }
@@ -4699,10 +5340,11 @@ $btnDiskReport.Add_Click({
     [void]$ps2.AddParameter("TemplatePath", $exportParams.TemplatePath)
     [void]$ps2.AddParameter("ScanPath",     $exportParams.ScanPath)
     [void]$ps2.AddParameter("AppDir",       $exportParams.AppDir)
+    [void]$ps2.AddParameter("_bgH",         $_bgH)
     $asyncHtml = $ps2.BeginInvoke()
 
     $progHtml = Show-ExportProgressDialog
-    if ($null -ne $progHtml.Title) { $progHtml.Title.Text = "Generando informe HTML" }
+    if ($null -ne $progHtml.Title) { $progHtml.Title.Text = (T "HtmlGeneratingBg") }
     $progHtml.Window.Show()
 
     $htmlTimer = New-Object System.Windows.Threading.DispatcherTimer
@@ -4718,7 +5360,7 @@ $btnDiskReport.Add_Click({
     if ($script:TaskPool.TryGetValue("html", [ref]$htmlTask) -and $null -ne $htmlTask) {
         $htmlTask.CancelFn = {
             $script:ExportState.Done  = $true
-            $script:ExportState.Error = "Cancelado por el usuario"
+            $script:ExportState.Error = (T "CancelledByUser" "Cancelado por el usuario")
             if ($null -ne $script:_htmlTimer) { try { $script:_htmlTimer.Stop() } catch {} }
             try { $script:_htmlPs.Stop() } catch {}
             Dispose-PooledPS $script:_htmlCtx
@@ -4730,7 +5372,7 @@ $btnDiskReport.Add_Click({
         $st   = $script:ExportState
         $prog = $script:_htmlProg
         $pct  = [int]$st.Progress
-        $cntStr = if ($st.ItemsTotal -gt 0) { "$($st.ItemsDone) / $($st.ItemsTotal) elementos" } else { "" }
+        $cntStr = if ($st.ItemsTotal -gt 0) { "$($st.ItemsDone) / $($st.ItemsTotal) $(T 'Items' 'elementos')" } else { "" }
         Update-ProgressDialog $prog $pct $st.Phase $cntStr
         Update-Task -Id "html" -Pct $pct -Detail "$($st.Phase) $cntStr"
         if ($st.Done) {
@@ -4741,15 +5383,15 @@ $btnDiskReport.Add_Click({
             $btnDiskReport.IsEnabled = $true
             if ($st.Error -ne "") {
                 Complete-Task -Id "html" -IsError -Detail $st.Error
-                $txtDiskScanStatus.Text = "Error al generar informe."
-                Show-ThemedDialog -Title "Error al generar informe" -Message $st.Error -Type "error"
+                $txtDiskScanStatus.Text = (T "HtmlReportError")
+                Show-ThemedDialog -Title ((T "HtmlReportError")) -Message $st.Error -Type "error"
             } else {
                 $outFile2 = if ($st.Result) { [string]$st.Result } else { "" }
                 $outLeaf  = if ($outFile2) { Split-Path $outFile2 -Leaf } else { "informe.html" }
                 Complete-Task -Id "html" -Detail $outLeaf
-                $txtDiskScanStatus.Text = "✅ Informe generado: $outLeaf"
-                $open = Show-ThemedDialog -Title "Informe generado" `
-                    -Message "Informe HTML guardado en:`n$outFile2`n`n¿Abrir en el navegador?" `
+                $txtDiskScanStatus.Text = "✅ $(T 'DiskReportGenerated' 'Informe generado'): $outLeaf"
+                $open = Show-ThemedDialog -Title (T "DiskReportGenerated" "Informe generado") `
+                    -Message "$((T "HtmlReportSavedOpenBrowser"))`n$outFile2" `
                     -Type "success" -Buttons "YesNo"
                 if ($open -and $outFile2) { Start-Process $outFile2 }
                 Invoke-AggressiveGC
@@ -4766,12 +5408,12 @@ $btnDiskReport.Add_Click({
 $btnDedup.Add_Click({
     if ($null -eq $script:AllScannedItems -or $script:AllScannedItems.Count -eq 0) {
         Show-ThemedDialog -Title "Sin datos" `
-            -Message "No hay datos de escaneo. Realiza un escaneo primero." -Type "info"
+            -Message (T "DiskNoScanData" "No hay datos de escaneo. Realiza un escaneo primero.") -Type "info"
         return
     }
 
     $btnDedup.IsEnabled     = $false
-    $txtDiskScanStatus.Text = "⏳ Calculando hashes SHA256 (archivos >10 MB)..."
+    $txtDiskScanStatus.Text = "⏳ $((T "DedupCalculatingHashes"))"
 
     # [FIX-BUG1] Definir $rootPath ANTES de Register-Task (que lo usa en el nombre)
     $rootPath = $txtDiskScanPath.Text
@@ -4961,7 +5603,7 @@ $btnDedup.Add_Click({
             $txtDiskScanStatus.Text = "Error en deduplicación."
             Write-Log "[B5] Error SHA256: $($script:DedupState.Error)" -Level "ERR"
             Show-ThemedDialog -Title "Error de deduplicación" `
-                -Message "Error al calcular hashes:`n$($script:DedupState.Error)" -Type "error"
+                -Message "$((T "DedupHashError")):`n$($script:DedupState.Error)" -Type "error"
             return
         }
 
@@ -4972,20 +5614,21 @@ $btnDedup.Add_Click({
                   else { "{0:N0} KB" -f ($waste/1KB) }
 
         if ($null -eq $groups -or $groups.Count -eq 0) {
-            Complete-Task -Id "dedup" -Detail "Sin duplicados"
-            $txtDiskScanStatus.Text = "✓ No se encontraron duplicados (>10 MB)."
+            Complete-Task -Id "dedup" -Detail (T "DedupNoDuplicates" "Sin duplicados")
+            $txtDiskScanStatus.Text = "✓ $((T "DedupNoDuplicates"))"
             Write-Log "[B5] Deduplicación completada: sin duplicados." -Level "INFO"
-            Show-ThemedDialog -Title "Sin duplicados" `
-                -Message "No se encontraron archivos duplicados mayores de 10 MB en la ruta escaneada." -Type "info"
+            Show-ThemedDialog -Title ((T "DedupNoDuplicatesTitle")) `
+                -Message ((T "DedupNoDuplicatesMsg")) -Type "info"
             return
         }
 
-        Complete-Task -Id "dedup" -Detail "$($groups.Count) grupos · $fmtW recuperables"
-        $txtDiskScanStatus.Text = "✓ $($groups.Count) grupos de duplicados — $fmtW recuperables."
+        Complete-Task -Id "dedup" -Detail "$($groups.Count) $(T 'DedupGroups' 'grupos') · $fmtW $(T 'DedupRecoverable' 'recuperables')"
+        $txtDiskScanStatus.Text = "✓ $($groups.Count) $((T "DedupGroupsFmt")) — $fmtW $((T "DedupRecoverable"))"
         Write-Log "[B5] Deduplicación: $($groups.Count) grupos, $fmtW recuperables." -Level "INFO"
 
         # ── Ventana de resultados de deduplicación ──────────────────────────
         $dedupXaml = [XamlLoader]::Load($script:XamlFolder, "DedupWindow")
+    $dedupXaml = $ExecutionContext.InvokeCommand.ExpandString($dedupXaml)
         try {
             $dr   = [System.Xml.XmlNodeReader]::new([xml]$dedupXaml)
             $dWin = [Windows.Markup.XamlReader]::Load($dr)
@@ -5002,7 +5645,7 @@ $btnDedup.Add_Click({
             $txtDedupSt     = $dWin.FindName("txtDedupStatus")
             $btnDedupClose  = $dWin.FindName("btnDedupClose")
 
-            $txtDedupSum.Text = "$($groups.Count) grupos · $($script:DedupState.TotalFiles) archivos analizados · $fmtW recuperables eliminando copias"
+            $txtDedupSum.Text = "$($groups.Count) $(T 'DedupGroups' 'grupos') · $($script:DedupState.TotalFiles) $(T 'DedupFilesAnalyzed' 'archivos analizados') · $fmtW $(T 'DedupRecoverableDelCopies' 'recuperables eliminando copias')"
             $lbGroups.ItemsSource = $groups
 
             # Botón eliminar copias de un grupo (conserva el primer archivo)
@@ -5017,8 +5660,8 @@ $btnDedup.Add_Click({
                     if ($null -eq $grp) { return }
 
                     $copies = $grp.FilesList | Select-Object -Skip 1
-                    $confirmMsg = "Se eliminarán $($copies.Count) copia(s) del grupo:`n(se conserva: $($grp.FilesList[0]))`n`n¿Continuar?"
-                    $ok = Show-ThemedDialog -Title "Confirmar eliminación" -Message $confirmMsg -Type "confirm"
+                    $confirmMsg = "$(T 'DedupConfirmDelete' 'Se eliminarán') $($copies.Count) $(T 'DedupCopiesOfGroup' 'copia(s) del grupo'):`n($(T 'DedupKeep' 'se conserva'): $($grp.FilesList[0]))`n`n$(T 'DedupContinue' '¿Continuar?')"
+                    $ok = Show-ThemedDialog -Title ((T "DlgConfirmDeleteTitle")) -Message $confirmMsg -Type "confirm"
                     if (-not $ok) { return }
 
                     $deleted = 0; $errors = 0
@@ -5027,7 +5670,7 @@ $btnDedup.Add_Click({
                         catch { $errors++; Write-Log "[B5] Error eliminando $f : $($_.Exception.Message)" -Level "WARN" }
                     }
                     Write-Log "[B5] Eliminadas $deleted copias del hash $($grp.Hash). Errores: $errors." -Level "INFO"
-                    $txtDedupSt.Text = "✓ $deleted archivo(s) eliminado(s)$(if($errors -gt 0){" · $errors error(es)"})"
+                    $txtDedupSt.Text = "✓ $deleted $((T "DedupDeletedResult"))$(if($errors -gt 0){" · $errors $((T "DedupErrors"))"})"
 
                     # Refrescar lista quitando el grupo procesado
                     $groups.Remove($grp) | Out-Null
@@ -5039,7 +5682,7 @@ $btnDedup.Add_Click({
             $dWin.ShowDialog() | Out-Null
         } catch {
             Write-Log "[B5] Error abriendo ventana de duplicados: $($_.Exception.Message)" -Level "ERR"
-            Show-ThemedDialog -Title "Error" -Message "Error al abrir la ventana de duplicados:`n$($_.Exception.Message)" -Type "error"
+            Show-ThemedDialog -Title ((T "DlgError")) -Message "$((T "DedupWindowError")):`n$($_.Exception.Message)" -Type "error"
         }
     })
     $dedupTimer.Start()
@@ -5081,12 +5724,12 @@ $lbDiskTree.Add_SelectionChanged({
 
     $txtDiskDetailName.Text  = $sel.DisplayName
     $txtDiskDetailSize.Text  = $sel.SizeStr
-    $txtDiskDetailFiles.Text = if ($sel.IsDir) { $sel.FileCount } else { "1 archivo" }
-    $txtDiskDetailDirs.Text  = if ($sel.IsDir) { "$($sel.DirCount) carpetas" } else { "—" }
+    $txtDiskDetailFiles.Text = if ($sel.IsDir) { $sel.FileCount } else { ((T "DedupOneFile")) }
+    $txtDiskDetailDirs.Text  = if ($sel.IsDir) { "$($sel.DirCount) $((T "DiskFolders"))" } else { "—" }
     $txtDiskDetailPct.Text   = "$($sel.TotalPct)%"
 
     # Top 10 archivos más grandes — ejecutado en runspace para no bloquear la UI
-    $icTopFiles.ItemsSource = @([PSCustomObject]@{ FileName = "Buscando archivos grandes…"; FileSize = "" })
+    $icTopFiles.ItemsSource = @([PSCustomObject]@{ FileName = (T "DiskSearchingLargeFiles" "Buscando archivos grandes…"); FileSize = "" })
     $selPath = $sel.FullPath
     if ($sel.IsDir -and (Test-Path $selPath)) {
         $topBg = {
@@ -5130,7 +5773,7 @@ $lbDiskTree.Add_SelectionChanged({
 # ─────────────────────────────────────────────────────────────────────────────
 # [N9] Show-FolderScanner — ventana emergente de análisis de carpeta
 # ─────────────────────────────────────────────────────────────────────────────
-function Show-FolderScanner {
+function global:Show-FolderScanner {
     param([string]$FolderPath)
 
     $fsXaml = [XamlLoader]::Load($script:XamlFolder, "FolderScannerWindow")
@@ -5166,7 +5809,7 @@ function Show-FolderScanner {
     $script:fsFilterTxt = ""
 
     # ── Helper: formatear tamaño ──
-    function Format-FsSize([long]$b) {
+    function global:Format-FsSize([long]$b) {
         if ($b -ge 1GB) { return "{0:N2} GB" -f ($b / 1GB) }
         if ($b -ge 1MB) { return "{0:N1} MB" -f ($b / 1MB) }
         if ($b -ge 1KB) { return "{0:N0} KB" -f ($b / 1KB) }
@@ -5174,7 +5817,7 @@ function Show-FolderScanner {
     }
 
     # ── Helper: color por tamaño ──
-    function Get-FsSizeColor([long]$b) {
+    function global:Get-FsSizeColor([long]$b) {
         if ($b -ge 1GB)  { return "#FF6B84" }
         if ($b -ge 100MB){ return "#FFB547" }
         if ($b -ge 10MB) { return "#5BA3FF" }
@@ -5182,7 +5825,7 @@ function Show-FolderScanner {
     }
 
     # ── Helper: icono por extensión ──
-    function Get-FsIcon([string]$ext) {
+    function global:Get-FsIcon([string]$ext) {
         switch ($ext.ToLower()) {
             {$_ -in @(".mp4",".mkv",".avi",".mov",".wmv",".ts",".m2ts")} { return "🎬" }
             {$_ -in @(".mp3",".flac",".wav",".aac",".ogg",".m4a")}        { return "🎵" }
@@ -5200,7 +5843,7 @@ function Show-FolderScanner {
     }
 
     # ── Refrescar la lista con filtro y orden actuales ──
-    function Refresh-FsList {
+    function global:Refresh-FsList {
         # Liberar referencia anterior antes de reasignar (ayuda al GC)
         $fsListBox.ItemsSource = $null
 
@@ -5229,7 +5872,7 @@ function Show-FolderScanner {
 
         # Usar $script:fsTotalBytes ya acumulado — evita otro Measure-Object sobre toda la colección
         $fsTotalSize.Text  = Format-FsSize $script:fsTotalBytes
-        $fsFileCount.Text  = "$($script:fsAllItems.Count) archivos"
+        $fsFileCount.Text  = "$($script:fsAllItems.Count) $((T "FsFiles"))"
     }
 
     # ── Escaneo streaming con ConcurrentQueue (nunca bloquea la UI) ──
@@ -5268,7 +5911,7 @@ function Show-FolderScanner {
     $asyncFs = $psFs.BeginInvoke()
 
     # Lote adaptativo: en equipos con poca RAM disponible se reduce automáticamente
-    $availMB = [Math]::Round((Invoke-CimQuery -ClassName Win32_OperatingSystem -SilentOnFail).FreePhysicalMemory / 1024)
+    $availMB = [Math]::Round([SystemDataCollector]::GetRamSnapshot().FreeBytes / 1MB)
     $BATCH = if ($availMB -lt 2048) { 50 } elseif ($availMB -lt 4096) { 150 } else { 300 }
 
     $script:_scanTimer = New-Object System.Windows.Threading.DispatcherTimer
@@ -5305,8 +5948,8 @@ function Show-FolderScanner {
         # Actualizar contador en vivo
         $cnt = $script:fsAllItems.Count
         if ($cnt -gt 0) {
-            $fsScanStatus.Text = "Escaneando…   $cnt archivos  ·  $(Format-FsSize $script:fsTotalBytes)"
-            $fsScanCount.Text  = "$cnt archivos"
+            $fsScanStatus.Text = "$((T "ScanDefaultName"))…   $cnt $((T "FsFiles"))  ·  $(Format-FsSize $script:fsTotalBytes)"
+            $fsScanCount.Text  = "$cnt $((T "FsFiles"))"
         }
 
         # ¿Terminado? Queue vacía Y runspace señaliza done
@@ -5332,11 +5975,11 @@ function Show-FolderScanner {
             $fsScanProgress.IsIndeterminate = $false
             $fsScanProgress.Value           = 100
             $cnt2 = $script:fsAllItems.Count
-            $fsScanStatus.Text = "✅  Completado — $cnt2 archivos  ·  $(Format-FsSize $script:fsTotalBytes)"
+            $fsScanStatus.Text = "✅  $((T "FsScanDone")) — $cnt2 $((T "FsFiles"))  ·  $(Format-FsSize $script:fsTotalBytes)"
             Write-Log ("[SCAN] Completado: {0} archivos  |  {1}  |  ruta: {2}" -f $cnt2, (Format-FsSize $script:fsTotalBytes), $FolderPath) -Level "INFO" -NoUI
-            $fsScanCount.Text  = "$cnt2 archivos"
+            $fsScanCount.Text  = "$cnt2 $((T "FsFiles"))"
             $fsTotalSize.Text  = Format-FsSize $script:fsTotalBytes
-            $fsFileCount.Text  = "$cnt2 archivos"
+            $fsFileCount.Text  = "$cnt2 $((T "FsFiles"))"
             Refresh-FsList
         }
     })
@@ -5399,8 +6042,8 @@ function Show-FolderScanner {
         $sel = $fsListBox.SelectedItem
         if ($null -ne $sel -and (Test-Path $sel.FullPath)) {
             try { Start-Process $sel.FullPath } catch {
-                Show-ThemedDialog -Title "Error al abrir archivo" `
-                    -Message "No se puede abrir el archivo.`n$($_.Exception.Message)" -Type "error"
+                Show-ThemedDialog -Title ((T "ErrOpenFileTitle")) `
+                    -Message "$((T "ErrOpenFileDetail"))`n$($_.Exception.Message)" -Type "error"
             }
         }
     })
@@ -5418,7 +6061,7 @@ function Show-FolderScanner {
         $sel = $fsListBox.SelectedItem
         if ($null -ne $sel -and (Test-Path $sel.FullPath)) {
             try { Start-Process $sel.FullPath } catch {
-                Show-ThemedDialog -Title "Error al abrir" `
+                Show-ThemedDialog -Title ((T "ErrOpenFileTitle")) `
                     -Message "No se puede abrir el archivo.`n$($_.Exception.Message)" -Type "error"
             }
         }
@@ -5435,18 +6078,18 @@ function Show-FolderScanner {
     $fsCtxDelete.Add_Click({
         $sel = $fsListBox.SelectedItem
         if ($null -eq $sel) { return }
-        $confirm = Show-ThemedDialog -Title "Confirmar eliminación" `
-            -Message "¿Eliminar permanentemente este archivo?`n`n$($sel.FullPath)`n`nTamaño: $($sel.SizeStr)`n`nEsta acción no se puede deshacer." `
+        $confirm = Show-ThemedDialog -Title ((T "DlgConfirmDeleteTitle")) `
+            -Message "$((T "DlgConfirmDeleteFileMsg"))`n`n$($sel.FullPath)`n`n$((T "DlgSize")): $($sel.SizeStr)`n`n$((T "DlgCannotUndo"))" `
             -Type "warning" -Buttons "YesNo"
         if ($confirm) {
             try {
                 Remove-Item -Path $sel.FullPath -Force -ErrorAction Stop
                 $script:fsAllItems.Remove($sel) | Out-Null
-                $fsScanStatus.Text = "🗑  Eliminado: $($sel.FullPath)"
+                $fsScanStatus.Text = "🗑  $(T 'Deleted' 'Eliminado'): $($sel.FullPath)"
                 Refresh-FsList
             } catch {
-                Show-ThemedDialog -Title "Error al eliminar" `
-                    -Message "Error al eliminar:`n$($_.Exception.Message)" -Type "error"
+                Show-ThemedDialog -Title ((T "DlgDeleteError")) `
+                    -Message "$(T 'ErrDeleting' 'Error al eliminar'):`n$($_.Exception.Message)" -Type "error"
             }
         }
     })
@@ -5476,7 +6119,7 @@ function Show-FolderScanner {
 # ─────────────────────────────────────────────────────────────────────────────
 # [N8] Ventana de gestión de programas de inicio
 # ─────────────────────────────────────────────────────────────────────────────
-function Show-StartupManager {
+function global:Show-StartupManager {
     $startupXaml = [XamlLoader]::Load($script:XamlFolder, "StartupManagerWindow")
     $startupXaml = $ExecutionContext.InvokeCommand.ExpandString($startupXaml)
 
@@ -5501,12 +6144,12 @@ function Show-StartupManager {
             Name         = $e.Name
             Command      = $e.Command
             Source       = $e.Source
-            Location     = $e.Location
+            Location     = $e.RegPath
             OriginalName = $e.Name
         })
     }
     $sGrid.ItemsSource = $startupTable
-    $sStatus.Text = "$($startupTable.Count) entradas encontradas"
+    $sStatus.Text = "$($startupTable.Count) $((T "StartupEntriesFound"))"
 
     $btnApply.Add_Click({
         # Construir lista de StartupEntry desde la tabla UI
@@ -5523,10 +6166,10 @@ function Show-StartupManager {
         $results  = [SysOpt.StartupManager.StartupEngine]::ApplyChanges($entryList)
         $disabled = ($results | Where-Object { $_.Success -and $_.NewState -eq "Disabled" }).Count
         $errors   = ($results | Where-Object { -not $_.Success }).Count
-        $msg = "Cambios aplicados: $disabled entradas desactivadas."
+        $msg = "$(T 'StartupChangesApplied' 'Cambios aplicados'): $disabled $(T 'StartupEntriesDisabled' 'entradas desactivadas')."
         if ($errors -gt 0) { $msg += "`n$errors entradas no pudieron modificarse (requieren permisos adicionales)." }
         Show-ThemedDialog -Title "Cambios aplicados" -Message $msg -Type "success"
-        Write-ConsoleMain "🚀 Startup Manager: $disabled entradas desactivadas del registro."
+        Write-ConsoleMain "🚀 Startup Manager: $disabled $((T "StartupMgrResult"))"
         $sWindow.Close()
     })
 
@@ -5541,7 +6184,7 @@ function Show-StartupManager {
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Helper WPF: renderizar fila de diagnóstico ──────────────────────────────
-function Add-DiagRow {
+function global:Add-DiagRow {
     param(
         [System.Windows.Window]$Window,
         [System.Windows.Controls.StackPanel]$Panel,
@@ -5612,7 +6255,7 @@ function Add-DiagRow {
     [void]$Panel.Children.Add($border)
 }
 
-function Show-DiagnosticReport {
+function global:Show-DiagnosticReport {
     param([hashtable]$Report)
 
     $diagXaml = [XamlLoader]::Load($script:XamlFolder, "DiagnosticWindow")
@@ -5665,15 +6308,15 @@ function Show-DiagnosticReport {
     $btnExp.Add_Click({
         $sd = New-Object System.Windows.Forms.SaveFileDialog
         try {
-            $sd.Title            = "Exportar Informe de Diagnóstico"
+            $sd.Title            = (T "DiagExportBtn")
             $sd.Filter           = "Texto (*.txt)|*.txt|Todos (*.*)|*.*"
             $sd.DefaultExt       = "txt"
             $sd.FileName         = "DiagnosticoSistema_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
             $sd.InitialDirectory = [Environment]::GetFolderPath("Desktop")
             if ($sd.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
                 $exportLines | Out-File -FilePath $sd.FileName -Encoding UTF8
-                Show-ThemedDialog -Title "Informe exportado" `
-                    -Message "Informe guardado en:`n$($sd.FileName)" -Type "success"
+                Show-ThemedDialog -Title ((T "DiagExportDoneTitle")) `
+                    -Message "$((T "DiagExportDoneMsg")):`n$($sd.FileName)" -Type "success"
             }
         } finally { $sd.Dispose() }
     })
@@ -5727,7 +6370,7 @@ $OptimizationScript = {
             }
             # Actualizar nombre de tarea
             if ($p.TaskName) {
-                $TaskText.Text = "Tarea actual: {0}" -f $p.TaskName
+                $TaskText.Text = "$($LangRS['OptCurrentTask']): {0}" -f $p.TaskName
             }
             # Actualizar consola
             if ($p.Message) {
@@ -5760,11 +6403,11 @@ $OptimizationScript = {
     if ($result.IsDryRun -eq $false -and $options['AutoRestart'] -and
         -not $result.Cancelled) {
         $window.Dispatcher.Invoke([action]{
-            $ConsoleOutput.AppendText("Reiniciando el sistema en 10 segundos...`n")
+            $ConsoleOutput.AppendText("$($LangRS['OptRestarting'])`n")
         })
         for ($i = 10; $i -gt 0; $i--) {
             $window.Dispatcher.Invoke([action]{
-                $StatusText.Text = "Reiniciando en {0} segundos..." -f $i
+                $StatusText.Text = $LangRS['OptRestartingIn'] -f $i
             }.GetNewClosure())
             Start-Sleep -Seconds 1
         }
@@ -5801,23 +6444,23 @@ $btnSelectAll.Add_Click({
 
     foreach ($cb in $script:AllOptCheckboxes) { $cb.IsChecked = $targetState }
 
-    $btnSelectAll.Content = if ($targetState) { "✗ Deseleccionar Todo" } else { "✓ Seleccionar Todo" }
+    $btnSelectAll.Content = if ($targetState) { "✗ $(T 'BtnDeselectAll' 'Deseleccionar Todo')" } else { "✓ $(T 'BtnSelectAll2' 'Seleccionar Todo')" }
 })
 
 # ── Función central de arranque (dry-run o real) ─────────────────────────────
-function Start-Optimization {
+function global:Start-Optimization {
     param([bool]$DryRunOverride = $false)
 
     if ($chkCleanRegistry.IsChecked -and -not $chkBackupRegistry.IsChecked -and -not $DryRunOverride) {
-        $warn = Show-ThemedDialog -Title "Sin backup del registro" `
-            -Message "Has activado 'Limpiar registro' sin 'Crear backup'.`n`nLimpiar el registro SIN backup puede ser peligroso.`n`n¿Deseas continuar igualmente SIN hacer backup?" `
+        $warn = Show-ThemedDialog -Title ((T "DlgRegistryNoBackupTitle")) `
+            -Message ((T "DlgRegistryNoBackupMsg")) `
             -Type "warning" -Buttons "YesNo"
         if (-not $warn) { return }
     }
 
     if (-not [string]::IsNullOrWhiteSpace($ConsoleOutput.Text)) {
-        $clearWarn = Show-ThemedDialog -Title "Limpiar consola" `
-            -Message "La consola tiene contenido de una ejecución anterior.`n`n¿Deseas limpiarla y comenzar una nueva sesión?`n(Si quieres conservar el log, pulsa No y guárdalo primero)" `
+        $clearWarn = Show-ThemedDialog -Title ((T "DlgClearConsoleTitle")) `
+            -Message ((T "DlgClearConsoleMsgExt")) `
             -Type "question" -Buttons "YesNo"
         if (-not $clearWarn) { return }
     }
@@ -5825,18 +6468,18 @@ function Start-Optimization {
     # Contar tareas seleccionadas
     # Mapa checkbox → (Nombre tarea, Clave options)
     $taskMap = @(
-        @($chkOptimizeDisks,  "Optimizar discos", "OptimizeDisks"),
+        @($chkOptimizeDisks,  (T "ChkOptimizeDisks" "Optimizar discos"), "OptimizeDisks"),
         @($chkRecycleBin,     "Vaciar papelera",  "RecycleBin"),
         @($chkTempFiles,      "Temp Windows",     "TempFiles"),
         @($chkUserTemp,       "Temp Usuario",     "UserTemp"),
         @($chkWUCache,        "WU Cache",         "WUCache"),
         @($chkChkdsk,         "CHKDSK",           "Chkdsk"),
         @($chkClearMemory,    "Liberar RAM",      "ClearMemory"),
-        @($chkCloseProcesses, "Cerrar procesos",  "CloseProcesses"),
+        @($chkCloseProcesses, (T "ChkCloseProcesses" "Cerrar procesos"),  "CloseProcesses"),
         @($chkDNSCache,       "DNS",              "DNSCache"),
-        @($chkBrowserCache,   "Navegadores",      "BrowserCache"),
-        @($chkBackupRegistry, "Backup registro",  "BackupRegistry"),
-        @($chkCleanRegistry,  "Limpiar registro", "CleanRegistry"),
+        @($chkBrowserCache,   (T "ChkBrowserCache" "Navegadores"),      "BrowserCache"),
+        @($chkBackupRegistry, (T "ChkBackupRegistry" "Backup registro"),  "BackupRegistry"),
+        @($chkCleanRegistry,  (T "ChkCleanRegistry" "Limpiar registro"), "CleanRegistry"),
         @($chkSFC,            "SFC",              "SFC"),
         @($chkDISM,           "DISM",             "DISM"),
         @($chkEventLogs,      "Event Logs",       "EventLogs")
@@ -5849,8 +6492,8 @@ function Start-Optimization {
     }
 
     if ($selectedTasks.Count -eq 0 -and -not $chkShowStartup.IsChecked) {
-        Show-ThemedDialog -Title "Sin tareas seleccionadas" `
-            -Message "Por favor, selecciona al menos una opción." -Type "warning"
+        Show-ThemedDialog -Title ((T "DlgNoTasksTitle")) `
+            -Message (T "OptSelectAtLeastOne" "Por favor, selecciona al menos una opción.") -Type "warning"
         return
     }
 
@@ -5859,8 +6502,8 @@ function Start-Optimization {
     $isDryRun  = $DryRunOverride -or $chkDryRun.IsChecked
     $modeLabel = if ($isDryRun) { "🔍 MODO ANÁLISIS (sin cambios)" } else { "⚙ EJECUCIÓN REAL" }
 
-    $confirm = Show-ThemedDialog -Title "Confirmar optimización" `
-        -Message "Modo: $modeLabel`n`n¿Iniciar con $($selectedTasks.Count) tareas?`n• $($selectedTasks -join "`n• ")" `
+    $confirm = Show-ThemedDialog -Title ((T "DlgConfirmOptTitle")) `
+        -Message "$(T 'OptMode' 'Modo'): $modeLabel`n`n$(T 'OptStartWith' '¿Iniciar con') $($selectedTasks.Count) $(T 'OptTasks' 'tareas')?`n• $($selectedTasks -join "`n• ")" `
         -Type "question" -Buttons "YesNo"
     if (-not $confirm) {
         Write-Log "[OPT] Optimización cancelada por el usuario antes de iniciar." -Level "INFO" -NoUI
@@ -5881,7 +6524,7 @@ function Start-Optimization {
     $ConsoleOutput.Clear()
     $ProgressBar.Value  = 0
     $ProgressText.Text  = "0%"
-    $TaskText.Text      = "Iniciando..."
+    $TaskText.Text      = (T "SnapInitializing")
 
     $script:CancelSource  = New-Object System.Threading.CancellationTokenSource
     $script:WasCancelled  = $false
@@ -5903,6 +6546,14 @@ function Start-Optimization {
     $diagReportRef = [ref]$script:DiagReportData
     $script:DiagReportRef    = $diagReportRef
     $runspace.SessionStateProxy.SetVariable('DiagReportRef', $diagReportRef)
+
+    # ── Pre-resolver claves lang para el runspace (no hereda funciones) ──
+    $langRS = @{
+        'OptCurrentTask'  = (T 'OptCurrentTask'  'Tarea actual')
+        'OptRestarting'   = (T 'OptRestarting'    'Reiniciando el sistema en 10 segundos...')
+        'OptRestartingIn' = (T 'OptRestartingIn'  'Reiniciando en {0} segundos...')
+    }
+    $runspace.SessionStateProxy.SetVariable('LangRS', $langRS)
 
     $powershell = [powershell]::Create()
     $powershell.Runspace = $runspace
@@ -5979,13 +6630,13 @@ function Start-Optimization {
             $script:UI_ProgressBar.Value  = 0
             $script:UI_ProgressText.Text  = "0%"
             $script:UI_TaskText.Text      = ""
-            $script:UI_StatusText.Text    = "Listo para optimizar"
+            $script:UI_StatusText.Text    = (T "StatusReady" "Listo para optimizar")
 
             $script:UI_BtnStart.IsEnabled     = $true
             $script:UI_BtnDryRun.IsEnabled    = $true
             $script:UI_BtnSelectAll.IsEnabled = $true
             $script:UI_BtnCancel.IsEnabled    = $false
-            $script:UI_BtnCancel.Content      = "⏹ Cancelar"
+            $script:UI_BtnCancel.Content      = "⏹ $((T "BtnCancel"))"
             foreach ($cb in $script:UI_Checkboxes) { $cb.IsEnabled = $true }
 
             # Actualizar info del sistema al finalizar
@@ -5999,22 +6650,25 @@ function Start-Optimization {
 
             if ($script:WasCancelled) {
                 Write-Log "[OPT] Proceso cancelado por el usuario." -Level "WARN" -NoUI
-                Show-ThemedDialog -Title "Proceso cancelado" `
-                    -Message "La optimizacion fue cancelada por el usuario." -Type "warning"
+                Show-ThemedDialog -Title ((T "OptProcessCancelled")) `
+                    -Message ((T "OptProcessCancelled")) -Type "warning"
             } elseif ($script:LastRunWasDryRun -and $null -ne $script:DiagReportData) {
                 # Modo análisis completado → mostrar informe de diagnóstico
                 Write-Log "[OPT] Análisis (dry-run) completado con informe de diagnóstico." -Level "INFO" -NoUI
                 Show-DiagnosticReport -Report $script:DiagReportData
+                Show-Toast -Title (T "ToastAnalysisDoneTitle") -Message (T "ToastAnalysisDoneMsg") -Type "Info"
             } elseif ($script:LastRunWasDryRun) {
                 # Dry run sin datos (tareas no recogen diagData) → mensaje simple
                 Write-Log "[OPT] Análisis (dry-run) completado." -Level "INFO" -NoUI
-                Show-ThemedDialog -Title "Análisis completado" `
-                    -Message "Análisis completado.`n`nRevisa la consola para ver los detalles." -Type "info"
+                Show-ThemedDialog -Title ((T "OptAnalysisDoneTitle")) `
+                    -Message ((T "OptAnalysisDoneMsg")) -Type "info"
+                Show-Toast -Title (T "ToastAnalysisDoneTitle") -Message (T "ToastAnalysisDoneMsg") -Type "Info"
             } else {
                 Write-Log "── Fin de optimización ───────────────────────────────────" -Level "INFO" -NoUI
                 Write-Log "[OPT] Optimización real completada correctamente." -Level "INFO" -NoUI
-                Show-ThemedDialog -Title "Optimización completada" `
-                    -Message "¡Proceso completado correctamente!`n`nTodas las tareas seleccionadas han finalizado." -Type "success"
+                Show-ThemedDialog -Title ((T "OptDoneTitle")) `
+                    -Message ((T "OptDoneMsg")) -Type "success"
+                Show-Toast -Title (T "ToastOptDoneTitle") -Message (T "ToastOptDoneMsg") -Type "Success"
             }
             $script:WasCancelled = $false
         }
@@ -6031,8 +6685,8 @@ $btnDryRun.Add_Click({ Start-Optimization -DryRunOverride $true })
 # Botón Cancelar
 $btnCancel.Add_Click({
     if ($null -ne $script:CancelSource -and -not $script:CancelSource.IsCancellationRequested) {
-        $res = Show-ThemedDialog -Title "Confirmar cancelación" `
-            -Message "¿Cancelar la optimización en curso?`n`nLa tarea actual terminará antes de detenerse." `
+        $res = Show-ThemedDialog -Title ((T "TaskConfirmCancelTitle")) `
+            -Message ((T "OptConfirmCancelMsg")) `
             -Type "question" -Buttons "YesNo"
         if ($res) {
             $script:WasCancelled = $true
@@ -6050,14 +6704,14 @@ $btnSaveLog.Add_Click({
     $logContent = $ConsoleOutput.Text
     if ([string]::IsNullOrWhiteSpace($logContent)) {
         Show-ThemedDialog -Title "Log vacío" `
-            -Message "La consola está vacía. No hay nada que guardar." -Type "info"
+            -Message ((T "OptConsoleEmpty")) -Type "info"
         return
     }
 
     $saveDialog = New-Object System.Windows.Forms.SaveFileDialog
     try {
-        $saveDialog.Title            = "Guardar Log de Optimización"
-        $saveDialog.Filter           = "Archivo de texto (*.txt)|*.txt|Todos los archivos (*.*)|*.*"
+        $saveDialog.Title            = (T "DlgSaveLogTitle")
+        $saveDialog.Filter           = "$((T "DlgSaveLogFilter"))|$((T "DlgAllFilesFilter"))|*.*"
         $saveDialog.DefaultExt       = "txt"
         $saveDialog.FileName         = "OptimizadorLog_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
         if (-not (Test-Path $script:LogsDir)) {
@@ -6068,11 +6722,11 @@ $btnSaveLog.Add_Click({
         if ($saveDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
             try {
                 $logContent | Out-File -FilePath $saveDialog.FileName -Encoding UTF8
-                Show-ThemedDialog -Title "Log guardado" `
-                    -Message "Log guardado en:`n`n$($saveDialog.FileName)" -Type "success"
+                Show-ThemedDialog -Title ((T "DlgLogSavedTitle")) `
+                    -Message "$((T "DlgLogSavedMsg")):`n`n$($saveDialog.FileName)" -Type "success"
             } catch {
-                Show-ThemedDialog -Title "Error al guardar" `
-                    -Message "Error al guardar:`n$($_.Exception.Message)" -Type "error"
+                Show-ThemedDialog -Title ((T "DlgSaveError")) `
+                    -Message "$((T "DlgSaveError")):`n$($_.Exception.Message)" -Type "error"
             }
         }
     } finally { $saveDialog.Dispose() }
@@ -6118,19 +6772,10 @@ $window.Add_Closed({
         if ($null -ne $script:UnhandledExHandler)  { [System.AppDomain]::CurrentDomain.remove_UnhandledException($script:UnhandledExHandler) }
         if ($null -ne $script:DispatcherExHandler) { $window.Dispatcher.remove_UnhandledException($script:DispatcherExHandler) }
     } catch {}
-    # [WMI] Cerrar CimSession compartida
-    try {
-        if ($null -ne $script:CimSession) { $script:CimSession | Remove-CimSession -ErrorAction SilentlyContinue; $script:CimSession = $null }
-    } catch {}
+    # [WMI] CimSession eliminada — DAL usa WMI nativo en C#
 
-    # Señalizar parada del runspace de escaneo y esperar brevemente
-    [ScanCtl211]::Stop = $true
-    # [CTK] Cancelar y liberar el token global
-    try {
-        if (([System.Management.Automation.PSTypeName]'ScanTokenManager').Type) {
-            [ScanTokenManager]::Dispose()
-        }
-    } catch {}
+    # [CTK] Dispose() cancela el token + libera recursos → ScanCtl211.Stop = true via bridge
+    try { [ScanTokenManager]::Dispose() } catch {}
     if ($null -ne $script:DiskScanRunspace) {
         try { $script:DiskScanRunspace.Close()   } catch {}
         try { $script:DiskScanRunspace.Dispose() } catch {}
@@ -6166,8 +6811,54 @@ $window.Add_Closed({
         $script:CancelSource = $null
     }
 
-    # Nota: el runspace de optimización se limpia vía $script:ActiveRunspace (arriba)
-    # $script:OptRunspace no se usa — eliminado para evitar confusión
+    # ── [EXIT-FIX] Limpiar runspace de optimización si sigue corriendo ──────
+    if ($null -ne $script:ActivePowershell) {
+        try { $script:ActivePowershell.Stop()    } catch {}
+        try { $script:ActivePowershell.Dispose() } catch {}
+        $script:ActivePowershell = $null
+    }
+    if ($null -ne $script:ActiveRunspace) {
+        try { $script:ActiveRunspace.Close()   } catch {}
+        try { $script:ActiveRunspace.Dispose() } catch {}
+        $script:ActiveRunspace = $null
+    }
+    $script:ActiveHandle = $null
+
+    # ── [EXIT-FIX] Limpiar contextos async pooled (load/csv/html) ────────
+    if ($null -ne $script:_loadCtx) {
+        try { Dispose-PooledPS $script:_loadCtx } catch {}
+        $script:_loadCtx = $null; $script:_loadPs = $null; $script:_loadAsync = $null
+    }
+    if ($null -ne $script:_csvCtx) {
+        try { $script:_csvPs.Stop() } catch {}
+        try { Dispose-PooledPS $script:_csvCtx } catch {}
+        $script:_csvCtx = $null; $script:_csvPs = $null; $script:_csvAsync = $null
+    }
+    if ($null -ne $script:_htmlCtx) {
+        try { $script:_htmlPs.Stop() } catch {}
+        try { Dispose-PooledPS $script:_htmlCtx } catch {}
+        $script:_htmlCtx = $null; $script:_htmlPs = $null; $script:_htmlAsync = $null
+    }
+
+    # ── [EXIT-FIX] Limpiar async de guardado (save settings) ─────────────
+    if ($null -ne $script:_savePs) {
+        try { $script:_savePs.Stop()    } catch {}
+        try { $script:_savePs.Dispose() } catch {}
+        $script:_savePs = $null
+    }
+    if ($null -ne $script:_saveRs) {
+        try { $script:_saveRs.Close()   } catch {}
+        try { $script:_saveRs.Dispose() } catch {}
+        $script:_saveRs = $null
+    }
+    $script:_saveAsync = $null
+
+    # ── [EXIT-FIX] GC agresivo para liberar handles de DLL ───────────────
+    try { Invoke-AggressiveGC } catch {}
+
+    # ── [EXIT-FIX] Forzar cierre del proceso para matar threads huérfanos ─
+    # Sin esto, los threads de runspaces no-background mantienen powershell.exe vivo
+    try { [Environment]::Exit(0) } catch {}
 })
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -6177,7 +6868,7 @@ $window.Add_Closed({
 # ─────────────────────────────────────────────────────────────────────────────
 # Función: Ventana emergente "Acerca de la versión"
 # ─────────────────────────────────────────────────────────────────────────────
-function Show-AboutWindow {
+function global:Show-AboutWindow {
     $aboutXaml = [XamlLoader]::Load($script:XamlFolder, "AboutWindow")
     $aboutXaml = $ExecutionContext.InvokeCommand.ExpandString($aboutXaml)
     try {
@@ -6207,14 +6898,11 @@ function Show-AboutWindow {
         $aboutWin.ShowDialog() | Out-Null
     } catch {
         Show-ThemedDialog -Title "Error" `
-            -Message "Error al abrir la ventana de novedades:`n$($_.Exception.Message)" -Type "error"
+            -Message "$((T "ErrNewsWindow")):`n$($_.Exception.Message)" -Type "error"
     }
 }
 
-# Conectar botón ℹ
-if ($null -ne $btnAbout) {
-    $btnAbout.Add_Click({ Show-AboutWindow })
-}
+
 
 # Conectar botón ⚡ Tareas
 $btnShowTasks = $window.FindName("btnShowTasks")
@@ -6233,12 +6921,11 @@ if ($null -ne $btnOptions) {
 Write-ConsoleMain "═══════════════════════════════════════════════════════════"
 Write-ConsoleMain "SysOpt - Windows Optimizer GUI  v$($script:AppVersion)"
 Write-ConsoleMain "═══════════════════════════════════════════════════════════"
-Write-ConsoleMain "Sistema iniciado correctamente"
+Write-ConsoleMain (T "WelcomeLine1" "Sistema iniciado correctamente")
 Write-ConsoleMain ""
-Write-ConsoleMain "Selecciona las opciones y presiona '▶ Iniciar Optimización'"
-Write-ConsoleMain "  o '🔍 Analizar' para ver qué se liberaría sin cambios."
+Write-ConsoleMain (T "WelcomeLine4" "  o '🔍 Analizar' para ver qué se liberaría sin cambios.")
 Write-ConsoleMain ""
-Write-ConsoleMain "💡 Ver novedades de la versión: botón  ℹ  en la barra superior."
+Write-ConsoleMain (T "WelcomeLine5" "💡 Ver novedades de la versión: botón  ℹ  en la barra superior.")
 Write-ConsoleMain ""
 
 $window.ShowDialog() | Out-Null

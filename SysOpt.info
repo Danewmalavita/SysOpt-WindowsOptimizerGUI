@@ -1,0 +1,102 @@
+@{
+    RequiresAdmin = $true
+
+    # ╔══════════════════════════════════════════════════════════════╗
+    # ║              REGISTRO DE CAMBIOS — SysOpt                   ║
+    # ╚══════════════════════════════════════════════════════════════╝
+
+    Cambios = [ordered]@{
+
+        # ┌──────────────────────────────────────────────────────────┐
+        # │  v3.2.0  —  CTK + DAL + Agent hooks en SysOpt.Core.dll  │
+        # └──────────────────────────────────────────────────────────┘
+        "v3.2.0" = @{
+            Titulo = "CTK + DAL + Agent hooks en SysOpt.Core.dll"
+            Items  = @(
+                # ── Cancel Token Kit ──────────────────────────────
+                "[CTK] ScanTokenManager COMPLETO — bridge CTK→ScanCtl211.Stop, 0 escrituras directas, Cancel()/Dispose() limpio"
+                "[CTK] RequestNew() + Cancel() + Dispose() en Add_Closed — cancelación limpia de runspaces"
+
+                # ── Data Access Layer ─────────────────────────────
+                "[DAL] SystemDataCollector COMPLETO — 13 WMI queries migradas, CimSession eliminada, 8 Get*Snapshot() activos"
+                "[DAL] GetFullSnapshot() — SystemSnapshot completo serializable para modo agente"
+                "[DAL] Modelos puros: CpuSnapshot, RamSnapshot, DiskSnapshot, NetworkSnapshot, GpuSnapshot, PortSnapshot"
+
+                # ── Agent Framework ───────────────────────────────
+                "[AGENT] AgentBus + IAgentTransport + AgentThresholds — hooks preparados, standalone safe"
+
+                # ── DLLs y compilación ────────────────────────────
+                "[DLL] compile-dlls.ps1 renovado — auto-descubre todos los .cs de .\libs\ con referencias correctas"
+                "[DLL] WseTrim cargado al inicio (junto al resto) en lugar de bajo demanda"
+                "[DLL] Load-SysOptDll helper unificado — un punto de carga para las 5 DLLs"
+                "[DLL] SysOpt.Optimizer.dll — 15 tareas de optimización en C#"
+                "[DLL] SysOpt.StartupManager.dll — gestión de inicio de Windows"
+                "[DLL] SysOpt.Diagnostics.dll — motor de diagnóstico del sistema"
+                "[DLL] SysOpt.Toast.dll — sistema de notificaciones toast"
+
+                # ── UI y temas ────────────────────────────────────
+                "[THEME] 33 temas preinstalados (expansión de 11 a 33)"
+                "[UI] Toggle switch Win11 en ventana de opciones"
+
+                # ── Debug y rendimiento ───────────────────────────
+                "[DBG] Auditoría y carga de 8 DLLs en debug/splash"
+                "[OPT] PS1 reducido de 6924 a ~6241 líneas (-9.9%)"
+                "[OPT] Compactación: `$taskMap, reflexión `$diagHash"
+            )
+        }
+
+        # ┌──────────────────────────────────────────────────────────┐
+        # │  v3.1.0  —  Temas visuales + i18n + DLLs modulares      │
+        # └──────────────────────────────────────────────────────────┘
+        "v3.1.0" = @{
+            Titulo = "Temas visuales + Internacionalización + DLLs modulares"
+            Items  = @(
+                # ── Temas ─────────────────────────────────────────
+                "[THEME] Sistema de temas dinámicos cargado desde .\assets\themes\ vía SysOpt.ThemeEngine.dll"
+                "[THEME] Barra de progreso animada al aplicar temas — parsing en runspace background"
+                "[THEME] 11 temas incluidos: Default Dark/Light, IceBlue, IceCream, Manga, Matrix, PipBoy, Simpsons, Votorantim, Windows Dark/Light"
+
+                # ── Internacionalización ──────────────────────────
+                "[I18N] Sistema de idiomas cargado desde .\assets\lang\ vía SysOpt.Core.dll (LangEngine)"
+                "[I18N] Idiomas incluidos: Español, English, Português (Brasil)"
+                "[I18N] Función T() — traducción centralizada con fallback al texto XAML original"
+
+                # ── DLLs ──────────────────────────────────────────
+                "[DLL] SysOpt.Core.dll — LangEngine + SettingsHelper compilados como ensamblado externo en .\libs\"
+                "[DLL] SysOpt.ThemeEngine.dll — ThemeEngine compilado como ensamblado externo en .\libs\"
+
+                # ── UI y configuración ────────────────────────────
+                "[UI] Botón ⚙ Opciones en la barra superior (entre Tareas y About)"
+                "[UI] Ventana de Opciones con selectores de tema e idioma + vista previa"
+                "[CFG] Tema e idioma seleccionados se persisten en settings.json (%APPDATA%\SysOpt)"
+                "[FIX] Símbolo © correcto en la ventana About (antes mostraba '(c)')"
+            )
+        }
+
+        # ┌──────────────────────────────────────────────────────────┐
+        # │  v3.0.0  —  DLL externos nativos + arquitectura modular  │
+        # └──────────────────────────────────────────────────────────┘
+        "v3.0.0" = @{
+            Titulo = "DLL externos nativos + arquitectura modular"
+            Items  = @(
+                "[DLL] SysOpt.MemoryHelper.dll y SysOpt.DiskEngine.dll como ensamblados externos en .\libs\"
+                "[DLL] Eliminada la compilación inline C# — tipos cargados con Add-Type -Path una sola vez"
+                "[DLL] Guard de tipo compartido: DiskItem_v211, DiskItemToggle_v230, ScanCtl211, PScanner211"
+                "[ARCH] Ruta de libs normalizada a .\libs\ relativa al script (PSScriptRoot)"
+            )
+        }
+
+        # ┌──────────────────────────────────────────────────────────┐
+        # │  v2.5.0  —  Estabilidad + Deduplicación + TaskPool      │
+        # └──────────────────────────────────────────────────────────┘
+        "v2.5.0" = @{
+            Titulo = "Estabilidad + Deduplicación + TaskPool"
+            Items  = @(
+                "[LOG] Write-Log centralizado con rotación diaria y Mutex thread-safe"
+                "[ERR] Error boundary global: AppDomain + Dispatcher"
+                "[B5] Deduplicación SHA256 archivos >10 MB en background"
+                "[TASKPOOL] Panel de tareas async estilo torrent"
+            )
+        }
+    }
+}
