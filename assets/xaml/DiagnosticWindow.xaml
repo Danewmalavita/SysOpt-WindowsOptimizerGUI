@@ -1,0 +1,118 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Informe de Diagnóstico del Sistema" Height="680" Width="860"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
+        Background="$(Get-TC 'BgCardDark' '#131625')">
+    <Window.Resources>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize"   Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="$(Get-TC 'TextSecondary' '#B0BACC')"/>
+            <Setter Property="Margin"     Value="0,14,0,4"/>
+        </Style>
+        <Style x:Key="GoodRow" TargetType="Border">
+            <Setter Property="Background"     Value="$(Get-TC 'BgStatusOk' '#182A1E')"/>
+            <Setter Property="BorderBrush"    Value="$(Get-TC 'BorderSubtle' '#2A4A35')"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"   Value="6"/>
+            <Setter Property="Padding"        Value="12,7"/>
+            <Setter Property="Margin"         Value="0,3"/>
+        </Style>
+        <Style x:Key="WarnRow" TargetType="Border">
+            <Setter Property="Background"     Value="$(Get-TC 'BgStatusWarn' '#2A2010')"/>
+            <Setter Property="BorderBrush"    Value="$(Get-TC 'BtnAmberBg' '#5A4010')"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"   Value="6"/>
+            <Setter Property="Padding"        Value="12,7"/>
+            <Setter Property="Margin"         Value="0,3"/>
+        </Style>
+        <Style x:Key="CritRow" TargetType="Border">
+            <Setter Property="Background"     Value="$(Get-TC 'BgStatusErr' '#2A1018')"/>
+            <Setter Property="BorderBrush"    Value="$(Get-TC 'BtnDangerBg' '#5A1828')"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"   Value="6"/>
+            <Setter Property="Padding"        Value="12,7"/>
+            <Setter Property="Margin"         Value="0,3"/>
+        </Style>
+        <Style x:Key="InfoRow" TargetType="Border">
+            <Setter Property="Background"     Value="$(Get-TC 'CtxHover' '#1A2540')"/>
+            <Setter Property="BorderBrush"    Value="$(Get-TC 'ComboSelected' '#2A3A60')"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"   Value="6"/>
+            <Setter Property="Padding"        Value="12,7"/>
+            <Setter Property="Margin"         Value="0,3"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,0,0,1" Padding="24,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock FontFamily="Segoe UI" FontSize="20" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#F0F3FA')">
+                        <Run Text="Informe de Diagnóstico"/>
+                    </TextBlock>
+                    <TextBlock Name="DiagSubtitle" FontFamily="Segoe UI" FontSize="11"
+                               Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,4,0,0"
+                               Text="Análisis completado — resultados por categoría"/>
+                </StackPanel>
+                <!-- Score global -->
+                <Border Grid.Column="1" CornerRadius="10" Padding="18,10" VerticalAlignment="Center">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="$(Get-TC 'ComboSelected' '#1A3A5C')" Offset="0"/>
+                            <GradientStop Color="$(Get-TC 'ComboHover' '#162A40')" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel HorizontalAlignment="Center">
+                        <TextBlock Text="PUNTUACIÓN" FontFamily="Segoe UI" FontSize="9"
+                                   FontWeight="Bold" Foreground="$(Get-TC 'AccentBlue' '#7BA8E0')" HorizontalAlignment="Center"/>
+                        <TextBlock Name="ScoreText" Text="—" FontFamily="Segoe UI" FontSize="32"
+                                   FontWeight="Bold" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" HorizontalAlignment="Center"/>
+                        <TextBlock Name="ScoreLabel" Text="calculando..." FontFamily="Segoe UI" FontSize="10"
+                                   Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Body — scroll con categorías -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0">
+            <StackPanel Name="DiagPanel" Margin="24,16,24,16"/>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,1,0,0" Padding="24,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Name="DiagFooterNote" Grid.Column="0"
+                           FontFamily="Segoe UI" FontSize="10" Foreground="$(Get-TC 'TextMuted' '#6B7599')"
+                           VerticalAlignment="Center"
+                           Text="▶  Pulsa 'Iniciar Optimización' en la ventana principal para reparar los puntos marcados."/>
+                <Button Name="btnExportDiag" Grid.Column="1" Content="💾  Exportar informe"
+                        Background="$(Get-TC 'CtxHover' '#1A2540')" BorderBrush="$(Get-TC 'HdrBtnBorder' '#3D5080')" BorderThickness="1"
+                        Foreground="$(Get-TC 'AccentBlue' '#7BA8E0')" FontFamily="Segoe UI" FontSize="11" FontWeight="SemiBold"
+                        Padding="14,7" Margin="8,0" Cursor="Hand" Height="34"/>
+                <Button Name="btnCloseDiag" Grid.Column="2" Content="Cerrar"
+                        Background="$(Get-TC 'CtxHover' '#1A2540')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1"
+                        Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" FontFamily="Segoe UI" FontSize="11"
+                        Padding="18,7" Cursor="Hand" Height="34"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

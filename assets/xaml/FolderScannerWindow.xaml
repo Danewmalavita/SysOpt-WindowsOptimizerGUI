@@ -1,0 +1,298 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Explorador de Carpeta" Height="680" Width="920"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
+        Background="$(Get-TC 'BgDeep' '#0D0F1A')">
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Foreground" Value="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="FontFamily"    Value="Segoe UI"/>
+            <Setter Property="FontSize"      Value="11"/>
+            <Setter Property="Cursor"        Value="Hand"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"       Value="10,5"/>
+        </Style>
+        <Style TargetType="ContextMenu">
+            <Setter Property="Background"      Value="$(Get-TC 'BgInput' '#1A1E2F')"/>
+            <Setter Property="BorderBrush"     Value="$(Get-TC 'BorderSubtle' '#3A4468')"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" CornerRadius="8" Padding="4,4">
+                            <ItemsPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="MenuItem">
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="12"/>
+            <Setter Property="Foreground"  Value="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
+            <Setter Property="Background"  Value="Transparent"/>
+            <Setter Property="Padding"     Value="10,6"/>
+            <Setter Property="Cursor"      Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="5" Margin="2,1" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="$(Get-TC 'ComboSelected' '#1E3058')"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="MIDanger" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Foreground" Value="$(Get-TC 'AccentRed' '#FF6B84')"/>
+        </Style>
+        <Style TargetType="Separator">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Rectangle Height="1" Fill="$(Get-TC 'BorderSubtle' '#2A3448')" Margin="8,3"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="5"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style TargetType="ProgressBar">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border CornerRadius="3" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Height="5">
+                            <Border x:Name="PART_Track">
+                                <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="3">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="$(Get-TC 'AccentBlue' '#5BA3FF')" Offset="0"/>
+                                            <GradientStop Color="$(Get-TC 'AccentCyan' '#2EDFBF')" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                            </Border>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="16,12,16,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Cabecera -->
+        <Border Grid.Row="0" CornerRadius="10" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Padding="16,12" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Width="38" Height="38" CornerRadius="10" Background="$(Get-TC 'ComboSelected' '#1A3058')" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <TextBlock Text="🔍" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="Explorador de Carpeta" FontSize="15" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
+                    <TextBlock Name="fsPathLabel" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border CornerRadius="6" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" Padding="10,5" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Total: " FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"/>
+                            <TextBlock Name="fsTotalSize" Text="—" FontSize="11" FontWeight="Bold" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')"/>
+                        </StackPanel>
+                    </Border>
+                    <Border CornerRadius="6" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" Padding="10,5">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Archivos: " FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"/>
+                            <TextBlock Name="fsFileCount" Text="—" FontSize="11" FontWeight="Bold" Foreground="$(Get-TC 'AccentGreen' '#4AE896')"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Barra de búsqueda/filtro + ordenación -->
+        <Border Grid.Row="1" CornerRadius="8" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Padding="10,7" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Name="fsFilter" Grid.Column="0"
+                         Background="$(Get-TC 'BgDeep' '#0D0F1A')" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')"
+                         BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1"
+                         FontFamily="Segoe UI" FontSize="11" Padding="8,5"
+                         VerticalContentAlignment="Center"
+                         CaretBrush="$(Get-TC 'AccentBlue' '#5BA3FF')" SelectionBrush="$(Get-TC 'BtnSecondaryFg' '#3D8EFF')"/>
+                <TextBlock Name="fsFilterHint" Grid.Column="0"
+                           Text="  🔎  Filtrar por nombre…" FontSize="11" Foreground="$(Get-TC 'BorderHover' '#4A5068')"
+                           VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0"/>
+                <TextBlock Grid.Column="1" Text="Ordenar:" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" VerticalAlignment="Center" Margin="10,0,6,0"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Name="fsSortSize"  Content="Tamaño ↓" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Margin="0,0,4,0" FontSize="10"/>
+                    <Button Name="fsSortName"  Content="Nombre"   Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,4,0" FontSize="10"/>
+                    <Button Name="fsSortExt"   Content="Extensión" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" FontSize="10"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Lista de archivos -->
+        <Border Grid.Row="2" CornerRadius="10" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <!-- Cabecera de columnas -->
+                <Border Grid.Row="0" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,0,0,1" Padding="0,0,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="180"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="" Padding="8,6"/>
+                        <TextBlock Grid.Column="1" Text="Nombre" FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6"/>
+                        <TextBlock Grid.Column="2" Text="Tamaño"   FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6" TextAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Text="Ext."     FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6" TextAlignment="Center"/>
+                        <TextBlock Grid.Column="4" Text="Modificado" FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6"/>
+                    </Grid>
+                </Border>
+                <!-- Filas de archivos -->
+                <ListBox Name="fsListBox" Grid.Row="1"
+                         Background="Transparent" BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         VirtualizingStackPanel.IsVirtualizing="True"
+                         SelectionMode="Single">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Name="fsCtxPreview"  Header="👁  Vista previa / Abrir archivo"/>
+                            <MenuItem Name="fsCtxLocation" Header="📂  Ir a la ubicación"/>
+                            <Separator/>
+                            <MenuItem Name="fsCtxDelete"   Header="🗑  Eliminar archivo" Style="{StaticResource MIDanger}"/>
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin"  Value="0"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="lbi" Background="Transparent"
+                                                BorderBrush="$(Get-TC 'CtxHover' '#1E2740')" BorderThickness="0,0,0,1">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="lbi" Property="Background" Value="$(Get-TC 'ComboSelected' '#1A3A5C')"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="lbi" Property="Background" Value="$(Get-TC 'BgInput' '#1E253B')"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="32">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="30"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="180"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- Barra proporcional de tamaño -->
+                                <Border Grid.Column="0" Grid.ColumnSpan="5" HorizontalAlignment="Left"
+                                        Width="{Binding BarW}" Height="32"
+                                        Background="{Binding BarC}" Opacity="0.13"/>
+                                <!-- Icono tipo -->
+                                <TextBlock Grid.Column="0" Text="{Binding Icon}"
+                                           FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <!-- Nombre -->
+                                <TextBlock Grid.Column="1" Text="{Binding DisplayName}"
+                                           FontSize="11" Foreground="{Binding NameColor}"
+                                           VerticalAlignment="Center" Padding="4,0"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <!-- Tamaño -->
+                                <TextBlock Grid.Column="2" Text="{Binding SizeStr}"
+                                           FontSize="11" Foreground="{Binding SizeColor}"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" TextAlignment="Right" Padding="4,0"/>
+                                <!-- Extensión -->
+                                <Border Grid.Column="3" CornerRadius="4" Background="$(Get-TC 'CtxHover' '#1A2540')"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center" Padding="5,2" Margin="2,0">
+                                    <TextBlock Text="{Binding Ext}" FontSize="9" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"
+                                               HorizontalAlignment="Center"/>
+                                </Border>
+                                <!-- Fecha modificación -->
+                                <TextBlock Grid.Column="4" Text="{Binding Modified}"
+                                           FontSize="10" Foreground="$(Get-TC 'BorderHover' '#4A5068')"
+                                           VerticalAlignment="Center" Padding="4,0"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- Barra de progreso del escaneo -->
+        <Border Grid.Row="3" CornerRadius="8" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Padding="12,8" Margin="0,8,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Name="fsScanStatus" Text="Iniciando escaneo…" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,0,4"/>
+                    <ProgressBar Name="fsScanProgress" IsIndeterminate="True" Height="5"/>
+                </StackPanel>
+                <TextBlock Name="fsScanCount" Grid.Column="1" Text="" FontSize="10" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')"
+                           VerticalAlignment="Center" Margin="12,0,0,0" FontWeight="SemiBold"/>
+            </Grid>
+        </Border>
+
+        <!-- Footer -->
+        <Grid Grid.Row="4" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Name="fsSelInfo" Grid.Column="0" Text="" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" VerticalAlignment="Center"/>
+            <Button Name="fsBtnClose" Grid.Column="1" Content="Cerrar"
+                    Background="$(Get-TC 'BtnDangerBg' '#2E0E14')" BorderBrush="$(Get-TC 'BtnDangerFg' '#FF4D6A')" Foreground="$(Get-TC 'BtnDangerFg' '#FF4D6A')"
+                    MinWidth="90"/>
+        </Grid>
+    </Grid>
+</Window>
