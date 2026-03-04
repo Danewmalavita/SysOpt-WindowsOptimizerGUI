@@ -82,39 +82,7 @@ Add-Type -AssemblyName Microsoft.VisualBasic
 Add-Type -AssemblyName WindowsBase
 
 # ─────────────────────────────────────────────────────────────────────────────
-$splashXaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
-        Width="480" Height="160" WindowStartupLocation="CenterScreen" Topmost="True">
-    <Border CornerRadius="12" BorderThickness="1" BorderBrush="#252B40">
-        <Border.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#1A2035" Offset="0"/>
-                <GradientStop Color="#131625" Offset="1"/>
-            </LinearGradientBrush>
-        </Border.Background>
-        <StackPanel VerticalAlignment="Center" Margin="36,0">
-            <TextBlock FontFamily="Segoe UI" FontSize="20" FontWeight="Bold" Foreground="#E8ECF4" Margin="0,0,0,6">
-                <Run Text="SYS"/><Run Foreground="#5BA3FF" Text="OPT"/>
-                <Run Foreground="#8B96B8" FontSize="11" FontWeight="Normal" Text="   Windows Optimizer GUI"/>
-            </TextBlock>
-            <TextBlock Name="SplashMsg" Text="Cargando ensamblados .NET..." FontFamily="Segoe UI"
-                       FontSize="11" Foreground="#7880A0" Margin="0,0,0,12"/>
-            <Border Height="5" CornerRadius="2.5" Background="#1A1E2F">
-                <Border Name="SplashBar" HorizontalAlignment="Left" Width="0" Height="5" CornerRadius="2.5">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                            <GradientStop Color="#5BA3FF" Offset="0"/>
-                            <GradientStop Color="#4AE896" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
-                </Border>
-            </Border>
-        </StackPanel>
-    </Border>
-</Window>
-"@
+$splashXaml = [System.IO.File]::ReadAllText((Join-Path $PSScriptRoot "assets\xaml\SplashWindow.xaml"))
 $splashReader = [System.Xml.XmlNodeReader]::new([xml]$splashXaml)
 $splashWin    = [Windows.Markup.XamlReader]::Load($splashReader)
 $splashMsg    = $splashWin.FindName("SplashMsg")
@@ -131,7 +99,7 @@ Set-SplashProgress 10 "Cargando ensamblados .NET..."
 
 # =============================================================================
 # CARGA DE DLL EXTERNAS  —  todas en .\libs\  relativas a PSScriptRoot
-# Orden: MemoryHelper → DiskEngine → Core (CTK+DAL+i18n) → ThemeEngine → WseTrim
+# Orden: MemoryHelper → DiskEngine → Core (CTK+DAL+i18n) → ThemeEngine → WseTrim → Optimizer
 # compile-dlls.ps1 en .\libs\ recompila todas si modificas los .cs
 # =============================================================================
 
@@ -150,13 +118,13 @@ function script:Load-SysOptDll {
             Write-Verbose "SysOpt: DLL cargada: $Label"
             # Write-Log no existe aun en bootstrap; se registra en el log completo mas adelante
             if (Get-Command Write-Log -ErrorAction SilentlyContinue) {
-                Write-Log "DLL cargada: $Label" -Level INFO
+                Write-Log "DLL cargada: $Label" -Level DBG
             }
         } catch {
             $errMsg = "Error cargando $Label — $($_.Exception.Message)"
             Write-Warning $errMsg
             if (Get-Command Write-Log -ErrorAction SilentlyContinue) {
-                Write-Log $errMsg -Level ERROR
+                Write-Log $errMsg -Level ERR
             }
             if ($Hard) { throw }
         }
@@ -178,34 +146,46 @@ function script:Load-SysOptDll {
 
 $script:_libsDir = Join-Path $PSScriptRoot "libs"
 
-# ── [DLL 1/5] MemoryHelper — Win32 P/Invoke para EmptyWorkingSet ─────────────
-Set-SplashProgress 15 "Cargando MemoryHelper..."
+# ── [DLL 1/7] MemoryHelper — Win32 P/Invoke para EmptyWorkingSet ─────────────
+Set-SplashProgress 10 "Cargando MemoryHelper..."
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.MemoryHelper.dll") `
                -GuardType "MemoryHelper" -Label "MemoryHelper" -Hard
 
-# ── [DLL 2/5] DiskEngine — modelos y escaner paralelo del Explorador ──────────
+# ── [DLL 2/7] DiskEngine — modelos y escaner paralelo del Explorador ──────────
 # Contiene: DiskItem_v211, DiskItemToggle_v230, ScanCtl211, PScanner211
-Set-SplashProgress 25 "Cargando DiskEngine..."
+Set-SplashProgress 18 "Cargando DiskEngine..."
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.DiskEngine.dll") `
                -GuardType "DiskItem_v211" -Label "DiskEngine" -Hard
 
-# ── [DLL 3/5] Core — LangEngine + XamlLoader + CTK + DAL + AgentBus ──────────
+# ── [DLL 3/7] Core — LangEngine + XamlLoader + CTK + DAL + AgentBus ──────────
 # v3.2.0: añade ScanTokenManager, SystemDataCollector, modelos de datos y AgentBus
-Set-SplashProgress 40 "Cargando Core (CTK + DAL)..."
+Set-SplashProgress 26 "Cargando Core (CTK + DAL)..."
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.Core.dll") `
                -GuardType "LangEngine" -Label "Core" -Hard
 
-# ── [DLL 4/5] ThemeEngine — parser de archivos .theme ────────────────────────
-Set-SplashProgress 55 "Cargando ThemeEngine..."
+# ── [DLL 4/7] ThemeEngine — parser de archivos .theme ────────────────────────
+Set-SplashProgress 34 "Cargando ThemeEngine..."
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.ThemeEngine.dll") `
                -GuardType "ThemeEngine" -Label "ThemeEngine" -Hard
 
-# ── [DLL 5/5] WseTrim — SetProcessWorkingSetSize para trim de Working Set ─────
+# ── [DLL 5/7] WseTrim — SetProcessWorkingSetSize para trim de Working Set ─────
 # Se carga aqui (inicio) en lugar de bajo demanda para errores tempranos visibles
-Set-SplashProgress 65 "Cargando WseTrim..."
+Set-SplashProgress 42 "Cargando WseTrim..."
 Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.WseTrim.dll") `
                -GuardType "WseTrim" -Label "WseTrim"
 # WseTrim es no-Hard: si falta el DLL la app sigue funcionando sin trim de WS
+
+# ── [DLL 6/7] Optimizer — OptimizerEngine + WUCacheManager + ProcessManager ──
+# Contiene: OptimizeOptions, OptimizeProgress, OptimizerEngine, WUCacheManager, ProcessManager
+Set-SplashProgress 50 "Cargando Optimizer..."
+Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.Optimizer.dll") `
+               -GuardType "SysOpt.Optimizer.OptimizerEngine" -Label "Optimizer" 
+
+# ── [DLL 7/7] StartupManager — motor de gestión de programas de inicio ──────
+# Contiene: StartupEntry, ApplyResult, StartupEngine
+Set-SplashProgress 58 "Cargando StartupManager..."
+Load-SysOptDll -DllPath (Join-Path $script:_libsDir "SysOpt.StartupManager.dll") `
+               -GuardType "SysOpt.StartupManager.StartupEngine" -Label "StartupManager"
 
 # ── Inicializar CTK global ────────────────────────────────────────────────────
 # ScanTokenManager reemplaza el flag booleano ScanCtl211.Stop para cancelacion
@@ -274,45 +254,17 @@ function Update-DynamicThemeValues {
     $tc = $script:CurrentThemeColors
     if (-not $tc -or $tc.Count -eq 0) { return }
 
-    # Compute dark accent backgrounds for status colors
-    function Local:DarkAccent([string]$hex, [double]$factor) {
-        try {
-            $c = [System.Windows.Media.ColorConverter]::ConvertFromString($hex)
-            $r = [math]::Max(0, [math]::Min(255, [int]($c.R * $factor)))
-            $g = [math]::Max(0, [math]::Min(255, [int]($c.G * $factor)))
-            $b = [math]::Max(0, [math]::Min(255, [int]($c.B * $factor)))
-            return "#{0:X2}{1:X2}{2:X2}" -f $r, $g, $b
-        } catch { return $hex }
-    }
-
-    # Status colors (derived from accent colors)
-    $blue   = if ($tc.ContainsKey("AccentBlue"))   { $tc["AccentBlue"] }   else { "#5BA3FF" }
-    $green  = if ($tc.ContainsKey("AccentGreen"))  { $tc["AccentGreen"] }  else { "#4AE896" }
-    $red    = if ($tc.ContainsKey("AccentRed"))    { $tc["AccentRed"] }    else { "#FF6B84" }
-    $amber  = if ($tc.ContainsKey("AccentAmber"))  { $tc["AccentAmber"] }  else { "#FFB547" }
-    $purple = if ($tc.ContainsKey("AccentPurple")) { $tc["AccentPurple"] } else { "#9B7EFF" }
-    $cyan   = if ($tc.ContainsKey("AccentCyan"))   { $tc["AccentCyan"] }   else { "#2EDFBF" }
-
-    # Usar BgStatus*/FgStatus* del tema cuando existen — son valores ajustados
-    # manualmente para cada tema (light y dark). DarkAccent solo como fallback.
-    $tc["StatusRunningBg"] = if ($tc.ContainsKey("BgStatusInfo"))  { $tc["BgStatusInfo"] }  else { DarkAccent $blue  0.18 }
-    $tc["StatusRunningFg"] = if ($tc.ContainsKey("FgStatusInfo"))  { $tc["FgStatusInfo"] }  else { $blue }
-    $tc["StatusDoneBg"]    = if ($tc.ContainsKey("BgStatusOk"))    { $tc["BgStatusOk"] }    else { DarkAccent $green 0.18 }
-    $tc["StatusDoneFg"]    = if ($tc.ContainsKey("FgStatusOk"))    { $tc["FgStatusOk"] }    else { $green }
-    $tc["StatusErrorBg"]   = if ($tc.ContainsKey("BgStatusErr"))   { $tc["BgStatusErr"] }   else { DarkAccent $red   0.22 }
-    $tc["StatusErrorFg"]   = if ($tc.ContainsKey("FgStatusErr"))   { $tc["FgStatusErr"] }   else { $red }
-    $tc["StatusCancelBg"]  = if ($tc.ContainsKey("BgStatusWarn"))  { $tc["BgStatusWarn"] }  else { DarkAccent $amber 0.22 }
-    $tc["StatusCancelFg"]  = if ($tc.ContainsKey("FgStatusWarn"))  { $tc["FgStatusWarn"] }  else { $amber }
-
-    # IconBg = mismo que StatusBg para coherencia visual entre badge e icono
-    $tc["IconRunningBg"]   = $tc["StatusRunningBg"]
-    $tc["IconDoneBg"]      = $tc["StatusDoneBg"]
-    $tc["IconErrorBg"]     = $tc["StatusErrorBg"]
-    $tc["IconCancelBg"]    = $tc["StatusCancelBg"]
+    # Compute status colors via C# ThemeApplier
+    # BuildStatusColors expects Dictionary<string,string> — convert Hashtable
+    $tcDict = [System.Collections.Generic.Dictionary[string, string]]::new()
+    foreach ($k in $tc.Keys) { $tcDict[$k] = [string]$tc[$k] }
+    $statusColors = [ThemeApplier]::BuildStatusColors($tcDict)
+    foreach ($kv in $statusColors.GetEnumerator()) { $tc[$kv.Key] = $kv.Value }
 
     # Update TaskStatusMap with themed colors
     $script:TaskStatusMap = @{
         running   = @{ Text = T 'StatusRunning' 'En curso';   Bg = $tc["StatusRunningBg"]; Fg = $tc["StatusRunningFg"] }
+        paused    = @{ Text = T 'StatusPaused'  'Pausada';    Bg = $tc["StatusCancelBg"];  Fg = $tc["StatusCancelFg"] }
         done      = @{ Text = T 'StatusDone' 'Completada';    Bg = $tc["StatusDoneBg"];    Fg = $tc["StatusDoneFg"] }
         error     = @{ Text = T 'StatusError' 'Error';        Bg = $tc["StatusErrorBg"];   Fg = $tc["StatusErrorFg"] }
         cancelled = @{ Text = T 'StatusCancel' 'Cancelada';   Bg = $tc["StatusCancelBg"];  Fg = $tc["StatusCancelFg"] }
@@ -334,7 +286,7 @@ function Initialize-RunspacePool {
         $pool.Open()
         $script:RunspacePool = $pool
         [SysOptFallbacks]::RunspacePoolAvailable = $true
-        Write-Log "RunspacePool abierto (1-3 runspaces)" -Level INFO
+        Write-Log "RunspacePool abierto (1-3 runspaces)" -Level DBG
     } catch {
         Write-Verbose "SysOpt: RunspacePool init failed — will fallback to individual runspaces. $_"
         $script:RunspacePool = $null
@@ -439,7 +391,7 @@ $script:UnhandledExHandler = [System.UnhandledExceptionEventHandler]{
     $ex  = $e.ExceptionObject
     $msg = if ($ex -is [Exception]) { $ex.Message } else { $ex.ToString() }
     $stack = if ($ex -is [Exception] -and $ex.StackTrace) { "`n$($ex.StackTrace)" } else { "" }
-    try { Write-Log "[ERR-GLOBAL] $msg$stack" -Level "ERROR" -NoUI } catch {}
+    try { Write-Log "[ERR-GLOBAL] $msg$stack" -Level "CRIT" -NoUI } catch {}
     # Intentar mostrar diálogo si el Dispatcher sigue vivo
     try {
         $window.Dispatcher.Invoke([action]{
@@ -455,7 +407,7 @@ $script:DispatcherExHandler = [System.Windows.Threading.DispatcherUnhandledExcep
     param($sender, $e)
     $msg   = $e.Exception.Message
     $stack = if ($e.Exception.StackTrace) { "`n$($e.Exception.StackTrace)" } else { "" }
-    try { Write-Log "[ERR-DISPATCHER] $msg$stack" -Level "ERROR" } catch {}
+    try { Write-Log "[ERR-DISPATCHER] $msg$stack" -Level "CRIT" } catch {}
     try {
         Show-ThemedDialog -Title "Error de interfaz" `
             -Message "Error inesperado en la interfaz gráfica.`n`n$msg`n`nLa aplicación intentará continuar. Revisa el log en .\logs\" `
@@ -876,7 +828,7 @@ function Initialize-Logger {
 function Write-Log {
     param(
         [string]$Message,
-        [ValidateSet("INFO","WARN","ERROR","UI")][string]$Level = "INFO",
+        [ValidateSet("DBG","INFO","WARN","ERR","CRIT","UI")][string]$Level = "INFO",
         [switch]$NoUI    # si $true, solo va al archivo (llamadas desde runspaces)
     )
     $timestamp = Get-Date -Format "HH:mm:ss"
@@ -915,10 +867,12 @@ try {
         @{ Guard = 'ScanTokenManager';   Dll = 'SysOpt.Core.dll'          },
         @{ Guard = 'SystemDataCollector';Dll = 'SysOpt.Core.dll'          },
         @{ Guard = 'ThemeEngine';        Dll = 'SysOpt.ThemeEngine.dll'   },
-        @{ Guard = 'WseTrim';            Dll = 'SysOpt.WseTrim.dll'       }
+        @{ Guard = 'WseTrim';            Dll = 'SysOpt.WseTrim.dll'       },
+        @{ Guard = 'SysOpt.Optimizer.OptimizerEngine'; Dll = 'SysOpt.Optimizer.dll' },
+        @{ Guard = 'SysOpt.StartupManager.StartupEngine'; Dll = 'SysOpt.StartupManager.dll' }
     )
 
-    Write-Log "── Auditoría de ensamblados ──────────────────────────────" -Level "INFO" -NoUI
+    Write-Log "── Auditoría de ensamblados ──────────────────────────────" -Level "DBG" -NoUI
     $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
     foreach ($entry in $expectedDlls) {
@@ -935,14 +889,14 @@ try {
 
             # Solo loggear cada DLL física una vez (Core.dll tiene 3 tipos guard)
             if ($seen.Add($location)) {
-                Write-Log ("[DLL] {0,-28} v{1}  [{2}]  {3}" -f $entry.Dll, $version, $srcNote, $location) -Level "INFO" -NoUI
+                Write-Log ("[DLL] {0,-28} v{1}  [{2}]  {3}" -f $entry.Dll, $version, $srcNote, $location) -Level "DBG" -NoUI
             }
         } else {
             Write-Log ("[DLL] {0,-28} NO CARGADA — tipo '{1}' no encontrado" -f $entry.Dll, $entry.Guard) -Level "WARN" -NoUI
         }
     }
 
-    # Extra: listar cualquier SysOpt.*.dll cargado que no esté en la lista esperada
+    # Extra: detectar DLLs SysOpt.*.dll en AppDomain que no estén en la lista esperada
     $allAsm = [System.AppDomain]::CurrentDomain.GetAssemblies() |
         Where-Object { $_.GetName().Name -like 'SysOpt.*' }
     foreach ($asm in $allAsm) {
@@ -952,7 +906,18 @@ try {
         }
     }
 
-    Write-Log "── Fin auditoría ─────────────────────────────────────────" -Level "INFO" -NoUI
+    # Auto-detección: escanear libs/ en busca de SysOpt.*.dll que existan en disco
+    # pero NO estén cargadas en el AppDomain — captura DLLs nuevas no registradas
+    $expectedFileNames = $expectedDlls | ForEach-Object { $_.Dll } | Sort-Object -Unique
+    $diskDlls = Get-ChildItem -Path $script:_libsDir -Filter "SysOpt.*.dll" -File -ErrorAction SilentlyContinue
+    foreach ($diskDll in $diskDlls) {
+        if ($diskDll.Name -notin $expectedFileNames -and -not $seen.Contains($diskDll.FullName)) {
+            Write-Log ("[DLL] {0,-28} [EN DISCO NO CARGADA] {1}" -f $diskDll.Name, $diskDll.FullName) -Level "WARN" -NoUI
+            Write-Log "      ↳ Añade esta DLL a la sección de carga y a `$expectedDlls en la auditoría" -Level "WARN" -NoUI
+        }
+    }
+
+    Write-Log "── Fin auditoría ─────────────────────────────────────────" -Level "DBG" -NoUI
 } catch {
     Write-Log "[DLL] Error en auditoría de ensamblados: $($_.Exception.Message)" -Level "WARN" -NoUI
 }
@@ -989,7 +954,7 @@ function Register-Task {
         Paused     = $false
     })
     $script:TaskPool[$Id] = $task
-    Write-Log "[TASK] Iniciada: $Name" -Level "INFO" -NoUI
+    Write-Log "[TASK] Iniciada: $Name" -Level "DBG" -NoUI
     return $task
 }
 
@@ -1001,7 +966,7 @@ function Complete-Task {
         $t.Pct     = if ($IsError) { $t.Pct } else { 100 }
         $t.Detail  = if ($Detail) { $Detail } else { $t.Detail }
         $t.EndTime = [datetime]::Now
-        Write-Log "[TASK] Completada ($($t.Status)): $($t.Name)" -Level $(if($IsError){"WARN"}else{"INFO"}) -NoUI
+        Write-Log "[TASK] Completada ($($t.Status)): $($t.Name)" -Level $(if($IsError){"WARN"}else{"DBG"}) -NoUI
     }
 }
 
@@ -1038,7 +1003,7 @@ function Get-SharedCimSession {
                                 -SessionOption $opts `
                                 -OperationTimeoutSec 5 `
                                 -ErrorAction Stop
-        Write-Log "[WMI] CimSession creada (timeout=5s)" -Level "INFO" -NoUI
+        Write-Log "[WMI] CimSession creada (timeout=5s)" -Level "DBG" -NoUI
     } catch {
         Write-Log "[WMI] No se pudo crear CimSession: $($_.Exception.Message)" -Level "WARN" -NoUI
         $script:CimSession = $null
@@ -1149,7 +1114,7 @@ function Draw-SparkLine {
         $gs2 = New-Object System.Windows.Media.GradientStop
         $gs2.Color  = [System.Windows.Media.ColorConverter]::ConvertFromString($FillColor)
         $gs2.Offset = 1
-        $gs2.Color  = $gs2.Color; $gs2.Color = [System.Windows.Media.Color]::FromArgb(5, $gs2.Color.R, $gs2.Color.G, $gs2.Color.B)
+        $gs2.Color = [System.Windows.Media.Color]::FromArgb(5, $gs2.Color.R, $gs2.Color.G, $gs2.Color.B)
         $gradBrush.GradientStops.Add($gs1)
         $gradBrush.GradientStops.Add($gs2)
         $poly.Fill    = $gradBrush
@@ -1187,22 +1152,22 @@ function Draw-SparkLine {
 # ─────────────────────────────────────────────────────────────────────────────
 function Update-SystemInfo {
     try {
-        $os  = Invoke-CimQuery -ClassName Win32_OperatingSystem
-        $cpu = Invoke-CimQuery -ClassName Win32_Processor | Select-Object -First 1
+        # SystemDataCollector snapshots — consolidates CIM queries
+        $ramSnap  = [SystemDataCollector]::GetRamSnapshot()
+        $cpuSnap  = [SystemDataCollector]::GetCpuSnapshot()
+        $diskSnap = [SystemDataCollector]::GetDiskSnapshot()
 
-        $totalGB = [math]::Round($os.TotalVisibleMemorySize / 1MB, 1)
-        $freeGB  = [math]::Round($os.FreePhysicalMemory     / 1MB, 1)
-        $usedPct = [math]::Round((($totalGB - $freeGB) / [math]::Max($totalGB, 1)) * 100)
+        $totalGB = [math]::Round($ramSnap.TotalBytes / 1GB, 1)
+        $freeGB  = [math]::Round($ramSnap.FreeBytes  / 1GB, 1)
+        $usedPct = [math]::Round($ramSnap.UsedPercent)
 
-        # Disco C: via Win32_LogicalDisk — no requiere módulo Storage
-        $diskCim     = Invoke-CimQuery -ClassName Win32_LogicalDisk -Filter "DeviceID='C:'" -SilentOnFail |
-                           Select-Object -First 1
-        $diskTotalGB = if ($diskCim) { [math]::Round($diskCim.Size      / 1GB, 1) } else { 0 }
-        $diskFreeGB  = if ($diskCim) { [math]::Round($diskCim.FreeSpace / 1GB, 1) } else { 0 }
-        $diskUsedPct = [math]::Round((($diskTotalGB - $diskFreeGB) / [math]::Max($diskTotalGB, 1)) * 100)
+        $diskVol     = $diskSnap.Volumes | Where-Object { $_.DeviceId -eq 'C:' } | Select-Object -First 1
+        $diskTotalGB = if ($diskVol) { [math]::Round($diskVol.TotalBytes / 1GB, 1) } else { 0 }
+        $diskFreeGB  = if ($diskVol) { [math]::Round($diskVol.FreeBytes  / 1GB, 1) } else { 0 }
+        $diskUsedPct = if ($diskVol) { [math]::Round($diskVol.UsedPercent) } else { 0 }
 
-        $cpuLoad = [math]::Min(100, [math]::Max(0, [double]$cpu.LoadPercentage))
-        $cpuName = ($cpu.Name -replace '\s+', ' ')
+        $cpuLoad = [math]::Min(100, [math]::Max(0, $cpuSnap.LoadPercent))
+        $cpuName = ($cpuSnap.Name -replace '\s+', ' ')
         if ($cpuName.Length -gt 35) { $cpuName = $cpuName.Substring(0, 35) + [char]0x2026 }
 
         # Actividad de disco via PerformanceCounter
@@ -1252,94 +1217,17 @@ $chartTimer.Add_Tick({ Update-SystemInfo })
 #      WPF ignora Background en el ToggleButton interno a menos que se recorra
 #      explícitamente el árbol visual después de que el control está cargado.
 # ─────────────────────────────────────────────────────────────────────────────
-function Get-VisualChildren {
-    param([System.Windows.DependencyObject]$Parent)
-    $count = [System.Windows.Media.VisualTreeHelper]::GetChildrenCount($Parent)
-    for ($i = 0; $i -lt $count; $i++) {
-        $child = [System.Windows.Media.VisualTreeHelper]::GetChild($Parent, $i)
-        $child
-        Get-VisualChildren $child
-    }
-}
+function Get-VisualChildren { param($Parent); return [ThemeApplier]::GetVisualChildren($Parent) }
 
 function Apply-ComboBoxDarkTheme {
     param([System.Windows.Controls.ComboBox]$ComboBox)
-    $ComboBox.ApplyTemplate() | Out-Null
-    $bc = [System.Windows.Media.BrushConverter]::new()
-    $darkBg     = $bc.ConvertFromString((Get-TC 'BgInput' '#1A1E2F'))
-    $darkBorder = $bc.ConvertFromString((Get-TC 'BorderSubtle' '#3A4468'))
-    $lightFg    = $bc.ConvertFromString((Get-TC 'TextPrimary' '#E8ECF4'))
-    $hoverBg    = $bc.ConvertFromString((Get-TC 'ComboHover' '#1E3A5C'))
-
-    # -- Set ComboBox foreground for selected text display --
-    $ComboBox.Foreground = $lightFg
-
-    # -- Theme the closed ComboBox (ToggleButton area) --
-    Get-VisualChildren $ComboBox | ForEach-Object {
-        $el = $_
-        if ($el -is [System.Windows.Controls.Primitives.ToggleButton]) {
-            $el.Background   = $darkBg
-            $el.BorderBrush  = $darkBorder
-            $el.Foreground   = $lightFg
-            $el.ApplyTemplate() | Out-Null
-            Get-VisualChildren $el | ForEach-Object {
-                if ($_ -is [System.Windows.Controls.Border]) {
-                    $_.Background  = $darkBg
-                    $_.BorderBrush = $darkBorder
-                }
-            }
-        }
-        if ($el -is [System.Windows.Controls.Border]) {
-            $el.Background  = $darkBg
-            $el.BorderBrush = $darkBorder
-        }
-    }
-
-    # -- Theme the dropdown Popup when it opens --
-    # (Popup visual tree only exists once opened)
-    $ComboBox.Add_DropDownOpened({
-        param($sender, $e)
-        try {
-            $cb = $sender
-            $bc2 = [System.Windows.Media.BrushConverter]::new()
-            $popBg     = $bc2.ConvertFromString((Get-TC 'BgInput' '#1A1E2F'))
-            $popBorder = $bc2.ConvertFromString((Get-TC 'BorderSubtle' '#3A4468'))
-            $popFg     = $bc2.ConvertFromString((Get-TC 'TextPrimary' '#E8ECF4'))
-            $popHover  = $bc2.ConvertFromString((Get-TC 'ComboHover' '#1E3A5C'))
-
-            $popup = $cb.Template.FindName("PART_Popup", $cb)
-            if ($popup -and $popup.Child) {
-                $chrome = $popup.Child
-                # Handle SystemDropShadowChrome (Aero/Luna themes)
-                if ($chrome.GetType().Name -match 'Chrome|Decorator') {
-                    try { $chrome.Color = [System.Windows.Media.Colors]::Transparent } catch {}
-                }
-                if ($chrome -is [System.Windows.Controls.Border]) {
-                    $chrome.Background  = $popBg
-                    $chrome.BorderBrush = $popBorder
-                }
-                # Walk all children inside the popup
-                Get-VisualChildren $chrome | ForEach-Object {
-                    if ($_ -is [System.Windows.Controls.Border]) {
-                        $_.Background  = $popBg
-                        $_.BorderBrush = $popBorder
-                    }
-                    if ($_ -is [System.Windows.Controls.ScrollViewer]) {
-                        $_.Background = $popBg
-                    }
-                }
-            }
-            # Also theme each ComboBoxItem in the dropdown
-            foreach ($item in $cb.Items) {
-                $container = $cb.ItemContainerGenerator.ContainerFromItem($item)
-                if ($container -is [System.Windows.Controls.ComboBoxItem]) {
-                    $container.Background = $popBg
-                    $container.Foreground = $popFg
-                    $container.BorderBrush = [System.Windows.Media.Brushes]::Transparent
-                }
-            }
-        } catch {}
-    })
+    [ThemeApplier]::ApplyComboBoxTheme(
+        $ComboBox,
+        (Get-TC 'BgInput' '#1A1E2F'),
+        (Get-TC 'BorderSubtle' '#3A4468'),
+        (Get-TC 'TextPrimary' '#E8ECF4'),
+        (Get-TC 'ComboHover' '#1E3A5C')
+    )
 }
 
 $window.Add_Loaded({
@@ -1513,34 +1401,12 @@ $icRamModules     = $window.FindName("icRamModules")
 $icSmartDisks     = $window.FindName("icSmartDisks")
 $icNetAdapters    = $window.FindName("icNetAdapters")
 
-function Format-Bytes {
-    param([long]$Bytes)
-    if ($Bytes -ge 1GB) { return "{0:N1} GB" -f ($Bytes / 1GB) }
-    if ($Bytes -ge 1MB) { return "{0:N0} MB" -f ($Bytes / 1MB) }
-    if ($Bytes -ge 1KB) { return "{0:N0} KB" -f ($Bytes / 1KB) }
-    return "$Bytes B"
-}
+function Format-Bytes { param([long]$Bytes); return [Formatter]::FormatBytes($Bytes) }
 
 # causando fallo de resolución de nombre "OUL" al invocarse desde el dispatcher WPF)
-function Format-Rate {
-    param([double]$bps)
-    if ($bps -ge 1MB) { return "{0:N1} MB/s" -f ($bps / 1MB) }
-    if ($bps -ge 1KB) { return "{0:N0} KB/s" -f ($bps / 1KB) }
-    if ($bps -gt 0)   { return "{0:N0} B/s"  -f $bps }
-    return "0 B/s"
-}
+function Format-Rate { param([double]$bps); return [Formatter]::FormatRate($bps) }
 
-function Get-LinkBps {
-    param($raw)
-    $n = [uint64]0
-    if ([uint64]::TryParse("$raw", [ref]$n)) { return $n }
-    if ("$raw" -match '([\d\.]+)\s*(G|M|K)?bps') {
-        $v = [double]$Matches[1]; $u = "$($Matches[2])"
-        $m = if ($u -eq 'G') { 1000000000 } elseif ($u -eq 'M') { 1000000 } elseif ($u -eq 'K') { 1000 } else { 1 }
-        return [uint64]($v * $m)
-    }
-    return [uint64]0
-}
+function Get-LinkBps { param($raw); return [Formatter]::ParseLinkBps("$raw") }
 
 function Update-PerformanceTab {
     if ($script:AppClosing) { return }
@@ -1595,11 +1461,7 @@ function Update-PerformanceTab {
         $usedB  = $totalB - $freeB
         $pct    = [math]::Round($usedB / $totalB * 100)
 
-        $fmt = { param($b)
-            if ($b -ge 1GB) { "{0:N1} GB" -f ($b / 1GB) }
-            elseif ($b -ge 1MB) { "{0:N0} MB" -f ($b / 1MB) }
-            else { "{0:N0} KB" -f ($b / 1KB) }
-        }
+        $fmt = { param($b) return [Formatter]::FormatBytes([long]$b) }
 
         $txtRamTotal.Text = & $fmt $totalB
         $txtRamUsed.Text  = & $fmt $usedB
@@ -1686,9 +1548,9 @@ function Update-PerformanceTab {
         } catch {}
 
         # Funciones de formato inline (sin scriptblock para evitar problemas de scope)
-        function Format-NetRate  { param([double]$b); if ($b -ge 1MB) { return "{0:N1} MB/s" -f ($b/1MB) } elseif ($b -ge 1KB) { return "{0:N0} KB/s" -f ($b/1KB) } elseif ($b -gt 0) { return "{0:N0} B/s" -f $b } else { return "0 B/s" } }
-        function Format-NetBytes { param([double]$b); if ($b -ge 1GB) { return "{0:N1} GB" -f ($b/1GB) } elseif ($b -ge 1MB) { return "{0:N0} MB" -f ($b/1MB) } else { return "{0:N0} KB" -f ($b/1KB) } }
-        function Format-LinkBps  { param([uint64]$bps); if ($bps -ge 1000000000) { return "$([math]::Round($bps/1e9,0)) Gbps" } elseif ($bps -ge 1000000) { return "$([math]::Round($bps/1e6,0)) Mbps" } elseif ($bps -gt 0) { return "$bps bps" } else { return "—" } }
+        function Format-NetRate  { param([double]$b); return [Formatter]::FormatRate($b) }
+        function Format-NetBytes { param([double]$b); return [Formatter]::FormatBytes([long]$b) }
+        function Format-LinkBps  { param([uint64]$bps); return [Formatter]::FormatLinkSpeed($bps) }
 
         $netItems = [System.Collections.Generic.List[object]]::new()
 
@@ -2223,7 +2085,7 @@ function Start-DiskScan {
                 # Datos reales de carpeta completada
                 $sz     = $msgSize
                 $sc     = if ($sz -ge 10GB) {"#FF6B84"} elseif ($sz -ge 1GB) {"#FFB547"} elseif ($sz -ge 100MB) {"#5BA3FF"} else {"#B0BACC"}
-                $szStr  = if ($sz -ge 1GB) {"{0:N1} GB" -f ($sz/1GB)} elseif ($sz -ge 1MB) {"{0:N0} MB" -f ($sz/1MB)} elseif ($sz -ge 1KB) {"{0:N0} KB" -f ($sz/1KB)} else {"$sz B"}
+                $szStr  = [Formatter]::FormatBytes([long]$sz)
                 $fc     = "$msgFiles arch.  $msgDirs carp."
                 $hasCh  = $msgDirs -gt 0
 
@@ -2353,7 +2215,7 @@ function Start-DiskScan {
                     }
                 } else {
                     $dsc    = if ($dsz -ge 10GB) {"#FF6B84"} elseif ($dsz -ge 1GB) {"#FFB547"} elseif ($dsz -ge 100MB) {"#5BA3FF"} else {"#B0BACC"}
-                    $dszStr = if ($dsz -ge 1GB) {"{0:N1} GB" -f ($dsz/1GB)} elseif ($dsz -ge 1MB) {"{0:N0} MB" -f ($dsz/1MB)} elseif ($dsz -ge 1KB) {"{0:N0} KB" -f ($dsz/1KB)} else {"$dsz B"}
+                    $dszStr = [Formatter]::FormatBytes([long]$dsz)
                     $dhch   = $ddirs -gt 0
                     if ($script:LiveItems.ContainsKey($dk)) {
                         $dex = $script:AllScannedItems[$script:LiveItems[$dk]]
@@ -2440,7 +2302,7 @@ $script:DiskUiTimer.Stop()
             $txtSnapshotName.Text         = "Escaneo $(Get-Date -Format 'dd/MM/yyyy HH:mm')"
             $txtSnapshotName.SelectAll()
 
-            $gtStr2 = if ($gt2 -ge 1GB) { "{0:N1} GB" -f ($gt2/1GB) } elseif ($gt2 -ge 1MB) { "{0:N0} MB" -f ($gt2/1MB) } else { "{0:N0} KB" -f ($gt2/1KB) }
+            $gtStr2 = [Formatter]::FormatBytes([long]$gt2)
             $emoji = if ([ScanCtl211]::Stop) { "⏹" } else { "✅" }
             $txtDiskScanStatus.Text = "$emoji  $($script:AllScannedItems.Count) elementos  ·  $gtStr2  ·  $(Get-Date -Format 'HH:mm:ss')"
             $wasStop = [ScanCtl211]::Stop
@@ -2452,12 +2314,14 @@ $script:DiskUiTimer.Start()
 
 $btnDiskBrowse.Add_Click({
     $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
-    $dlg.Description = "Selecciona la carpeta a escanear"
-    $dlg.RootFolder  = "MyComputer"
-    $dlg.SelectedPath = $txtDiskScanPath.Text
-    if ($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-        $txtDiskScanPath.Text = $dlg.SelectedPath
-    }
+    try {
+        $dlg.Description  = "Selecciona la carpeta a escanear"
+        $dlg.RootFolder   = "MyComputer"
+        $dlg.SelectedPath = $txtDiskScanPath.Text
+        if ($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+            $txtDiskScanPath.Text = $dlg.SelectedPath
+        }
+    } finally { $dlg.Dispose() }
 })
 
 $btnDiskScan.Add_Click({
@@ -2491,9 +2355,14 @@ function Save-Settings {
             DiskFilterText     = $txtDiskFilter.Text
             Theme              = $script:CurrentTheme
             Language           = $script:CurrentLang
+            DebugLog           = [LogEngine]::DebugEnabled
         }
         $json = $cfg | ConvertTo-Json
-        [System.IO.File]::WriteAllText($script:SettingsPath, $json, [System.Text.Encoding]::UTF8)
+        # Escritura atómica: temp → Move evita file-lock conflicts
+        $tmp = $script:SettingsPath + ".tmp"
+        [System.IO.File]::WriteAllText($tmp, $json, [System.Text.Encoding]::UTF8)
+        [System.IO.File]::Copy($tmp, $script:SettingsPath, $true)
+        try { [System.IO.File]::Delete($tmp) } catch {}
     } catch {
         Write-Log "[WARN] No se pudo guardar settings.json: $_" -Level "WARN" -NoUI
     }
@@ -2520,6 +2389,10 @@ function Load-Settings {
             }
             if ($cfg.Language -and (Test-Path (Join-Path $script:LangDir "$($cfg.Language).lang"))) {
                 $script:CurrentLang = $cfg.Language
+            }
+            # Debug logging toggle
+            if ($cfg.PSObject.Properties['DebugLog'] -and $cfg.DebugLog -eq $true) {
+                [LogEngine]::DebugEnabled = $true
             }
         }
     } catch {}
@@ -2908,14 +2781,14 @@ function Apply-ThemeWithProgress {
         }
     }
 
-    # -- PASS 2: Update GradientStops via visual tree walker --
+    # -- PASS 2: Update GradientStops via ThemeApplier --
     $barFill.Width = [math]::Round(392 * 70 / 100)
     $lbl.Text = T 'SplashApplyingTheme' 'Actualizando gradientes...'
     $progWin.Dispatcher.Invoke([action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
 
-    # Build old-to-new color map for gradients
-    $gradientMap = @{}
-    foreach ($hex in $mapKeys) {
+    # Build old-to-new Color map for gradients
+    $gradientMap = [System.Collections.Generic.Dictionary[string, [System.Windows.Media.Color]]]::new()
+    foreach ($hex in $script:ThemeColorMap.Keys) {
         $info = $script:ThemeColorMap[$hex]
         $themeKey = $info[0]
         $dr = [int]$info[1]; $dg = [int]$info[2]; $db = [int]$info[3]
@@ -2925,39 +2798,13 @@ function Apply-ThemeWithProgress {
                 $newR = [math]::Max(0, [math]::Min(255, [int]$baseColor.R + $dr))
                 $newG = [math]::Max(0, [math]::Min(255, [int]$baseColor.G + $dg))
                 $newB = [math]::Max(0, [math]::Min(255, [int]$baseColor.B + $db))
-                $gradientMap["#{0:X2}{1:X2}{2:X2}" -f [int]("0x" + $hex.Substring(0,2)), [int]("0x" + $hex.Substring(2,2)), [int]("0x" + $hex.Substring(4,2))] = [System.Windows.Media.Color]::FromRgb($newR, $newG, $newB)
+                $gradientMap[("#{0:X2}{1:X2}{2:X2}" -f [int]("0x" + $hex.Substring(0,2)), [int]("0x" + $hex.Substring(2,2)), [int]("0x" + $hex.Substring(4,2)))] = [System.Windows.Media.Color]::FromRgb($newR, $newG, $newB)
             } catch {}
         }
     }
+    [ThemeApplier]::ReplaceGradientColors($window, $gradientMap)
 
-    $allElements = @($window) + @(Get-VisualChildren $window)
-    for ($ei = 0; $ei -lt $allElements.Count; $ei++) {
-        $el = $allElements[$ei]
-        foreach ($prop in @('Background','Foreground','BorderBrush','Fill')) {
-            try {
-                $brush = $el.$prop
-                if ($brush -is [System.Windows.Media.LinearGradientBrush] -or
-                    $brush -is [System.Windows.Media.RadialGradientBrush]) {
-                    $changed = $false
-                    $newGrad = $brush.Clone()
-                    foreach ($gs in $newGrad.GradientStops) {
-                        $c = $gs.Color
-                        $oldHex = "#{0:X2}{1:X2}{2:X2}" -f $c.R, $c.G, $c.B
-                        if ($gradientMap.ContainsKey($oldHex)) {
-                            $gs.Color = $gradientMap[$oldHex]
-                            $changed = $true
-                        }
-                    }
-                    if ($changed) { $el.$prop = $newGrad }
-                }
-            } catch {}
-        }
-        if ($ei % 300 -eq 0) {
-            $pct = 70 + [math]::Round(($ei / [math]::Max(1, $allElements.Count)) * 20)
-            $barFill.Width = [math]::Round(392 * [math]::Min(95, $pct) / 100)
-            $progWin.Dispatcher.Invoke([action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
-        }
-    }
+    $barFill.Width = [math]::Round(392 * 95 / 100)
 
     # -- PASS 3: Update script-level state --
     $barFill.Width = [math]::Round(392 * 95 / 100)
@@ -3010,88 +2857,21 @@ function Apply-ThemeWithProgress {
 # [OPTIONS] Ventana de Opciones — Tema e Idioma
 # ─────────────────────────────────────────────────────────────────────────────
 function Show-OptionsWindow {
-    $optXaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="$(T 'OptionsTitle' 'Opciones — SysOpt')" Width="460" Height="360"
-        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Background="$(Get-TC 'BgDeep' '#0D0F1A')" WindowStyle="SingleBorderWindow">
-    <Grid>
-        <Rectangle Fill="$(Get-TC 'BgDeep' '#0D0F1A')"/>
-        <Ellipse Width="300" Height="300" Opacity="0.08" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-80,-60,0,0">
-            <Ellipse.Fill><RadialGradientBrush><GradientStop Color="$(Get-TC 'AccentPurple' '#A47CFF')" Offset="0"/><GradientStop Color="Transparent" Offset="1"/></RadialGradientBrush></Ellipse.Fill>
-        </Ellipse>
-        <StackPanel Margin="28,24,28,24">
-            <!-- Header -->
-            <TextBlock FontFamily="Segoe UI" FontSize="20" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')" Margin="0,0,0,20">
-                <Run Text="⚙ "/><Run Foreground="$(Get-TC 'AccentPurple' '#A47CFF')" Text="$(T 'OptionsTitle' 'Opciones')"/>
-            </TextBlock>
-
-            <!-- Tema -->
-            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,0,6"
-                       Text="$(T 'OptionsThemeLabel' 'Tema visual')"/>
-            <ComboBox Name="cmbTheme" Height="32" Margin="0,0,0,16"/>
-
-            <!-- Idioma -->
-            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,0,6"
-                       Text="$(T 'OptionsLangLabel' 'Idioma')"/>
-            <ComboBox Name="cmbLang" Height="32" Margin="0,0,0,20"/>
-
-            <!-- Hint -->
-            <TextBlock FontFamily="Segoe UI" FontSize="10" FontStyle="Italic" Foreground="$(Get-TC 'TextMuted' '#5A6080')"
-                       Text="$(T 'OptionsRestartHint' 'Algunos cambios de idioma requieren reiniciar SysOpt.')"
-                       Margin="0,0,0,16" TextWrapping="Wrap"/>
-
-            <!-- Botones -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Name="btnOptApply" Content="$(T 'OptionsBtnApply' 'Aplicar')"
-                        Width="110" Height="34" Margin="0,0,10,0"
-                        Background="$(Get-TC 'BtnSecondaryBg' '#1A4A8A')" BorderBrush="$(Get-TC 'AccentBlue' '#5BA3FF')" BorderThickness="1"
-                        Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border x:Name="bd" CornerRadius="8" Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="$(Get-TC 'HdrBtnHover' '#253060')"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-                <Button Name="btnOptClose" Content="$(T 'OptionsBtnClose' 'Cerrar')"
-                        Width="110" Height="34"
-                        Background="$(Get-TC 'HdrBtnBg' '#1A2040')" BorderBrush="$(Get-TC 'HdrBtnBorder' '#3D5080')" BorderThickness="1"
-                        Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold" Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border x:Name="bd" CornerRadius="8" Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="$(Get-TC 'HdrBtnHover' '#253060')"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-            </StackPanel>
-        </StackPanel>
-    </Grid>
-</Window>
-"@
+    $optXaml = [XamlLoader]::Load($script:XamlFolder, "OptionsWindow")
+    $optXaml = $ExecutionContext.InvokeCommand.ExpandString($optXaml)
     try {
         $optReader = [System.Xml.XmlNodeReader]::new([xml]$optXaml)
         $optWin    = [Windows.Markup.XamlReader]::Load($optReader)
         $optWin.Owner = $window
 
-        $cmbTheme = $optWin.FindName("cmbTheme")
-        $cmbLang  = $optWin.FindName("cmbLang")
+        $cmbTheme    = $optWin.FindName("cmbTheme")
+        $cmbLang     = $optWin.FindName("cmbLang")
+        $tglDebugLog = $optWin.FindName("tglDebugLog")
+
+        # Sincronizar checkbox con estado actual de LogEngine
+        if ($null -ne $tglDebugLog) {
+            $tglDebugLog.IsChecked = [LogEngine]::DebugEnabled
+        }
 
         # ── Poblar ComboBox de temas ──
         $themeNames = [ThemeEngine]::ListThemes($script:ThemesDir)
@@ -3143,6 +2923,12 @@ function Show-OptionsWindow {
                 $optWin.Show()
             }
 
+            # Aplicar debug toggle
+            if ($null -ne $tglDebugLog) {
+                [LogEngine]::DebugEnabled = ($tglDebugLog.IsChecked -eq $true)
+                Write-Log ("[CFG] Debug logging: {0}" -f $(if ([LogEngine]::DebugEnabled) {"ON"} else {"OFF"})) -Level "INFO" -NoUI
+            }
+
             try { Save-Settings } catch {}
         }.GetNewClosure())
 
@@ -3184,12 +2970,7 @@ $txtSnapshotDetailMeta  = $window.FindName("txtSnapshotDetailMeta")
 $txtSnapshotStatus      = $window.FindName("txtSnapshotStatus")
 
 # ── Helpers de formato ───────────────────────────────────────────────────────
-function Format-SnapshotSize([long]$bytes) {
-    if ($bytes -ge 1GB) { "{0:N1} GB" -f ($bytes / 1GB) }
-    elseif ($bytes -ge 1MB) { "{0:N0} MB" -f ($bytes / 1MB) }
-    elseif ($bytes -ge 1KB) { "{0:N0} KB" -f ($bytes / 1KB) }
-    else { "$bytes B" }
-}
+function Format-SnapshotSize([long]$bytes) { return [Formatter]::FormatBytes($bytes) }
 
 # ── Actualizar contador y estado de botones según checks ─────────────────────
 function Update-SnapshotCheckState {
@@ -3435,12 +3216,7 @@ function Load-SnapshotList {
 
     $bgLoad = {
         param($State, $FilePaths)
-        function FmtB([long]$b) {
-            if ($b -ge 1GB) { "{0:N1} GB" -f ($b/1GB) }
-            elseif ($b -ge 1MB) { "{0:N0} MB" -f ($b/1MB) }
-            elseif ($b -ge 1KB) { "{0:N0} KB" -f ($b/1KB) }
-            else { "$b B" }
-        }
+        function FmtB([long]$b) { return [Formatter]::FormatBytes($b) }
         # ── [RAM-04] JsonTextReader: leer solo metadatos sin cargar Entries ──
         function Read-SnapshotMeta([string]$fp) {
             $meta = @{ Label=""; RootPath=""; Date=""; EntryCount=0; TotalBytes=0L; RootCount=0 }
@@ -4183,289 +3959,7 @@ function Show-TasksWindow {
         return
     }
 
-    $twXaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Tareas en Segundo Plano — SysOpt"
-        Width="540" Height="480" MinWidth="420" MinHeight="300"
-        WindowStartupLocation="CenterOwner"
-        ResizeMode="CanResizeWithGrip"
-        Background="{DynamicResource TB_0D0F1A}"
-        WindowStyle="SingleBorderWindow">
-    <Window.Resources>
-        <!-- Estilos ContextMenu / MenuItem / Separator idénticos al MainWindow,
-             usando DynamicResource para que el cambio de tema los actualice. -->
-        <Style TargetType="ContextMenu">
-            <Setter Property="Background"      Value="{DynamicResource TB_1A1E2F}"/>
-            <Setter Property="BorderBrush"     Value="{DynamicResource TB_3A4468}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding"         Value="4"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="{DynamicResource TB_1A1E2F}"
-                                BorderBrush="{DynamicResource TB_3A4468}"
-                                BorderThickness="1" CornerRadius="8" Padding="4,4">
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.5" Color="#000000"/>
-                            </Border.Effect>
-                            <ItemsPresenter/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="MenuItem">
-            <Setter Property="FontFamily"  Value="Segoe UI"/>
-            <Setter Property="FontSize"    Value="12"/>
-            <Setter Property="Foreground"  Value="{DynamicResource TB_E8ECF4}"/>
-            <Setter Property="Background"  Value="Transparent"/>
-            <Setter Property="Padding"     Value="10,6"/>
-            <Setter Property="Cursor"      Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="MenuItem">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                CornerRadius="5" Margin="2,1" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter ContentSource="Header" VerticalAlignment="Center"
-                                              RecognizesAccessKey="True"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="bd" Property="Background"
-                                        Value="{DynamicResource TB_1E3058}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.35"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="MenuItemDanger" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-            <Setter Property="Foreground" Value="{DynamicResource TB_FF6B84}"/>
-        </Style>
-        <Style x:Key="MenuItemWarn" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-            <Setter Property="Foreground" Value="{DynamicResource TB_FFB547}"/>
-        </Style>
-        <Style x:Key="MenuItemGreen" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-            <Setter Property="Foreground" Value="{DynamicResource TB_4AE896}"/>
-        </Style>
-        <Style TargetType="Separator">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Separator">
-                        <Rectangle Height="1" Fill="{DynamicResource TB_2A3448}" Margin="8,3"/>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource TB_131625}" BorderBrush="{DynamicResource TB_252B40}"
-                BorderThickness="0,0,0,1" Padding="14,10">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock FontFamily="Segoe UI" FontSize="13" FontWeight="Bold"
-                               Foreground="{DynamicResource TB_E8ECF4}" Text="⚡  Tareas en Segundo Plano"/>
-                    <TextBlock Name="txtTasksSubtitle" FontFamily="Segoe UI" FontSize="10"
-                               Foreground="{DynamicResource TB_7880A0}" Margin="0,2,0,0" Text="Sin tareas activas"/>
-                </StackPanel>
-                <Button Name="btnTasksClearDone" Grid.Column="1"
-                        Content="🧹  Limpiar completadas"
-                        Height="24" FontSize="10" VerticalAlignment="Center"
-                        Padding="10,0" Cursor="Hand"
-                        Background="{DynamicResource TB_1A1E2F}" Foreground="{DynamicResource TB_7880A0}"
-                        BorderBrush="{DynamicResource TB_252B40}" BorderThickness="1"
-                        FontFamily="Segoe UI"
-                        ToolTip="Elimina las tareas ya completadas o fallidas"/>
-            </Grid>
-        </Border>
-
-        <!-- Lista de tareas -->
-        <ListBox Name="lbTasks" Grid.Row="1"
-                 Background="{DynamicResource TB_0D0F1A}" BorderThickness="0"
-                 Foreground="{DynamicResource TB_E8ECF4}"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 Margin="8,8,8,0">
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                    <Setter Property="Background"                 Value="Transparent"/>
-                    <Setter Property="Padding"                    Value="0"/>
-                    <Setter Property="Margin"                     Value="0,0,0,6"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                    <Setter Property="Focusable"                  Value="False"/>
-                </Style>
-            </ListBox.ItemContainerStyle>
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Border Background="{DynamicResource TB_131625}"
-                            BorderBrush="{DynamicResource TB_252B40}"
-                            BorderThickness="1" CornerRadius="8" Padding="14,10"
-                            Tag="{Binding Id}">
-                        <Border.ContextMenu>
-                            <!-- TB_* se resuelven desde Application.Current.Resources (disponible para todos los popups) -->
-                            <!-- Tag/MenuItem.Tag los propaga el handler ContextMenuOpening en PS                         -->
-                            <ContextMenu>
-                                <ContextMenu.Resources>
-                                    <Style TargetType="ContextMenu">
-                                        <Setter Property="Background"      Value="{DynamicResource TB_1A1E2F}"/>
-                                        <Setter Property="BorderBrush"     Value="{DynamicResource TB_3A4468}"/>
-                                        <Setter Property="BorderThickness" Value="1"/>
-                                        <Setter Property="Padding"         Value="4"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ContextMenu">
-                                                    <Border Background="{DynamicResource TB_1A1E2F}"
-                                                            BorderBrush="{DynamicResource TB_3A4468}"
-                                                            BorderThickness="1" CornerRadius="8" Padding="4,4">
-                                                        <Border.Effect>
-                                                            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.5" Color="#000000"/>
-                                                        </Border.Effect>
-                                                        <ItemsPresenter/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                    <Style x:Key="MenuItemBase" TargetType="MenuItem">
-                                        <Setter Property="FontFamily"  Value="Segoe UI"/>
-                                        <Setter Property="FontSize"    Value="12"/>
-                                        <Setter Property="Foreground"  Value="{DynamicResource TB_E8ECF4}"/>
-                                        <Setter Property="Background"  Value="Transparent"/>
-                                        <Setter Property="Padding"     Value="10,6"/>
-                                        <Setter Property="Cursor"      Value="Hand"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="MenuItem">
-                                                    <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                                            CornerRadius="5" Margin="2,1" Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter ContentSource="Header"
-                                                                          VerticalAlignment="Center"
-                                                                          RecognizesAccessKey="True"/>
-                                                    </Border>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsHighlighted" Value="True">
-                                                            <Setter TargetName="bd" Property="Background"
-                                                                    Value="{DynamicResource TB_1E3058}"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsEnabled" Value="False">
-                                                            <Setter Property="Opacity" Value="0.35"/>
-                                                        </Trigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                    <Style x:Key="MenuItemWarn" TargetType="MenuItem" BasedOn="{StaticResource MenuItemBase}">
-                                        <Setter Property="Foreground" Value="{DynamicResource TB_FFB547}"/>
-                                    </Style>
-                                    <Style x:Key="MenuItemGreen" TargetType="MenuItem" BasedOn="{StaticResource MenuItemBase}">
-                                        <Setter Property="Foreground" Value="{DynamicResource TB_4AE896}"/>
-                                    </Style>
-                                    <Style x:Key="MenuItemDanger" TargetType="MenuItem" BasedOn="{StaticResource MenuItemBase}">
-                                        <Setter Property="Foreground" Value="{DynamicResource TB_FF6B84}"/>
-                                    </Style>
-                                    <Style TargetType="Separator">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Separator">
-                                                    <Rectangle Height="1" Fill="{DynamicResource TB_2A3448}" Margin="8,3"/>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </ContextMenu.Resources>
-                                <MenuItem Header="⏸   Pausar tarea"
-                                          IsEnabled="{Binding CanPause}"
-                                          Style="{StaticResource MenuItemWarn}"/>
-                                <MenuItem Header="▶  Reanudar tarea"
-                                          IsEnabled="{Binding CanResume}"
-                                          Style="{StaticResource MenuItemGreen}"/>
-                                <Separator/>
-                                <MenuItem Header="⊘  Cancelar tarea"
-                                          IsEnabled="{Binding CanCancel}"
-                                          Style="{StaticResource MenuItemDanger}"/>
-                            </ContextMenu>
-                        </Border.ContextMenu>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Icono -->
-                            <Border Grid.Column="0" Width="34" Height="34" CornerRadius="8"
-                                    Background="{Binding IconBg}"
-                                    Margin="0,0,12,0" VerticalAlignment="Top">
-                                <TextBlock Text="{Binding Icon}" FontSize="16"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-
-                            <!-- Centro: nombre + barra + detalle -->
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Name}"
-                                           FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TB_E8ECF4}" Margin="0,0,0,4"
-                                           TextTrimming="CharacterEllipsis"/>
-                                <Border Height="5" CornerRadius="3"
-                                        Background="{DynamicResource TB_1A1E2F}" Margin="0,0,0,4"
-                                        ClipToBounds="True">
-                                    <Border CornerRadius="3"
-                                            Background="{Binding BarColor}"
-                                            HorizontalAlignment="Left"
-                                            Width="{Binding BarPx}"/>
-                                </Border>
-                                <TextBlock Text="{Binding Detail}"
-                                           FontFamily="Segoe UI" FontSize="10"
-                                           Foreground="{DynamicResource TB_7880A0}"
-                                           TextTrimming="CharacterEllipsis"/>
-                            </StackPanel>
-
-                            <!-- Derecha: badge + tiempo -->
-                            <StackPanel Grid.Column="2" VerticalAlignment="Top"
-                                        HorizontalAlignment="Right" Margin="10,0,0,0">
-                                <Border CornerRadius="5" Background="{Binding StatusBg}"
-                                        Padding="7,3" Margin="0,0,0,5" HorizontalAlignment="Right">
-                                    <TextBlock Text="{Binding StatusText}"
-                                               FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
-                                               Foreground="{Binding StatusFg}"/>
-                                </Border>
-                                <TextBlock Text="{Binding Elapsed}"
-                                           FontFamily="JetBrains Mono" FontSize="10"
-                                           Foreground="{DynamicResource TB_7880A0}"
-                                           HorizontalAlignment="Right"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-
-        <!-- Statusbar -->
-        <Border Grid.Row="2" Background="{DynamicResource TB_131625}"
-                BorderBrush="{DynamicResource TB_252B40}"
-                BorderThickness="0,1,0,0" Padding="14,6">
-            <TextBlock Name="txtTasksStatus" FontFamily="JetBrains Mono" FontSize="10"
-                       Foreground="{DynamicResource TB_7880A0}"
-                       Text="Pool: 0 activa(s) · 0 completada(s)"/>
-        </Border>
-    </Grid>
-</Window>
-"@
+    $twXaml = [XamlLoader]::Load($script:XamlFolder, "TasksWindow")
     $reader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($twXaml))
     $tw     = [System.Windows.Markup.XamlReader]::Load($reader)
     try { $tw.Owner = $window } catch {}
@@ -4837,13 +4331,15 @@ $btnExportCsv.Add_Click({
         return
     }
     $dlgFile = New-Object System.Windows.Forms.SaveFileDialog
-    $dlgFile.Title      = "Exportar resultados del explorador"
-    $dlgFile.Filter     = "CSV (*.csv)|*.csv|Todos los archivos|*.*"
-    $dlgFile.DefaultExt = "csv"
-    $dlgFile.FileName   = "SysOpt_Disco_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
-    $dlgFile.InitialDirectory = [Environment]::GetFolderPath("Desktop")
-    if ($dlgFile.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
-    $csvPath = $dlgFile.FileName
+    try {
+        $dlgFile.Title      = "Exportar resultados del explorador"
+        $dlgFile.Filter     = "CSV (*.csv)|*.csv|Todos los archivos|*.*"
+        $dlgFile.DefaultExt = "csv"
+        $dlgFile.FileName   = "SysOpt_Disco_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
+        $dlgFile.InitialDirectory = [Environment]::GetFolderPath("Desktop")
+        if ($dlgFile.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+        $csvPath = $dlgFile.FileName
+    } finally { $dlgFile.Dispose() }
 
     $btnExportCsv.IsEnabled  = $false
     $txtDiskScanStatus.Text  = "⏳ Exportando CSV en segundo plano..."
@@ -5453,7 +4949,7 @@ $btnDedup.Add_Click({
         if ($script:DedupState.Error) {
             Complete-Task -Id "dedup" -IsError -Detail $script:DedupState.Error
             $txtDiskScanStatus.Text = "Error en deduplicación."
-            Write-Log "[B5] Error SHA256: $($script:DedupState.Error)" -Level "ERROR"
+            Write-Log "[B5] Error SHA256: $($script:DedupState.Error)" -Level "ERR"
             Show-ThemedDialog -Title "Error de deduplicación" `
                 -Message "Error al calcular hashes:`n$($script:DedupState.Error)" -Type "error"
             return
@@ -5532,7 +5028,7 @@ $btnDedup.Add_Click({
             $btnDedupClose.Add_Click({ $dWin.Close() })
             $dWin.ShowDialog() | Out-Null
         } catch {
-            Write-Log "[B5] Error abriendo ventana de duplicados: $($_.Exception.Message)" -Level "ERROR"
+            Write-Log "[B5] Error abriendo ventana de duplicados: $($_.Exception.Message)" -Level "ERR"
             Show-ThemedDialog -Title "Error" -Message "Error al abrir la ventana de duplicados:`n$($_.Exception.Message)" -Type "error"
         }
     })
@@ -5610,7 +5106,7 @@ $lbDiskTree.Add_SelectionChanged({
             $topFiles2 = [System.Collections.Generic.List[object]]::new()
             foreach ($r in $results) {
                 if ($null -ne $r) {
-                    $sz = if ($r.Len -ge 1GB) { "{0:N1} GB" -f ($r.Len/1GB) } elseif ($r.Len -ge 1MB) { "{0:N0} MB" -f ($r.Len/1MB) } elseif ($r.Len -ge 1KB) { "{0:N0} KB" -f ($r.Len/1KB) } else { "$($r.Len) B" }
+                    $sz = [Formatter]::FormatBytes([long]$r.Len)
                     $topFiles2.Add([PSCustomObject]@{ FileName=$r.Name; FileSize=$sz })
                 }
             }
@@ -5627,306 +5123,8 @@ $lbDiskTree.Add_SelectionChanged({
 function Show-FolderScanner {
     param([string]$FolderPath)
 
-    $fsXaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Explorador de Carpeta" Height="680" Width="920"
-        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
-        Background="$(Get-TC 'BgDeep' '#0D0F1A')">
-    <Window.Resources>
-        <Style TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Foreground" Value="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="FontFamily"    Value="Segoe UI"/>
-            <Setter Property="FontSize"      Value="11"/>
-            <Setter Property="Cursor"        Value="Hand"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding"       Value="10,5"/>
-        </Style>
-        <Style TargetType="ContextMenu">
-            <Setter Property="Background"      Value="$(Get-TC 'BgInput' '#1A1E2F')"/>
-            <Setter Property="BorderBrush"     Value="$(Get-TC 'BorderSubtle' '#3A4468')"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding"         Value="4"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" CornerRadius="8" Padding="4,4">
-                            <ItemsPresenter/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="MenuItem">
-            <Setter Property="FontFamily"  Value="Segoe UI"/>
-            <Setter Property="FontSize"    Value="12"/>
-            <Setter Property="Foreground"  Value="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
-            <Setter Property="Background"  Value="Transparent"/>
-            <Setter Property="Padding"     Value="10,6"/>
-            <Setter Property="Cursor"      Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="MenuItem">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="5" Margin="2,1" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="$(Get-TC 'ComboSelected' '#1E3058')"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.4"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="MIDanger" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-            <Setter Property="Foreground" Value="$(Get-TC 'AccentRed' '#FF6B84')"/>
-        </Style>
-        <Style TargetType="Separator">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Separator">
-                        <Rectangle Height="1" Fill="$(Get-TC 'BorderSubtle' '#2A3448')" Margin="8,3"/>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="ScrollBar">
-            <Setter Property="Width" Value="5"/>
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
-        <Style TargetType="ProgressBar">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ProgressBar">
-                        <Border CornerRadius="3" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Height="5">
-                            <Border x:Name="PART_Track">
-                                <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="3">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                            <GradientStop Color="$(Get-TC 'AccentBlue' '#5BA3FF')" Offset="0"/>
-                                            <GradientStop Color="$(Get-TC 'AccentCyan' '#2EDFBF')" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Border.Background>
-                                </Border>
-                            </Border>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
-
-    <Grid Margin="16,12,16,12">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Cabecera -->
-        <Border Grid.Row="0" CornerRadius="10" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Padding="16,12" Margin="0,0,0,10">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Width="38" Height="38" CornerRadius="10" Background="$(Get-TC 'ComboSelected' '#1A3058')" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <TextBlock Text="🔍" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="Explorador de Carpeta" FontSize="15" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
-                    <TextBlock Name="fsPathLabel" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" TextTrimming="CharacterEllipsis"/>
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border CornerRadius="6" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" Padding="10,5" Margin="0,0,8,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Total: " FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"/>
-                            <TextBlock Name="fsTotalSize" Text="—" FontSize="11" FontWeight="Bold" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')"/>
-                        </StackPanel>
-                    </Border>
-                    <Border CornerRadius="6" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1" Padding="10,5">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Archivos: " FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"/>
-                            <TextBlock Name="fsFileCount" Text="—" FontSize="11" FontWeight="Bold" Foreground="$(Get-TC 'AccentGreen' '#4AE896')"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- Barra de búsqueda/filtro + ordenación -->
-        <Border Grid.Row="1" CornerRadius="8" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Padding="10,7" Margin="0,0,0,8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBox Name="fsFilter" Grid.Column="0"
-                         Background="$(Get-TC 'BgDeep' '#0D0F1A')" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')"
-                         BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" BorderThickness="1"
-                         FontFamily="Segoe UI" FontSize="11" Padding="8,5"
-                         VerticalContentAlignment="Center"
-                         CaretBrush="$(Get-TC 'AccentBlue' '#5BA3FF')" SelectionBrush="$(Get-TC 'BtnSecondaryFg' '#3D8EFF')"/>
-                <TextBlock Name="fsFilterHint" Grid.Column="0"
-                           Text="  🔎  Filtrar por nombre…" FontSize="11" Foreground="$(Get-TC 'BorderHover' '#4A5068')"
-                           VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0"/>
-                <TextBlock Grid.Column="1" Text="Ordenar:" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" VerticalAlignment="Center" Margin="10,0,6,0"/>
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Name="fsSortSize"  Content="Tamaño ↓" Background="$(Get-TC 'BgInput' '#132040')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Margin="0,0,4,0" FontSize="10"/>
-                    <Button Name="fsSortName"  Content="Nombre"   Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,4,0" FontSize="10"/>
-                    <Button Name="fsSortExt"   Content="Extensión" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#3A4468')" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" FontSize="10"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- Lista de archivos -->
-        <Border Grid.Row="2" CornerRadius="10" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <!-- Cabecera de columnas -->
-                <Border Grid.Row="0" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,0,0,1" Padding="0,0,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="30"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="90"/>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="180"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="" Padding="8,6"/>
-                        <TextBlock Grid.Column="1" Text="Nombre" FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6"/>
-                        <TextBlock Grid.Column="2" Text="Tamaño"   FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6" TextAlignment="Right"/>
-                        <TextBlock Grid.Column="3" Text="Ext."     FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6" TextAlignment="Center"/>
-                        <TextBlock Grid.Column="4" Text="Modificado" FontSize="10" FontWeight="SemiBold" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Padding="4,6"/>
-                    </Grid>
-                </Border>
-                <!-- Filas de archivos -->
-                <ListBox Name="fsListBox" Grid.Row="1"
-                         Background="Transparent" BorderThickness="0"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         VirtualizingStackPanel.IsVirtualizing="True"
-                         SelectionMode="Single">
-                    <ListBox.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Name="fsCtxPreview"  Header="👁  Vista previa / Abrir archivo"/>
-                            <MenuItem Name="fsCtxLocation" Header="📂  Ir a la ubicación"/>
-                            <Separator/>
-                            <MenuItem Name="fsCtxDelete"   Header="🗑  Eliminar archivo" Style="{StaticResource MIDanger}"/>
-                        </ContextMenu>
-                    </ListBox.ContextMenu>
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Padding" Value="0"/>
-                            <Setter Property="Margin"  Value="0"/>
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="lbi" Background="Transparent"
-                                                BorderBrush="$(Get-TC 'CtxHover' '#1E2740')" BorderThickness="0,0,0,1">
-                                            <ContentPresenter/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="lbi" Property="Background" Value="$(Get-TC 'ComboSelected' '#1A3A5C')"/>
-                                            </Trigger>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="lbi" Property="Background" Value="$(Get-TC 'BgInput' '#1E253B')"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Height="32">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="30"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="90"/>
-                                    <ColumnDefinition Width="80"/>
-                                    <ColumnDefinition Width="180"/>
-                                </Grid.ColumnDefinitions>
-                                <!-- Barra proporcional de tamaño -->
-                                <Border Grid.Column="0" Grid.ColumnSpan="5" HorizontalAlignment="Left"
-                                        Width="{Binding BarW}" Height="32"
-                                        Background="{Binding BarC}" Opacity="0.13"/>
-                                <!-- Icono tipo -->
-                                <TextBlock Grid.Column="0" Text="{Binding Icon}"
-                                           FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                <!-- Nombre -->
-                                <TextBlock Grid.Column="1" Text="{Binding DisplayName}"
-                                           FontSize="11" Foreground="{Binding NameColor}"
-                                           VerticalAlignment="Center" Padding="4,0"
-                                           TextTrimming="CharacterEllipsis"/>
-                                <!-- Tamaño -->
-                                <TextBlock Grid.Column="2" Text="{Binding SizeStr}"
-                                           FontSize="11" Foreground="{Binding SizeColor}"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center" TextAlignment="Right" Padding="4,0"/>
-                                <!-- Extensión -->
-                                <Border Grid.Column="3" CornerRadius="4" Background="$(Get-TC 'CtxHover' '#1A2540')"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center" Padding="5,2" Margin="2,0">
-                                    <TextBlock Text="{Binding Ext}" FontSize="9" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')"
-                                               HorizontalAlignment="Center"/>
-                                </Border>
-                                <!-- Fecha modificación -->
-                                <TextBlock Grid.Column="4" Text="{Binding Modified}"
-                                           FontSize="10" Foreground="$(Get-TC 'BorderHover' '#4A5068')"
-                                           VerticalAlignment="Center" Padding="4,0"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
-        </Border>
-
-        <!-- Barra de progreso del escaneo -->
-        <Border Grid.Row="3" CornerRadius="8" Background="$(Get-TC 'BgInput' '#1A1E2F')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" Padding="12,8" Margin="0,8,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
-                    <TextBlock Name="fsScanStatus" Text="Iniciando escaneo…" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,0,0,4"/>
-                    <ProgressBar Name="fsScanProgress" IsIndeterminate="True" Height="5"/>
-                </StackPanel>
-                <TextBlock Name="fsScanCount" Grid.Column="1" Text="" FontSize="10" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')"
-                           VerticalAlignment="Center" Margin="12,0,0,0" FontWeight="SemiBold"/>
-            </Grid>
-        </Border>
-
-        <!-- Footer -->
-        <Grid Grid.Row="4" Margin="0,8,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Name="fsSelInfo" Grid.Column="0" Text="" FontSize="10" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" VerticalAlignment="Center"/>
-            <Button Name="fsBtnClose" Grid.Column="1" Content="Cerrar"
-                    Background="$(Get-TC 'BtnDangerBg' '#2E0E14')" BorderBrush="$(Get-TC 'BtnDangerFg' '#FF4D6A')" Foreground="$(Get-TC 'BtnDangerFg' '#FF4D6A')"
-                    MinWidth="90"/>
-        </Grid>
-    </Grid>
-</Window>
-"@
+    $fsXaml = [XamlLoader]::Load($script:XamlFolder, "FolderScannerWindow")
+    $fsXaml = $ExecutionContext.InvokeCommand.ExpandString($fsXaml)
 
     $fsReader  = [System.Xml.XmlNodeReader]::new([xml]$fsXaml)
     $fsWindow  = [Windows.Markup.XamlReader]::Load($fsReader)
@@ -6269,165 +5467,8 @@ function Show-FolderScanner {
 # [N8] Ventana de gestión de programas de inicio
 # ─────────────────────────────────────────────────────────────────────────────
 function Show-StartupManager {
-    $startupXaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Gestor de Inicio" Height="560" Width="860"
-        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
-        Background="$(Get-TC 'BgDeep' '#0D0F1A')" WindowStyle="None" AllowsTransparency="True">
-
-    <Window.Resources>
-        <!-- DataGrid oscuro -->
-        <Style TargetType="DataGrid">
-            <Setter Property="Background"            Value="$(Get-TC 'BgDeep' '#0D0F1A')"/>
-            <Setter Property="Foreground"            Value="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
-            <Setter Property="BorderBrush"           Value="$(Get-TC 'BorderSubtle' '#252B40')"/>
-            <Setter Property="BorderThickness"       Value="0"/>
-            <Setter Property="RowBackground"         Value="$(Get-TC 'BgCardDark' '#131625')"/>
-            <Setter Property="AlternatingRowBackground" Value="$(Get-TC 'BgDeep' '#0F1220')"/>
-            <Setter Property="HorizontalGridLinesBrush" Value="$(Get-TC 'BgInput' '#1A1E2F')"/>
-            <Setter Property="VerticalGridLinesBrush"   Value="Transparent"/>
-            <Setter Property="ColumnHeaderHeight"    Value="34"/>
-        </Style>
-        <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background"   Value="$(Get-TC 'BgInput' '#1A1E2F')"/>
-            <Setter Property="Foreground"   Value="$(Get-TC 'TextMuted' '#7880A0')"/>
-            <Setter Property="BorderBrush"  Value="$(Get-TC 'BorderSubtle' '#252B40')"/>
-            <Setter Property="BorderThickness" Value="0,0,1,1"/>
-            <Setter Property="Padding"      Value="10,0"/>
-            <Setter Property="FontSize"     Value="10"/>
-            <Setter Property="FontFamily"   Value="JetBrains Mono, Consolas"/>
-            <Setter Property="FontWeight"   Value="SemiBold"/>
-        </Style>
-        <Style TargetType="DataGridRow">
-            <Setter Property="Foreground"   Value="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="$(Get-TC 'BgStatusInfo' '#1A2F4A')"/>
-                    <Setter Property="Foreground" Value="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
-                </Trigger>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="$(Get-TC 'PurpleBlobBg' '#181D2E')"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        <Style TargetType="DataGridCell">
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding"         Value="10,6"/>
-            <Setter Property="Foreground"      Value="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
-            <Setter Property="FontSize"        Value="12"/>
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="Transparent"/>
-                    <Setter Property="Foreground" Value="$(Get-TC 'TextPrimary' '#E8ECF4')"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="$(Get-TC 'AccentGreen' '#4AE896')"/>
-        </Style>
-        <Style TargetType="ScrollBar">
-            <Setter Property="Background"  Value="$(Get-TC 'BgDeep' '#0D0F1A')"/>
-            <Setter Property="Width"       Value="6"/>
-        </Style>
-    </Window.Resources>
-
-    <Border Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1" CornerRadius="10">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.7" Color="$(Get-TC 'ConsoleBg' '#000000')"/>
-        </Border.Effect>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="52"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <!-- Barra de título arrastrable -->
-            <Border Grid.Row="0" Background="$(Get-TC 'BgDeep' '#0D0F1A')" CornerRadius="10,10,0,0"
-                    BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,0,0,1"
-                    Name="titleBar">
-                <Grid Margin="18,0">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Width="26" Height="26" CornerRadius="6"
-                                Background="$(Get-TC 'AccentPurple' '#9B7EFF')" Margin="0,0,10,0">
-                            <TextBlock Text="🚀" FontSize="13"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="Gestor de Programas de Inicio" FontSize="14" FontWeight="Bold"
-                                   Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')" VerticalAlignment="Center"
-                                   FontFamily="Syne, Segoe UI"/>
-                    </StackPanel>
-                    <Button Name="btnCloseStartup" Content="✕" HorizontalAlignment="Right"
-                            Width="32" Height="32" Background="Transparent" BorderThickness="0"
-                            Foreground="$(Get-TC 'TextMuted' '#7880A0')" FontSize="14" Cursor="Hand" VerticalAlignment="Center">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" CornerRadius="6"
-                                                    Width="28" Height="28">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="$(Get-TC 'AccentRed' '#FF6B84')"/>
-                                                    <Setter Property="Foreground" Value="White"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-                </Grid>
-            </Border>
-
-            <!-- Subtítulo informativo -->
-            <Border Grid.Row="1" Background="$(Get-TC 'DryRunBg' '#0D1E35')" BorderBrush="$(Get-TC 'ComboHover' '#1A2B45')" BorderThickness="0,0,0,1" Padding="18,8">
-                <TextBlock Text="Entradas de autoarranque en el registro de Windows (HKCU y HKLM). Desmarca para deshabilitar."
-                           FontSize="11" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')"
-                           FontFamily="JetBrains Mono, Consolas" TextWrapping="Wrap"/>
-            </Border>
-
-            <!-- DataGrid temático -->
-            <DataGrid Name="StartupGrid" Grid.Row="2"
-                      AutoGenerateColumns="False" IsReadOnly="False"
-                      CanUserAddRows="False" CanUserDeleteRows="False"
-                      SelectionMode="Extended" GridLinesVisibility="Horizontal"
-                      FontSize="12" Margin="0">
-                <DataGrid.Columns>
-                    <DataGridCheckBoxColumn Header="ACTIVO" Binding="{Binding Enabled}" Width="70"/>
-                    <DataGridTextColumn Header="NOMBRE"  Binding="{Binding Name}"    Width="200" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="COMANDO" Binding="{Binding Command}"  Width="*"   IsReadOnly="True"/>
-                    <DataGridTextColumn Header="ORIGEN"  Binding="{Binding Source}"   Width="130" IsReadOnly="True"/>
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <!-- Footer con status y botones -->
-            <Border Grid.Row="3" Background="$(Get-TC 'BgDeep' '#0D0F1A')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,1,0,0"
-                    CornerRadius="0,0,10,10" Padding="18,10">
-                <Grid>
-                    <TextBlock Name="StartupStatus" VerticalAlignment="Center"
-                               Foreground="$(Get-TC 'TextMuted' '#7880A0')" FontSize="11"
-                               FontFamily="JetBrains Mono, Consolas"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Name="btnApplyStartup" Content="✔  Aplicar cambios"
-                                Height="34" Padding="16,0" Margin="0,0,8,0"
-                                Background="$(Get-TC 'AccentGreen' '#4AE896')" Foreground="$(Get-TC 'BgDeep' '#0D0F1A')"
-                                BorderThickness="0" FontWeight="Bold" FontSize="12" Cursor="Hand"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
-        </Grid>
-    </Border>
-</Window>
-"@
+    $startupXaml = [XamlLoader]::Load($script:XamlFolder, "StartupManagerWindow")
+    $startupXaml = $ExecutionContext.InvokeCommand.ExpandString($startupXaml)
 
     $sReader    = [System.Xml.XmlNodeReader]::new([xml]$startupXaml)
     $sWindow    = [Windows.Markup.XamlReader]::Load($sReader)
@@ -6441,53 +5482,37 @@ function Show-StartupManager {
     $script:_startupWin = $sWindow
     $titleBar.Add_MouseLeftButtonDown({ $script:_startupWin.DragMove() })
 
-    # Rutas del registro donde viven las entradas de autoarranque
-    $regPaths = @(
-        @{ Path = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run";            Source = "HKCU Run" },
-        @{ Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run";            Source = "HKLM Run" },
-        @{ Path = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run";Source = "HKLM Run (32)" }
-    )
-
-    # Tabla observable para el DataGrid
+    # ── Obtener entradas de inicio vía DLL ──────────────────────────────────────
+    $rawEntries = [SysOpt.StartupManager.StartupEngine]::GetAll()
     $startupTable = New-Object System.Collections.ObjectModel.ObservableCollection[object]
-
-    foreach ($reg in $regPaths) {
-        if (Test-Path $reg.Path) {
-            $props = Get-ItemProperty -Path $reg.Path -ErrorAction SilentlyContinue
-            if ($props) {
-                $props.PSObject.Properties | Where-Object {
-                    $_.Name -notmatch '^PS'
-                } | ForEach-Object {
-                    $entry = [PSCustomObject]@{
-                        Enabled = $true
-                        Name    = $_.Name
-                        Command = $_.Value
-                        Source  = $reg.Source
-                        RegPath = $reg.Path
-                        OriginalName = $_.Name
-                    }
-                    $startupTable.Add($entry)
-                }
-            }
-        }
+    foreach ($e in $rawEntries) {
+        $startupTable.Add([PSCustomObject]@{
+            Enabled      = $e.Enabled
+            Name         = $e.Name
+            Command      = $e.Command
+            Source       = $e.Source
+            Location     = $e.Location
+            OriginalName = $e.Name
+        })
     }
-
     $sGrid.ItemsSource = $startupTable
     $sStatus.Text = "$($startupTable.Count) entradas encontradas"
 
     $btnApply.Add_Click({
-        $disabled = 0
-        $errors   = 0
+        # Construir lista de StartupEntry desde la tabla UI
+        $entryList = New-Object "System.Collections.Generic.List[SysOpt.StartupManager.StartupEntry]"
         foreach ($item in $startupTable) {
-            if (-not $item.Enabled) {
-                try {
-                    Remove-ItemProperty -Path $item.RegPath -Name $item.OriginalName -Force -ErrorAction Stop
-                    $disabled++
-                } catch {
-                    $errors++
-                }
-            }
+            $se = New-Object SysOpt.StartupManager.StartupEntry
+            $se.Name     = $item.OriginalName
+            $se.Command  = $item.Command
+            $se.Location = $item.Location
+            $se.Source   = $item.Source
+            $se.Enabled  = $item.Enabled
+            $entryList.Add($se)
         }
+        $results  = [SysOpt.StartupManager.StartupEngine]::ApplyChanges($entryList)
+        $disabled = ($results | Where-Object { $_.Success -and $_.NewState -eq "Disabled" }).Count
+        $errors   = ($results | Where-Object { -not $_.Success }).Count
         $msg = "Cambios aplicados: $disabled entradas desactivadas."
         if ($errors -gt 0) { $msg += "`n$errors entradas no pudieron modificarse (requieren permisos adicionales)." }
         Show-ThemedDialog -Title "Cambios aplicados" -Message $msg -Type "success"
@@ -6507,126 +5532,8 @@ function Show-StartupManager {
 function Show-DiagnosticReport {
     param([hashtable]$Report)
 
-    $diagXaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Informe de Diagnóstico del Sistema" Height="680" Width="860"
-        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
-        Background="$(Get-TC 'BgCardDark' '#131625')">
-    <Window.Resources>
-        <Style x:Key="SectionHeader" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize"   Value="11"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="$(Get-TC 'TextSecondary' '#B0BACC')"/>
-            <Setter Property="Margin"     Value="0,14,0,4"/>
-        </Style>
-        <Style x:Key="GoodRow" TargetType="Border">
-            <Setter Property="Background"     Value="$(Get-TC 'BgStatusOk' '#182A1E')"/>
-            <Setter Property="BorderBrush"    Value="$(Get-TC 'BorderSubtle' '#2A4A35')"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius"   Value="6"/>
-            <Setter Property="Padding"        Value="12,7"/>
-            <Setter Property="Margin"         Value="0,3"/>
-        </Style>
-        <Style x:Key="WarnRow" TargetType="Border">
-            <Setter Property="Background"     Value="$(Get-TC 'BgStatusWarn' '#2A2010')"/>
-            <Setter Property="BorderBrush"    Value="$(Get-TC 'BtnAmberBg' '#5A4010')"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius"   Value="6"/>
-            <Setter Property="Padding"        Value="12,7"/>
-            <Setter Property="Margin"         Value="0,3"/>
-        </Style>
-        <Style x:Key="CritRow" TargetType="Border">
-            <Setter Property="Background"     Value="$(Get-TC 'BgStatusErr' '#2A1018')"/>
-            <Setter Property="BorderBrush"    Value="$(Get-TC 'BtnDangerBg' '#5A1828')"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius"   Value="6"/>
-            <Setter Property="Padding"        Value="12,7"/>
-            <Setter Property="Margin"         Value="0,3"/>
-        </Style>
-        <Style x:Key="InfoRow" TargetType="Border">
-            <Setter Property="Background"     Value="$(Get-TC 'CtxHover' '#1A2540')"/>
-            <Setter Property="BorderBrush"    Value="$(Get-TC 'ComboSelected' '#2A3A60')"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius"   Value="6"/>
-            <Setter Property="Padding"        Value="12,7"/>
-            <Setter Property="Margin"         Value="0,3"/>
-        </Style>
-    </Window.Resources>
-
-    <Grid Margin="0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Header -->
-        <Border Grid.Row="0" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,0,0,1" Padding="24,16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
-                    <TextBlock FontFamily="Segoe UI" FontSize="20" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#F0F3FA')">
-                        <Run Text="Informe de Diagnóstico"/>
-                    </TextBlock>
-                    <TextBlock Name="DiagSubtitle" FontFamily="Segoe UI" FontSize="11"
-                               Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" Margin="0,4,0,0"
-                               Text="Análisis completado — resultados por categoría"/>
-                </StackPanel>
-                <!-- Score global -->
-                <Border Grid.Column="1" CornerRadius="10" Padding="18,10" VerticalAlignment="Center">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="$(Get-TC 'ComboSelected' '#1A3A5C')" Offset="0"/>
-                            <GradientStop Color="$(Get-TC 'ComboHover' '#162A40')" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="PUNTUACIÓN" FontFamily="Segoe UI" FontSize="9"
-                                   FontWeight="Bold" Foreground="$(Get-TC 'AccentBlue' '#7BA8E0')" HorizontalAlignment="Center"/>
-                        <TextBlock Name="ScoreText" Text="—" FontFamily="Segoe UI" FontSize="32"
-                                   FontWeight="Bold" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" HorizontalAlignment="Center"/>
-                        <TextBlock Name="ScoreLabel" Text="calculando..." FontFamily="Segoe UI" FontSize="10"
-                                   Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-        </Border>
-
-        <!-- Body — scroll con categorías -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0">
-            <StackPanel Name="DiagPanel" Margin="24,16,24,16"/>
-        </ScrollViewer>
-
-        <!-- Footer -->
-        <Border Grid.Row="2" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="0,1,0,0" Padding="24,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Name="DiagFooterNote" Grid.Column="0"
-                           FontFamily="Segoe UI" FontSize="10" Foreground="$(Get-TC 'TextMuted' '#6B7599')"
-                           VerticalAlignment="Center"
-                           Text="▶  Pulsa 'Iniciar Optimización' en la ventana principal para reparar los puntos marcados."/>
-                <Button Name="btnExportDiag" Grid.Column="1" Content="💾  Exportar informe"
-                        Background="$(Get-TC 'CtxHover' '#1A2540')" BorderBrush="$(Get-TC 'HdrBtnBorder' '#3D5080')" BorderThickness="1"
-                        Foreground="$(Get-TC 'AccentBlue' '#7BA8E0')" FontFamily="Segoe UI" FontSize="11" FontWeight="SemiBold"
-                        Padding="14,7" Margin="8,0" Cursor="Hand" Height="34"/>
-                <Button Name="btnCloseDiag" Grid.Column="2" Content="Cerrar"
-                        Background="$(Get-TC 'CtxHover' '#1A2540')" BorderBrush="$(Get-TC 'BorderSubtle' '#252B40')" BorderThickness="1"
-                        Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" FontFamily="Segoe UI" FontSize="11"
-                        Padding="18,7" Cursor="Hand" Height="34"/>
-            </Grid>
-        </Border>
-    </Grid>
-</Window>
-"@
+    $diagXaml = [XamlLoader]::Load($script:XamlFolder, "DiagnosticWindow")
+    $diagXaml = $ExecutionContext.InvokeCommand.ExpandString($diagXaml)
 
     $dReader  = [System.Xml.XmlNodeReader]::new([xml]$diagXaml)
     $dWindow  = [Windows.Markup.XamlReader]::Load($dReader)
@@ -6898,16 +5805,18 @@ function Show-DiagnosticReport {
     # ── Exportar informe ─────────────────────────────────────────────────────
     $btnExp.Add_Click({
         $sd = New-Object System.Windows.Forms.SaveFileDialog
-        $sd.Title            = "Exportar Informe de Diagnóstico"
-        $sd.Filter           = "Texto (*.txt)|*.txt|Todos (*.*)|*.*"
-        $sd.DefaultExt       = "txt"
-        $sd.FileName         = "DiagnosticoSistema_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
-        $sd.InitialDirectory = [Environment]::GetFolderPath("Desktop")
-        if ($sd.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-            $exportLines | Out-File -FilePath $sd.FileName -Encoding UTF8
-            Show-ThemedDialog -Title "Informe exportado" `
-                -Message "Informe guardado en:`n$($sd.FileName)" -Type "success"
-        }
+        try {
+            $sd.Title            = "Exportar Informe de Diagnóstico"
+            $sd.Filter           = "Texto (*.txt)|*.txt|Todos (*.*)|*.*"
+            $sd.DefaultExt       = "txt"
+            $sd.FileName         = "DiagnosticoSistema_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+            $sd.InitialDirectory = [Environment]::GetFolderPath("Desktop")
+            if ($sd.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+                $exportLines | Out-File -FilePath $sd.FileName -Encoding UTF8
+                Show-ThemedDialog -Title "Informe exportado" `
+                    -Message "Informe guardado en:`n$($sd.FileName)" -Type "success"
+            }
+        } finally { $sd.Dispose() }
     })
 
     $btnClose.Add_Click({ $dWindow.Close() })
@@ -6926,1006 +5835,91 @@ $OptimizationScript = {
         $ProgressText, $TaskText, $options, $CancelToken
     )
 
-    function Invoke-CimQuery {
-        param([string]$ClassName, [string]$Filter = "", [string[]]$Property = @(), [switch]$SilentOnFail)
-        $params = @{ ClassName = $ClassName; ErrorAction = if ($SilentOnFail) { "SilentlyContinue" } else { "Stop" } }
-        if ($Filter)   { $params.Filter = $Filter }
-        if ($Property -and $Property.Count -gt 0) { $params.Property = $Property }
-        return (Get-CimInstance @params)
+    # ── Cargar DLLs dentro del runspace ──────────────────────────────────
+    # IMPORTANTE: Los runspace NO heredan los assemblies del hilo principal.
+    # Cada DLL debe cargarse explícitamente aquí.
+    $dllDir = $options['_DllDir']   # Inyectado desde Start-Optimization
+    Add-Type -Path (Join-Path $dllDir "SysOpt.Core.dll")
+    Add-Type -Path (Join-Path $dllDir "SysOpt.DiskEngine.dll")
+    Add-Type -Path (Join-Path $dllDir "SysOpt.MemoryHelper.dll")
+    Add-Type -Path (Join-Path $dllDir "SysOpt.Optimizer.dll")
+
+    # ── Mapear hashtable $options → OptimizeOptions DTO ──────────────────
+    $opts = New-Object SysOpt.Optimizer.OptimizeOptions
+    foreach ($key in $options.Keys) {
+        if ($key.StartsWith('_')) { continue }   # skip internal keys (_DllDir)
+        try {
+            $prop = $opts.GetType().GetProperty($key)
+            if ($prop -and $prop.PropertyType -eq [bool]) {
+                $prop.SetValue($opts, [bool]$options[$key], $null)
+            }
+        } catch { }
     }
 
-    # ── Diccionario de resultados del análisis (dry-run) ─────────────────────
-    $diagData = @{
-        TempFilesMB   = 0.0
-        UserTempMB    = 0.0
-        RecycleBinMB  = 0.0
-        WUCacheMB     = 0.0
-        BrowserCacheMB= 0.0
-        DnsEntries    = 0
-        OrphanedKeys  = 0
-        EventLogsMB   = 0.0
-        RamUsedPct    = 0
-        DiskCUsedPct  = 0
-    }
-
-    # ── Helpers de UI ────────────────────────────────────────────────────────
-    function Write-Console {
-        param([string]$Message)
-        $ts = Get-Date -Format "HH:mm:ss"
-        $out = "[$ts] $Message"
+    # ── Callback de progreso → Dispatcher.Invoke para actualizar UI ──────
+    $progressCallback = [System.Action[SysOpt.Optimizer.OptimizeProgress]]{
+        param($p)
         $window.Dispatcher.Invoke([action]{
-            $ConsoleOutput.AppendText("$out`n")
-            $ConsoleOutput.ScrollToEnd()
+            # Actualizar barra de progreso
+            if ($p.Percent -ge 0) {
+                $ProgressBar.Value = $p.Percent
+                $ProgressText.Text = "{0}%" -f $p.Percent
+            }
+            # Actualizar nombre de tarea
+            if ($p.TaskName) {
+                $TaskText.Text = "Tarea actual: {0}" -f $p.TaskName
+            }
+            # Actualizar consola
+            if ($p.Message) {
+                $ConsoleOutput.AppendText("{0}`n" -f $p.Message)
+                $ConsoleOutput.ScrollToEnd()
+            }
+            # Actualizar barra de estado
+            if ($p.Status) {
+                $StatusText.Text = $p.Status
+            }
         }.GetNewClosure())
     }
 
-    function Update-Progress {
-        param([int]$Percent, [string]$TaskName = "")
+    # ── Ejecutar orquestador ─────────────────────────────────────────────
+    $result = [SysOpt.Optimizer.OptimizerEngine]::Run(
+        $opts, $CancelToken, $progressCallback)
+
+    # ── Publicar datos diagnósticos al hilo principal ────────────────────
+    if ($null -ne $DiagReportRef) {
+        try {
+            $diagHash = @{
+                TempFilesMB    = $result.DiagData.TempFilesMB
+                UserTempMB     = $result.DiagData.UserTempMB
+                RecycleBinMB   = $result.DiagData.RecycleBinMB
+                WUCacheMB      = $result.DiagData.WUCacheMB
+                BrowserCacheMB = $result.DiagData.BrowserCacheMB
+                DnsEntries     = $result.DiagData.DnsEntries
+                OrphanedKeys   = $result.DiagData.OrphanedKeys
+                EventLogsMB    = $result.DiagData.EventLogsMB
+                RamUsedPct     = $result.DiagData.RamUsedPct
+                DiskCUsedPct   = $result.DiagData.DiskCUsedPct
+            }
+            $DiagReportRef.Value = $diagHash
+        } catch { }
+    }
+
+    # ── Auto-reinicio ────────────────────────────────────────────────────
+    if ($result.IsDryRun -eq $false -and $options['AutoRestart'] -and
+        -not $result.Cancelled) {
         $window.Dispatcher.Invoke([action]{
-            $ProgressBar.Value  = $Percent
-            $ProgressText.Text  = "$Percent%"
-            if ($TaskName) { $TaskText.Text = "Tarea actual: $TaskName" }
-        }.GetNewClosure())
-    }
-
-    function Update-SubProgress {
-        param([double]$Base, [double]$Sub, [double]$Weight)
-        $actual = [math]::Round($Base + (($Sub / 100) * $Weight))
-        $window.Dispatcher.Invoke([action]{
-            $ProgressBar.Value = $actual
-            $ProgressText.Text = "$actual%"
-        }.GetNewClosure())
-    }
-
-    function Update-Status {
-        param([string]$Status)
-        $window.Dispatcher.Invoke([action]{
-            $StatusText.Text = $Status
-        }.GetNewClosure())
-    }
-
-    function Test-Cancelled {
-        if ($CancelToken.IsCancellationRequested) {
-            Write-Console ""
-            Write-Console "⚠ OPTIMIZACIÓN CANCELADA POR EL USUARIO"
-            Update-Status "⚠ Cancelado por el usuario"
-            $window.Dispatcher.Invoke([action]{
-                $TaskText.Text = "Cancelado"
-            }.GetNewClosure())
-            return $true
-        }
-        return $false
-    }
-
-    # ── [M1] Función unificada de limpieza de carpetas temporales ────────────
-    function Invoke-CleanTempPaths {
-        param(
-            [string[]]$Paths,
-            [double]$BasePercent,
-            [double]$TaskWeight,
-            [bool]$DryRun = $false
-        )
-        $totalFreed = 0
-        $pathIndex  = 0
-        $pathCount  = $Paths.Count
-
-        foreach ($path in $Paths) {
-            $pathIndex++
-            Update-SubProgress $BasePercent ([int](($pathIndex / $pathCount) * 100)) $TaskWeight
-
-            if (-not (Test-Path $path)) {
-                Write-Console "  [$pathIndex/$pathCount] Ruta no encontrada: $path"
-                continue
-            }
-
-            Write-Console "  [$pathIndex/$pathCount] Analizando: $path"
-            try {
-                $beforeSize = (Get-ChildItem -Path $path -Recurse -Force -ErrorAction SilentlyContinue |
-                               Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
-                if ($null -eq $beforeSize) { $beforeSize = 0 }
-                $beforeMB = [math]::Round($beforeSize / 1MB, 2)
-                Write-Console "    Tamaño: $beforeMB MB"
-
-                if (-not $DryRun) {
-                    $deletedCount = 0
-                    Get-ChildItem -Path $path -Recurse -Force -ErrorAction SilentlyContinue |
-                        Where-Object { -not $_.PSIsContainer } | ForEach-Object {
-                            $fp = $_.FullName
-                            Remove-Item $fp -Force -ErrorAction SilentlyContinue
-                            if (-not (Test-Path $fp)) { $deletedCount++ }
-                        }
-                    # Eliminar directorios vacíos (o con restos no eliminables)
-                    # -Recurse es necesario para evitar el prompt interactivo en directorios con hijos
-                    Get-ChildItem -Path $path -Recurse -Force -ErrorAction SilentlyContinue |
-                        Where-Object { $_.PSIsContainer } |
-                        Sort-Object -Property FullName -Descending | ForEach-Object {
-                            Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
-                        }
-                    $afterSize = (Get-ChildItem -Path $path -Recurse -Force -ErrorAction SilentlyContinue |
-                                  Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
-                    if ($null -eq $afterSize) { $afterSize = 0 }
-                    $freed = ($beforeSize - $afterSize) / 1MB
-                    $totalFreed += $freed
-                    Write-Console "    ✓ Eliminados: $deletedCount archivos — $([math]::Round($freed,2)) MB liberados"
-                } else {
-                    $totalFreed += $beforeMB
-                    Write-Console "    [DRY RUN] Se liberarían ~$beforeMB MB"
-                }
-            } catch {
-                Write-Console "    ! Error: $($_.Exception.Message)"
-            }
-        }
-        return $totalFreed
-    }
-
-    # ── Contar tareas seleccionadas ──────────────────────────────────────────
-    $taskKeys = @(
-        'OptimizeDisks','RecycleBin','TempFiles','UserTemp','WUCache','Chkdsk',
-        'ClearMemory','CloseProcesses','DNSCache','BrowserCache',
-        'BackupRegistry','CleanRegistry','SFC','DISM','EventLogs'
-        # ShowStartup se maneja en el hilo principal, no aquí
-    )
-    $taskList   = $taskKeys | Where-Object { $options[$_] -eq $true }
-    $totalTasks = $taskList.Count
-    $dryRun     = $options['DryRun'] -eq $true
-
-
-    if ($totalTasks -eq 0) {
-        Write-Console "No hay tareas seleccionadas."
-        Update-Status "Sin tareas seleccionadas"
-        Update-Progress 0 ""
-        return
-    }
-
-    $taskWeight      = 100.0 / $totalTasks
-    $completedTasks  = 0
-    $startTime       = Get-Date
-    $dryRunLabel     = if ($dryRun) { " [MODO ANÁLISIS — sin cambios]" } else { "" }
-
-    $boxWidth  = 62   # ancho interior entre ║ y ║
-    $titleLine = if ($dryRun) {
-        "INICIANDO OPTIMIZACIÓN  —  MODO ANÁLISIS (DRY RUN)"
-    } else {
-        "INICIANDO OPTIMIZACIÓN DEL SISTEMA WINDOWS"
-    }
-    $pad   = [math]::Max(0, $boxWidth - $titleLine.Length)
-    $left  = [math]::Floor($pad / 2)
-    $right = $pad - $left
-    Write-Console "╔$('═' * $boxWidth)╗"
-    Write-Console "║$(' ' * $left)$titleLine$(' ' * $right)║"
-    Write-Console "╚$('═' * $boxWidth)╝"
-    Write-Console "Fecha:    $(Get-Date -Format 'dd/MM/yyyy HH:mm:ss')"
-    Write-Console "Modo:     $(if ($dryRun) { '🔍 ANÁLISIS (Dry Run) — solo reportar' } else { '⚙ EJECUCIÓN real' })"
-    Write-Console "Tareas:   $totalTasks"
-    Write-Console "Tareas a ejecutar: $($taskList -join ', ')"
-    Write-Console ""
-
-    # ── 1. OPTIMIZACIÓN DE DISCOS ────────────────────────────────────────────
-    if ($options['OptimizeDisks']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Optimización de discos"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})Optimizando discos..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "1. OPTIMIZACIÓN DE DISCOS DUROS$dryRunLabel"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        try {
-            $volumes = @(Get-Volume | Where-Object { $_.DriveLetter -and $_.DriveType -eq 'Fixed' })
-            Write-Console "Unidades encontradas: $($volumes.Count)"
-
-            $volIdx = 0
-            foreach ($volume in $volumes) {
-                $volIdx++
-                $dl      = $volume.DriveLetter
-                $sizeGB  = [math]::Round($volume.Size          / 1GB, 2)
-                $freeGB  = [math]::Round($volume.SizeRemaining / 1GB, 2)
-                Update-SubProgress $base ([int](($volIdx / $volumes.Count) * 100)) $taskWeight
-
-                Write-Console ""
-                Write-Console "  [$volIdx/$($volumes.Count)] Unidad ${dl}: — $sizeGB GB total, $freeGB GB libre"
-
-                try {
-                    $partition = Get-Partition -DriveLetter $dl -ErrorAction Stop
-                    $disk      = Get-Disk -Number $partition.DiskNumber -ErrorAction Stop
-
-                    $mediaType = $disk.MediaType
-                    try {
-                        $physDisk = Get-PhysicalDisk | Where-Object { $_.DeviceId -eq $disk.Number } | Select-Object -First 1
-                        if ($physDisk -and $physDisk.MediaType -and $physDisk.MediaType -ne 'Unspecified') {
-                            $mediaType = $physDisk.MediaType
-                        }
-                    } catch { }
-
-                    $isNVMe = $disk.FriendlyName -match 'NVMe|NVME|nvme'
-                    $isSSD  = $mediaType -in @('SSD', 'Solid State Drive') -or $isNVMe
-
-                    Write-Console "  Tipo: $mediaType$(if($isNVMe){' (NVMe)'})"
-
-                    if ($dryRun) {
-                        Write-Console "  [DRY RUN] Se ejecutaría: $(if($isSSD){'TRIM (Optimize-Volume -ReTrim)'}else{'Defrag (Optimize-Volume -Defrag)'})"
-                    } elseif ($isSSD) {
-                        Optimize-Volume -DriveLetter $dl -ReTrim -ErrorAction Stop
-                        Write-Console "  ✓ TRIM completado"
-                    } else {
-                        Optimize-Volume -DriveLetter $dl -Defrag -ErrorAction Stop
-                        Write-Console "  ✓ Desfragmentación completada"
-                    }
-                } catch {
-                    Write-Console "  ✗ Error: $($_.Exception.Message)"
-                    if (-not $dryRun) {
-                        try {
-                            $out = & defrag.exe "${dl}:" /O 2>&1
-                            $out | Where-Object { $_ -and $_.ToString().Trim() } |
-                                ForEach-Object { Write-Console "    $_" }
-                        } catch {
-                            Write-Console "  ✗ Método alternativo falló: $($_.Exception.Message)"
-                        }
-                    }
-                }
-            }
-            Write-Console ""
-            Write-Console "✓ Optimización de discos $(if($dryRun){'analizada'}else{'completada'})"
-        } catch {
-            Write-Console "Error general: $($_.Exception.Message)"
-        }
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 2. VACIAR PAPELERA ───────────────────────────────────────────────────
-    if ($options['RecycleBin']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Vaciando papelera"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})Vaciando papelera..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "2. VACIANDO PAPELERA DE RECICLAJE$dryRunLabel"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        try {
-            $totalSize = 0
-            Get-PSDrive -PSProvider FileSystem | ForEach-Object {
-                $rp = Join-Path $_.Root '$Recycle.Bin'
-                if (Test-Path $rp) {
-                    $sz = (Get-ChildItem -Path $rp -Force -Recurse -ErrorAction SilentlyContinue |
-                           Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
-                    if ($sz) { $totalSize += $sz }
-                }
-            }
-            $totalMB = [math]::Round($totalSize / 1MB, 2)
-            Write-Console "  Contenido total en papelera: $totalMB MB"
-            $diagData['RecycleBinMB'] = $totalMB
-
-            if ($dryRun) {
-                Write-Console "  [DRY RUN] Se liberarían ~$totalMB MB"
-            } else {
-                Get-PSDrive -PSProvider FileSystem | ForEach-Object {
-                    $rp = Join-Path $_.Root '$Recycle.Bin'
-                    if (Test-Path $rp) {
-                        Get-ChildItem -Path $rp -Force -ErrorAction SilentlyContinue |
-                            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-                    }
-                }
-                Write-Console "  ✓ Papelera vaciada para todas las unidades — $totalMB MB liberados"
-            }
-        } catch {
-            Write-Console "  ❌ Error: $($_.Exception.Message)"
-        }
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 3. ARCHIVOS TEMPORALES DE WINDOWS ───────────────────────────────────
-    if ($options['TempFiles']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Archivos temporales Windows"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})Temp Windows..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "3. ARCHIVOS TEMPORALES DE WINDOWS$dryRunLabel"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        $paths  = @("$env:SystemRoot\Temp", "$env:SystemRoot\Prefetch")
-        $freed  = Invoke-CleanTempPaths -Paths $paths -BasePercent $base -TaskWeight $taskWeight -DryRun $dryRun
-        $diagData['TempFilesMB'] = $freed
-        Write-Console ""
-        Write-Console "  ✓ Total: $([math]::Round($freed,2)) MB $(if($dryRun){'por liberar'}else{'liberados'})"
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 4. ARCHIVOS TEMPORALES DE USUARIO ───────────────────────────────────
-    if ($options['UserTemp']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Archivos temporales Usuario"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})Temp Usuario..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "4. ARCHIVOS TEMPORALES DE USUARIO$dryRunLabel"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        $paths = @("$env:TEMP", "$env:LOCALAPPDATA\Temp")
-        $freed = Invoke-CleanTempPaths -Paths $paths -BasePercent $base -TaskWeight $taskWeight -DryRun $dryRun
-        $diagData['UserTempMB'] = $freed
-        Write-Console ""
-        Write-Console "  ✓ Total: $([math]::Round($freed,2)) MB $(if($dryRun){'por liberar'}else{'liberados'})"
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 5. [N3] WINDOWS UPDATE CACHE ────────────────────────────────────────
-    if ($options['WUCache']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Windows Update Cache"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})Limpiando WU Cache..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "5. WINDOWS UPDATE CACHE (SoftwareDistribution)$dryRunLabel"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        $wuPath = "$env:SystemRoot\SoftwareDistribution\Download"
-
-        try {
-            $beforeSize = (Get-ChildItem -Path $wuPath -Recurse -Force -ErrorAction SilentlyContinue |
-                           Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
-            if ($null -eq $beforeSize) { $beforeSize = 0 }
-            $beforeMB = [math]::Round($beforeSize / 1MB, 2)
-            Write-Console "  Tamaño actual: $beforeMB MB"
-            $diagData['WUCacheMB'] = $beforeMB
-            Update-SubProgress $base 30 $taskWeight
-
-            if ($dryRun) {
-                Write-Console "  [DRY RUN] Se liberarían ~$beforeMB MB"
-            } else {
-                # Detener servicio de Windows Update temporalmente
-                Write-Console "  Deteniendo servicio Windows Update (wuauserv)..."
-                Stop-Service -Name wuauserv -Force -ErrorAction SilentlyContinue
-                Update-SubProgress $base 50 $taskWeight
-                Start-Sleep -Seconds 2
-
-                Get-ChildItem -Path $wuPath -Force -ErrorAction SilentlyContinue |
-                    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
-
-                $afterSize = (Get-ChildItem -Path $wuPath -Recurse -Force -ErrorAction SilentlyContinue |
-                              Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
-                if ($null -eq $afterSize) { $afterSize = 0 }
-
-                # Reiniciar servicio
-                Update-SubProgress $base 85 $taskWeight
-                Start-Service -Name wuauserv -ErrorAction SilentlyContinue
-                Write-Console "  ✓ Servicio Windows Update reiniciado"
-
-                $freed = [math]::Round(($beforeSize - $afterSize) / 1MB, 2)
-                Write-Console "  ✓ WU Cache limpiada — $freed MB liberados"
-            }
-        } catch {
-            Write-Console "  ! Error: $($_.Exception.Message)"
-            # Asegurar que el servicio queda activo aunque falle
-            Start-Service -Name wuauserv -ErrorAction SilentlyContinue
-        }
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 6. CHECK DISK ────────────────────────────────────────────────────────
-    if ($options['Chkdsk']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Check Disk (CHKDSK)"
-        Update-Status "Programando CHKDSK..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "6. PROGRAMANDO CHECK DISK (CHKDSK)"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        if ($dryRun) {
-            Write-Console "  [DRY RUN] Se programaría CHKDSK en el próximo reinicio"
-        } else {
-            try {
-                #      excluir el chequeo automático de arranque limpio pero
-                #      forzar via volumen sucio. En realidad el flujo correcto
-                #      es marcar dirty y NO excluir con /x, así CHKDSK sí corre.
-                Write-Console "  Marcando volumen C: como sucio (fsutil dirty set)..."
-                $fsutilOutput = & fsutil dirty set C: 2>&1
-                $fsutilOutput | Where-Object { $_ -and $_.ToString().Trim() } |
-                    ForEach-Object { Write-Console "    $_" }
-
-                Write-Console "  ✓ CHKDSK programado — se ejecutará en el próximo reinicio"
-                Write-Console "  NOTA: El sistema debe reiniciarse para que CHKDSK se ejecute"
-            } catch {
-                Write-Console "  Error: $($_.Exception.Message)"
-            }
-        }
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 7. LIBERAR MEMORIA RAM ───────────────────────────────────────────────
-    if ($options['ClearMemory']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Liberando memoria RAM"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})Liberando RAM..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "7. LIBERANDO MEMORIA RAM$dryRunLabel"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        try {
-            $osBefore   = Invoke-CimQuery -ClassName Win32_OperatingSystem
-            $totalGB    = [math]::Round($osBefore.TotalVisibleMemorySize / 1MB, 2)
-            $freeGBBef  = [math]::Round($osBefore.FreePhysicalMemory     / 1MB, 2)
-
-            Write-Console "  Total RAM:       $totalGB GB"
-            Write-Console "  Libre antes:     $freeGBBef GB"
-            Update-SubProgress $base 20 $taskWeight
-
-            if ($dryRun) {
-                Write-Console "  [DRY RUN] Se vaciaría el Working Set de todos los procesos accesibles"
-            } else {
-                $count = 0
-                foreach ($proc in (Get-Process -ErrorAction SilentlyContinue)) {
-                    try {
-                        $hProc = [MemoryHelper]::OpenProcess(0x1F0FFF, $false, $proc.Id)
-                        if ($hProc -ne [IntPtr]::Zero) {
-                            [MemoryHelper]::EmptyWorkingSet($hProc) | Out-Null
-                            [MemoryHelper]::CloseHandle($hProc) | Out-Null
-                            $count++
-                        }
-                    } catch { }
-                }
-                Write-Console "  Working Set vaciado en $count procesos"
-                Update-SubProgress $base 70 $taskWeight
-                Start-Sleep -Seconds 2
-
-                $osAfter   = Invoke-CimQuery -ClassName Win32_OperatingSystem
-                $freeGBAft = [math]::Round($osAfter.FreePhysicalMemory / 1MB, 2)
-                $gained    = [math]::Round($freeGBAft - $freeGBBef, 2)
-
-                Write-Console "  Libre después:   $freeGBAft GB"
-                Write-Console "  ✓ RAM recuperada: $gained GB"
-            }
-        } catch {
-            Write-Console "  Error: $($_.Exception.Message)"
-        }
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 8. CERRAR PROCESOS NO CRÍTICOS ───────────────────────────────────────
-    if ($options['CloseProcesses']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Cerrando procesos"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})Cerrando procesos..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "8. CERRANDO PROCESOS NO CRÍTICOS$dryRunLabel"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        try {
-            $criticals = @(
-                'System','svchost','csrss','wininit','services','lsass','winlogon',
-                'dwm','explorer','taskhostw','RuntimeBroker','sihost','fontdrvhost',
-                'smss','conhost','dllhost','spoolsv','SearchIndexer','MsMpEng',
-                'powershell','pwsh','audiodg','wudfhost','dasHost','TextInputHost',
-                'SecurityHealthService','SgrmBroker','SecurityHealthSystray',
-                'ShellExperienceHost','StartMenuExperienceHost','SearchUI','Cortana',
-                'ApplicationFrameHost','SystemSettings','WmiPrvSE','Memory Compression'
-            )
-
-            $curProc  = Get-Process -Id $PID
-            $sessionId = $curProc.SessionId
-            $parentPID = (Invoke-CimQuery -ClassName Win32_Process -Filter "ProcessId=$PID" -SilentOnFail).ParentProcessId
-
-            $targets = @(Get-Process | Where-Object {
-                $_.SessionId -eq $sessionId -and
-                $_.ProcessName -notin $criticals -and
-                $_.Id -ne $PID -and
-                $_.Id -ne $parentPID -and
-                $_.ProcessName -ne 'Idle'
-            })
-
-            Write-Console "  Procesos candidatos: $($targets.Count)"
-
-            $closed = 0
-            $idx    = 0
-            foreach ($p in $targets) {
-                $idx++
-                Update-SubProgress $base ([int](($idx / [Math]::Max($targets.Count,1)) * 100)) $taskWeight
-                if ($dryRun) {
-                    Write-Console "  [DRY RUN] Cerraría: $($p.ProcessName) (PID: $($p.Id))"
-                } else {
-                    try {
-                        $p | Stop-Process -Force -ErrorAction Stop
-                        $closed++
-                        Write-Console "  ✓ Cerrado: $($p.ProcessName) (PID: $($p.Id))"
-                    } catch { }
-                }
-            }
-            Write-Console ""
-            Write-Console "  ✓ Procesos cerrados: $closed de $($targets.Count)"
-        } catch {
-            Write-Console "  Error: $($_.Exception.Message)"
-        }
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 9. LIMPIAR CACHÉ DNS ─────────────────────────────────────────────────
-    if ($options['DNSCache']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Limpiando caché DNS"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})DNS cache..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "9. LIMPIANDO CACHÉ DNS$dryRunLabel"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        try {
-            if ($dryRun) {
-                $dnsEntries = (Get-DnsClientCache -ErrorAction SilentlyContinue).Count
-                Write-Console "  [DRY RUN] Caché DNS actual: $dnsEntries entradas"
-                $diagData['DnsEntries'] = $dnsEntries
-            } else {
-                Update-SubProgress $base 30 $taskWeight
-                Clear-DnsClientCache -ErrorAction Stop
-                Write-Console "  ✓ Clear-DnsClientCache ejecutado"
-                Update-SubProgress $base 60 $taskWeight
-
-                $psi = New-Object System.Diagnostics.ProcessStartInfo
-                $psi.FileName               = "cmd.exe"
-                $psi.Arguments              = "/c chcp 65001 >nul 2>&1 & ipconfig /flushdns"
-                $psi.RedirectStandardOutput = $true
-                $psi.RedirectStandardError  = $true
-                $psi.UseShellExecute        = $false
-                $psi.CreateNoWindow         = $true
-                $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
-                $proc = [System.Diagnostics.Process]::Start($psi)
-                $stdout = $proc.StandardOutput.ReadToEnd()
-                $proc.WaitForExit()
-                $stdout -split "`n" | Where-Object { $_.Trim() } |
-                    ForEach-Object { Write-Console "  $($_.TrimEnd())" }
-                Write-Console "  ✓ Caché DNS limpiada"
-            }
-        } catch {
-            Write-Console "  Error: $($_.Exception.Message)"
-        }
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 10. LIMPIAR NAVEGADORES ──────────────────────────────────────────────
-    if ($options['BrowserCache']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Limpiando navegadores"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})Navegadores..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "10. LIMPIANDO CACHÉ DE NAVEGADORES$dryRunLabel"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        $browsers = @{
-            "Chrome" = @(
-                "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Cache",
-                "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Cache2",
-                "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Code Cache",
-                "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\GPUCache"
-            )
-            "Edge" = @(
-                "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\Cache",
-                "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\Cache2",
-                "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\Code Cache",
-                "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\GPUCache"
-            )
-            "Brave" = @(
-                "$env:LOCALAPPDATA\BraveSoftware\Brave-Browser\User Data\Default\Cache",
-                "$env:LOCALAPPDATA\BraveSoftware\Brave-Browser\User Data\Default\Cache2",
-                "$env:LOCALAPPDATA\BraveSoftware\Brave-Browser\User Data\Default\Code Cache",
-                "$env:LOCALAPPDATA\BraveSoftware\Brave-Browser\User Data\Default\GPUCache"
-            )
-            "Opera" = @(
-                "$env:APPDATA\Opera Software\Opera Stable\Cache",
-                "$env:APPDATA\Opera Software\Opera Stable\Cache2",
-                "$env:APPDATA\Opera Software\Opera Stable\Code Cache",
-                "$env:APPDATA\Opera Software\Opera Stable\GPUCache"
-            )
-            "Opera GX" = @(
-                "$env:APPDATA\Opera Software\Opera GX Stable\Cache",
-                "$env:APPDATA\Opera Software\Opera GX Stable\Cache2",
-                "$env:APPDATA\Opera Software\Opera GX Stable\Code Cache",
-                "$env:APPDATA\Opera Software\Opera GX Stable\GPUCache"
-            )
-            "Firefox" = @("$env:LOCALAPPDATA\Mozilla\Firefox\Profiles")
-        }
-
-        $bIdx   = 0
-        $bCount = $browsers.Keys.Count
-
-        foreach ($browser in $browsers.Keys) {
-            $bIdx++
-            Update-SubProgress $base ([int](($bIdx / $bCount) * 100)) $taskWeight
-            Write-Console "  [$bIdx/$bCount] $browser..."
-            $cleared    = $false
-            $totalCleared = 0
-
-            foreach ($path in $browsers[$browser]) {
-                if ($browser -eq "Firefox") {
-                    # Expandir perfiles y limpiar cache + cache2
-                    $profileDirs = Get-ChildItem -Path $path -Directory -ErrorAction SilentlyContinue
-                    foreach ($pd in $profileDirs) {
-                        foreach ($cacheSub in @('cache', 'cache2')) {
-                            $cp = Join-Path $pd.FullName $cacheSub
-                            if (Test-Path $cp) {
-                                $sz = (Get-ChildItem -Path $cp -Recurse -Force -ErrorAction SilentlyContinue |
-                                       Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
-                                if ($sz) { $totalCleared += $sz / 1MB }
-                                if (-not $dryRun) {
-                                    Remove-Item -Path "$cp\*" -Recurse -Force -ErrorAction SilentlyContinue
-                                }
-                                $cleared = $true
-                            }
-                        }
-                    }
-                    continue
-                }
-
-                if (Test-Path $path) {
-                    try {
-                        $sz = (Get-ChildItem -Path $path -Recurse -Force -ErrorAction SilentlyContinue |
-                               Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
-                        if ($sz) { $totalCleared += $sz / 1MB }
-                        if (-not $dryRun) {
-                            Remove-Item -Path "$path\*" -Recurse -Force -ErrorAction SilentlyContinue
-                        }
-                        $cleared = $true
-                    } catch { }
-                }
-            }
-
-            $mb = [math]::Round($totalCleared, 2)
-            $diagData['BrowserCacheMB'] += $totalCleared
-            if ($cleared) {
-                Write-Console "    $(if($dryRun){'[DRY RUN]'} else {'✓'}) $browser — $mb MB $(if($dryRun){'por liberar'}else{'liberados'})"
-            } else {
-                Write-Console "    → $browser no encontrado o sin caché"
-            }
-        }
-
-        Write-Console ""
-        Write-Console "  ✓ Limpieza de navegadores $(if($dryRun){'analizada'}else{'completada'})"
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 11. BACKUP DEL REGISTRO ──────────────────────────────────────────────
-    if ($options['BackupRegistry']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Backup del registro"
-        Update-Status "Creando backup del registro..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "11. BACKUP DEL REGISTRO$(if($dryRun){' [DRY RUN — no se crea]'})"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        $backupPath = "$env:USERPROFILE\Desktop\RegistryBackup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
-
-        if ($dryRun) {
-            Write-Console "  [DRY RUN] Se crearía backup en: $backupPath"
-            Write-Console "  [DRY RUN] Exportaría: HKEY_CURRENT_USER, HKLM\SOFTWARE"
-        } else {
-            try {
-                New-Item -Path $backupPath -ItemType Directory -Force | Out-Null
-                Write-Console "  Carpeta: $backupPath"
-
-                $hives = @(
-                    @{Name="HKEY_CURRENT_USER";             File="HKCU_backup.reg"},
-                    @{Name="HKEY_LOCAL_MACHINE\SOFTWARE";   File="HKLM_SOFTWARE_backup.reg"}
-                )
-
-                $hi = 0
-                foreach ($hive in $hives) {
-                    $hi++
-                    Update-SubProgress $base ([int](($hi / $hives.Count) * 100)) $taskWeight
-                    Write-Console "  [$hi/$($hives.Count)] Exportando $($hive.Name)..."
-                    $exportFile = Join-Path $backupPath $hive.File
-                    & cmd /c "reg export `"$($hive.Name)`" `"$exportFile`" /y" 2>&1 | Out-Null
-                    if (Test-Path $exportFile) {
-                        $sz = [math]::Round((Get-Item $exportFile).Length / 1MB, 2)
-                        Write-Console "    ✓ $sz MB"
-                    } else {
-                        Write-Console "    ! No se pudo exportar"
-                    }
-                }
-                Write-Console ""
-                Write-Console "  ✓ Backup completado en: $backupPath"
-            } catch {
-                Write-Console "  Error: $($_.Exception.Message)"
-            }
-        }
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 12. LIMPIAR REGISTRO ─────────────────────────────────────────────────
-    if ($options['CleanRegistry']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Limpiando registro"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})Claves huérfanas..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "12. LIMPIANDO CLAVES HUÉRFANAS DEL REGISTRO$dryRunLabel"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        try {
-            $uninstallPaths = @(
-                "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
-                "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
-                "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
-            )
-
-            $orphaned = 0
-            $deleted  = 0
-            $pIdx     = 0
-
-            foreach ($path in $uninstallPaths) {
-                $pIdx++
-                Update-SubProgress $base (20 + [int](($pIdx / $uninstallPaths.Count) * 70)) $taskWeight
-                if (-not (Test-Path $path)) { continue }
-
-                Write-Console "  Analizando: $path"
-                Get-ChildItem -Path $path -ErrorAction SilentlyContinue | ForEach-Object {
-                    $key     = $_
-                    $props   = Get-ItemProperty -Path $key.PSPath -ErrorAction SilentlyContinue
-                    $dName   = $props.DisplayName
-                    $iLoc    = $props.InstallLocation
-
-                    if ($iLoc -and -not (Test-Path $iLoc)) {
-                        $orphaned++
-                        Write-Console "    → Huérfana: $dName"
-                        if (-not $dryRun) {
-                            try {
-                                Remove-Item -Path $key.PSPath -Recurse -Force -ErrorAction Stop
-                                $deleted++
-                                Write-Console "      ✓ Eliminada"
-                            } catch {
-                                Write-Console "      ! No se pudo eliminar: $($_.Exception.Message)"
-                            }
-                        } else {
-                            Write-Console "      [DRY RUN] Se eliminaría"
-                        }
-                    }
-                }
-            }
-
-            Write-Console ""
-            Write-Console "  ✓ Huérfanas encontradas: $orphaned — Eliminadas: $deleted"
-            $diagData['OrphanedKeys'] = $orphaned
-        } catch {
-            Write-Console "  Error: $($_.Exception.Message)"
-        }
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 13. SFC /SCANNOW ─────────────────────────────────────────────────────
-    if ($options['SFC']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "SFC /SCANNOW"
-        Update-Status "Ejecutando SFC (puede tardar varios minutos)..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "13. SFC /SCANNOW"
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "    NOTA: puede tardar entre 10-30 minutos"
-
-        if ($dryRun) {
-            Write-Console "  [DRY RUN] Se ejecutaría: sfc.exe /scannow"
-        } else {
-            try {
-                $sfcProc = Start-Process -FilePath "sfc.exe" -ArgumentList "/scannow" `
-                    -NoNewWindow -Wait -PassThru
-
-                $cbsLog = "$env:SystemRoot\Logs\CBS\CBS.log"
-                if (Test-Path $cbsLog) {
-                    $lastLines = Get-Content $cbsLog -Tail 20
-                    Write-Console "  Últimas líneas CBS.log:"
-                    $lastLines | ForEach-Object { Write-Console "    $_" }
-                }
-
-                switch ($sfcProc.ExitCode) {
-                    0 { Write-Console "  ✓ SFC: No se encontraron infracciones" }
-                    1 { Write-Console "  ✓ SFC: Archivos corruptos reparados" }
-                    2 { Write-Console "  ! SFC: Archivos corruptos que no pudieron repararse" }
-                    3 { Write-Console "  ! SFC: No se pudo realizar la verificación" }
-                    default { Write-Console "  ! SFC código: $($sfcProc.ExitCode)" }
-                }
-            } catch {
-                Write-Console "  Error: $($_.Exception.Message)"
-            }
-        }
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 14. DISM ─────────────────────────────────────────────────────────────
-    if ($options['DISM']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "DISM"
-        Update-Status "Ejecutando DISM (puede tardar varios minutos)..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "14. DISM — Reparación de imagen del sistema"
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "    NOTA: puede tardar entre 15-45 minutos"
-
-        if ($dryRun) {
-            Write-Console "  [DRY RUN] Se ejecutarían: CheckHealth, ScanHealth, RestoreHealth"
-        } else {
-            try {
-                foreach ($step in @(
-                    @{ Label="Paso 1/3: CheckHealth...";    Args="/Online /Cleanup-Image /CheckHealth";   Sub=10 },
-                    @{ Label="Paso 2/3: ScanHealth...";     Args="/Online /Cleanup-Image /ScanHealth";    Sub=40 },
-                    @{ Label="Paso 3/3: RestoreHealth...";  Args="/Online /Cleanup-Image /RestoreHealth"; Sub=70 }
-                )) {
-                    Write-Console ""
-                    Write-Console "  $($step.Label)"
-                    Update-SubProgress $base $step.Sub $taskWeight
-                    $out = & DISM ($step.Args -split ' ') 2>&1
-                    $out | Where-Object { $_ -and $_.ToString().Trim() } |
-                        ForEach-Object { Write-Console "    $_" }
-                }
-                Write-Console ""
-                Write-Console "  ✓ DISM completado"
-            } catch {
-                Write-Console "  Error: $($_.Exception.Message)"
-            }
-        }
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── 15. [N7] EVENT VIEWER LOGS ───────────────────────────────────────────
-    if ($options['EventLogs']) {
-        if (Test-Cancelled) { return }
-        $base = [math]::Round(($completedTasks / $totalTasks) * 100)
-        Update-Progress $base "Event Viewer Logs"
-        Update-Status "$(if($dryRun){'[DRY RUN] '})Limpiando Event Logs..."
-
-        Write-Console ""
-        Write-Console "═══════════════════════════════════════════════════════════"
-        Write-Console "15. LIMPIANDO EVENT VIEWER LOGS$dryRunLabel"
-        Write-Console "    (System, Application, Setup — NO Security)"
-        Write-Console "═══════════════════════════════════════════════════════════"
-
-        $logs = @('System', 'Application', 'Setup')
-
-        $lIdx = 0
-        foreach ($log in $logs) {
-            $lIdx++
-            Update-SubProgress $base ([int](($lIdx / $logs.Count) * 100)) $taskWeight
-
-            try {
-                $logInfo = Get-WinEvent -ListLog $log -ErrorAction Stop
-                $sizeMB  = [math]::Round($logInfo.FileSize / 1MB, 2)
-                $count   = $logInfo.RecordCount
-                $diagData['EventLogsMB'] += $sizeMB
-
-                Write-Console "  [$lIdx/$($logs.Count)] $log — $count eventos, $sizeMB MB"
-
-                if ($dryRun) {
-                    Write-Console "    [DRY RUN] Se limpiaría este log"
-                } else {
-                    & wevtutil.exe cl $log 2>&1 | Out-Null
-                    Write-Console "    ✓ Log limpiado"
-                }
-            } catch {
-                Write-Console "  [$lIdx] $log — Error: $($_.Exception.Message)"
-            }
-        }
-
-        Write-Console ""
-        Write-Console "  ✓ Event Logs $(if($dryRun){'analizados'}else{'limpiados'})"
-        Write-Console "  NOTA: El log 'Security' NO fue modificado (requiere auditoría)"
-
-        $completedTasks++
-        Update-Progress ([math]::Round(($completedTasks / $totalTasks) * 100)) ""
-    }
-
-    # ── RESUMEN FINAL ────────────────────────────────────────────────────────
-    # Capturar estado actual de RAM y disco para el informe
-    try {
-        $osSnap      = Invoke-CimQuery -ClassName Win32_OperatingSystem -SilentOnFail
-        $totalMemGB  = $osSnap.TotalVisibleMemorySize / 1MB
-        $freeMemGB   = $osSnap.FreePhysicalMemory     / 1MB
-        $diagData['RamUsedPct']  = [math]::Round((($totalMemGB - $freeMemGB) / $totalMemGB) * 100)
-        $volSnap = Get-Volume -DriveLetter C -ErrorAction SilentlyContinue
-        if ($volSnap) {
-            $diagData['DiskCUsedPct'] = [math]::Round((($volSnap.Size - $volSnap.SizeRemaining) / $volSnap.Size) * 100)
-        }
-    } catch { }
-
-    # Publicar resultados al hilo principal si es DryRun
-    if ($dryRun -and $null -ne $DiagReportRef) {
-        try { $DiagReportRef.Value = $diagData } catch { }
-    }
-
-    $endTime  = Get-Date
-    $duration = $endTime - $startTime
-    $durStr = "{0:D2}d {1:D2}h {2:D2}m {3:D2}s" -f $duration.Days, $duration.Hours, $duration.Minutes, $duration.Seconds
-
-    $footerTitle = if ($dryRun) {
-        "ANÁLISIS COMPLETADO EXITOSAMENTE"
-    } else {
-        "OPTIMIZACIÓN COMPLETADA EXITOSAMENTE"
-    }
-    $footerPad   = [math]::Max(0, $boxWidth - $footerTitle.Length)
-    $footerLeft  = [math]::Floor($footerPad / 2)
-    $footerRight = $footerPad - $footerLeft
-
-    Write-Console ""
-    Write-Console "╔$('═' * $boxWidth)╗"
-    Write-Console "║$(' ' * $footerLeft)$footerTitle$(' ' * $footerRight)║"
-    Write-Console "╚$('═' * $boxWidth)╝"
-    Write-Console "Tareas: $completedTasks / $totalTasks"
-    Write-Console "Tiempo: $durStr"
-    Write-Console ""
-
-    Update-Status "✓ $(if($dryRun){'Análisis'}else{'Optimización'}) completada"
-    Update-Progress 100 "Completado"
-    $window.Dispatcher.Invoke([action]{
-        $TaskText.Text = "¡Todas las tareas completadas!"
-    }.GetNewClosure())
-
-    # Auto-reinicio
-    if ($options['AutoRestart'] -and -not $dryRun) {
-        Write-Console "Reiniciando el sistema en 10 segundos..."
+            $ConsoleOutput.AppendText("Reiniciando el sistema en 10 segundos...`n")
+        })
         for ($i = 10; $i -gt 0; $i--) {
-            Update-Status "Reiniciando en $i segundos..."
+            $window.Dispatcher.Invoke([action]{
+                $StatusText.Text = "Reiniciando en {0} segundos..." -f $i
+            }.GetNewClosure())
             Start-Sleep -Seconds 1
         }
         Restart-Computer -Force
     }
 }
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # EVENTOS DE BOTONES
@@ -8055,6 +6049,7 @@ function Start-Optimization {
         'DISM'           = $chkDISM.IsChecked
         'EventLogs'      = $chkEventLogs.IsChecked
         'AutoRestart'    = $chkAutoRestart.IsChecked
+        '_DllDir'        = "$PSScriptRoot\libs"   # Ruta a las DLLs para el runspace
     }
 
 
@@ -8122,7 +6117,7 @@ function Start-Optimization {
             } catch {
                 $errMsg = $_.Exception.Message
                 $inner  = if ($_.Exception.InnerException) { " | Inner: $($_.Exception.InnerException.Message)" } else { "" }
-                Write-Log "[RUNSPACE] Error: $errMsg$inner" -Level "ERROR" -NoUI
+                Write-Log "[RUNSPACE] Error: $errMsg$inner" -Level "ERR" -NoUI
                 $window.Dispatcher.Invoke([action]{
                     $script:UI_ConsoleOutput.AppendText("[ERROR RUNSPACE] $errMsg$inner`n")
                     $script:UI_ConsoleOutput.ScrollToEnd()
@@ -8132,7 +6127,7 @@ function Start-Optimization {
             if ($script:ActivePowershell.Streams.Error.Count -gt 0) {
                 foreach ($streamErr in $script:ActivePowershell.Streams.Error) {
                     $se = "[RUNSPACE] Stream error: $($streamErr.ToString()) | Script: $($streamErr.InvocationInfo.ScriptName) línea $($streamErr.InvocationInfo.ScriptLineNumber)"
-                    Write-Log $se -Level "ERROR" -NoUI
+                    Write-Log $se -Level "ERR" -NoUI
                 }
             }
             try { $script:ActivePowershell.Dispose()  } catch { }
@@ -8223,25 +6218,27 @@ $btnSaveLog.Add_Click({
     }
 
     $saveDialog = New-Object System.Windows.Forms.SaveFileDialog
-    $saveDialog.Title            = "Guardar Log de Optimización"
-    $saveDialog.Filter           = "Archivo de texto (*.txt)|*.txt|Todos los archivos (*.*)|*.*"
-    $saveDialog.DefaultExt       = "txt"
-    $saveDialog.FileName         = "OptimizadorLog_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
-    if (-not (Test-Path $script:LogsDir)) {
-        [System.IO.Directory]::CreateDirectory($script:LogsDir) | Out-Null
-    }
-    $saveDialog.InitialDirectory = $script:LogsDir
-
-    if ($saveDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-        try {
-            $logContent | Out-File -FilePath $saveDialog.FileName -Encoding UTF8
-            Show-ThemedDialog -Title "Log guardado" `
-                -Message "Log guardado en:`n`n$($saveDialog.FileName)" -Type "success"
-        } catch {
-            Show-ThemedDialog -Title "Error al guardar" `
-                -Message "Error al guardar:`n$($_.Exception.Message)" -Type "error"
+    try {
+        $saveDialog.Title            = "Guardar Log de Optimización"
+        $saveDialog.Filter           = "Archivo de texto (*.txt)|*.txt|Todos los archivos (*.*)|*.*"
+        $saveDialog.DefaultExt       = "txt"
+        $saveDialog.FileName         = "OptimizadorLog_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+        if (-not (Test-Path $script:LogsDir)) {
+            [System.IO.Directory]::CreateDirectory($script:LogsDir) | Out-Null
         }
-    }
+        $saveDialog.InitialDirectory = $script:LogsDir
+
+        if ($saveDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+            try {
+                $logContent | Out-File -FilePath $saveDialog.FileName -Encoding UTF8
+                Show-ThemedDialog -Title "Log guardado" `
+                    -Message "Log guardado en:`n`n$($saveDialog.FileName)" -Type "success"
+            } catch {
+                Show-ThemedDialog -Title "Error al guardar" `
+                    -Message "Error al guardar:`n$($_.Exception.Message)" -Type "error"
+            }
+        }
+    } finally { $saveDialog.Dispose() }
 })
 
 # Botón Salir
@@ -8344,164 +6341,8 @@ $window.Add_Closed({
 # Función: Ventana emergente "Acerca de la versión"
 # ─────────────────────────────────────────────────────────────────────────────
 function Show-AboutWindow {
-    $aboutXaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Acerca de SysOpt" Width="560" Height="760"
-        WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize"
-        Background="$(Get-TC 'BgDeep' '#0D0F1A')"
-        WindowStyle="SingleBorderWindow">
-    <Grid>
-        <Rectangle Fill="$(Get-TC 'BgDeep' '#0D0F1A')"/>
-        <!-- Blob azul decorativo -->
-        <Ellipse Width="400" Height="400" Opacity="0.09" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-120,-80,0,0">
-            <Ellipse.Fill><RadialGradientBrush><GradientStop Color="$(Get-TC 'AccentBlue' '#5BA3FF')" Offset="0"/><GradientStop Color="Transparent" Offset="1"/></RadialGradientBrush></Ellipse.Fill>
-        </Ellipse>
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0">
-            <StackPanel Margin="28,24,28,24">
-                <!-- Header con logo + título -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,18">
-                    <Image Name="aboutLogo" Width="56" Height="56" Margin="0,0,14,0" VerticalAlignment="Center"
-                           RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock FontFamily="Segoe UI" FontSize="26" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')">
-                            <Run Text="SYS"/><Run Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Text="OPT"/>
-                        </TextBlock>
-                        <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="$(Get-TC 'TextMuted' '#7880A0')">Windows Optimizer GUI</TextBlock>
-                    </StackPanel>
-                    <Border CornerRadius="6" Background="#1A5BA3FF" BorderBrush="#405BA3FF" BorderThickness="1"
-                            Padding="10,4" Margin="14,0,0,0" VerticalAlignment="Center">
-                        <TextBlock FontFamily="Consolas" FontSize="11" FontWeight="Bold" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Text="v3.1.0"/>
-                    </Border>
-                </StackPanel>
-
-                <!-- Separador -->
-                <Rectangle Height="1" Fill="$(Get-TC 'BorderSubtle' '#252B40')" Margin="0,0,0,16"/>
-
-                <!-- v3.0.0 (Dev) DLL externos + Arquitectura modular -->
-                <Border CornerRadius="8" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'AccentPurple' '#9B7EFF')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <Border CornerRadius="4" Background="#1A9B7EFF" Padding="6,2" Margin="0,0,8,0">
-                                <TextBlock FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="$(Get-TC 'AccentPurple' '#9B7EFF')" Text="v3.1.0 · TEMAS + I18N"/>
-                            </Border>
-                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')" VerticalAlignment="Center" Text="Temas visuales + Internacionalización + Opciones"/>
-                        </StackPanel>
-                        <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" TextWrapping="Wrap" LineHeight="20">
-                            <Run Foreground="$(Get-TC 'AccentPurple' '#A47CFF')" Text="• [THEME]"/><Run Text="  Sistema de temas dinámicos — 11 temas incluidos en .\assets\themes\&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentPurple' '#A47CFF')" Text="• [THEME]"/><Run Text="  Barra de progreso animada al aplicar tema — parsing en runspace background&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentPurple' '#A47CFF')" Text="• [I18N]"/><Run Text="  Internacionalización: Español, English, Português (Brasil) en .\assets\lang\&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentPurple' '#A47CFF')" Text="• [I18N]"/><Run Text="  Función T() de traducción centralizada con fallback automático&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentPurple' '#A47CFF')" Text="• [DLL]"/><Run Text="  SysOpt.Core.dll (LangEngine) + SysOpt.ThemeEngine.dll en .\libs\&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentPurple' '#A47CFF')" Text="• [UI]"/><Run Text="  Botón ⚙ Opciones + ventana de configuración de temas e idioma&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentPurple' '#A47CFF')" Text="• [CFG]"/><Run Text="  Tema e idioma se persisten en settings.json (%APPDATA%\SysOpt)"/>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
-
-                <!-- v2.5.0 Estabilidad + Deduplicación + TaskPool -->
-                <Border CornerRadius="8" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'AccentGreen' '#4AE896')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <Border CornerRadius="4" Background="#1A4AE896" Padding="6,2" Margin="0,0,8,0">
-                                <TextBlock FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="v2.5.0 · ESTABILIDAD"/>
-                            </Border>
-                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')" VerticalAlignment="Center" Text="Deduplicación + TaskPool + Error Boundary"/>
-                        </StackPanel>
-                        <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" TextWrapping="Wrap" LineHeight="20">
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [B5]"/><Run Text="  Deduplicación SHA256: hash de archivos &gt;10 MB en background — ventana con grupos y espacio recuperable&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [LOG]"/><Run Text="  Logging estructurado: Write-Log a UI + .\logs\SysOpt_YYYY-MM-DD.log con rotación diaria (Mutex thread-safe)&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [ERR]"/><Run Text="  Error boundary global: AppDomain.UnhandledException + Dispatcher.UnhandledException&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [WMI]"/><Run Text="  CimSession compartida con OperationTimeoutSec=5 — todas las queries WMI centralizadas en Invoke-CimQuery&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [⚡]"/><Run Text="  TaskPool: ventana flotante de tareas async con barra responsive, badge de estado y tiempo transcurrido&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentAmber' '#FFB547')" Text="• [Fix]"/><Run Text="  FrameworkElementFactory → XAML string en Show-TasksWindow (eliminados 254 líneas obsoletas)&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentAmber' '#FFB547')" Text="• [Fix]"/><Run Text="  Race condition Split-Path: null-guard cuando Result llega antes que Done en hashtable sincronizado&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentAmber' '#FFB547')" Text="• [Fix]"/><Run Text="  6 timers async (csv/html/dedup/load/ent/save) ahora se paran limpiamente en Add_Closed"/>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
-
-                <!-- v2.4.0 FIFO Streaming -->
-                <Border CornerRadius="8" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'BtnSecondaryFg' '#3D8EFF')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <Border CornerRadius="4" Background="#1F5BA3FF" Padding="6,2" Margin="0,0,8,0">
-                                <TextBlock FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Text="v2.4.0 · FIFO"/>
-                            </Border>
-                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')" VerticalAlignment="Center" Text="FIFO Streaming Anti-RAM-Drain"/>
-                        </StackPanel>
-                        <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" TextWrapping="Wrap" LineHeight="20">
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [FIFO-01]"/><Run Text="  Guardado de snapshot: streaming ConcurrentQueue + JsonTextWriter directo al disco (−50% a −200% RAM pico)&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [FIFO-02]"/><Run Text="  Carga de entries: ConvertFrom-Json nativo + ConcurrentQueue — DispatcherTimer drena en lotes de 500/tick&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [FIFO-03]"/><Run Text="  Terminación limpia garantizada: GC + LOH compaction en bloque finally, incluso en error&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Text="• [Fix]"/><Run Text="  Set-Content → File::WriteAllText en Save-Settings (evita 'Stream was not readable' en PS 5.1)&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Text="• [Fix]"/><Run Text="  Toggle colapsar/expandir: Items.Refresh() explícito en LiveList (List&lt;T&gt;)&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" Text="• [Fix]"/><Run Text="  Parser FIFO-02: reemplazado regex frágil por ConvertFrom-Json nativo (compatible con snapshots v2.3 y v2.4.0)"/>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
-
-                <!-- v2.3.0 RAM + Snapshots -->
-                <Border CornerRadius="8" Background="$(Get-TC 'BgCardDark' '#131625')" BorderBrush="$(Get-TC 'AccentPurple' '#9B7EFF')" BorderThickness="0,0,0,2" Padding="14,12" Margin="0,0,0,12">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <Border CornerRadius="4" Background="#1A9B7EFF" Padding="6,2" Margin="0,0,8,0">
-                                <TextBlock FontFamily="Consolas" FontSize="10" FontWeight="Bold" Foreground="$(Get-TC 'AccentPurple' '#9B7EFF')" Text="v2.3.0 · RAM + SNAPSHOTS"/>
-                            </Border>
-                            <TextBlock FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="$(Get-TC 'TextPrimary' '#E8ECF4')" VerticalAlignment="Center" Text="Optimización RAM y comparador de snapshots"/>
-                        </StackPanel>
-                        <TextBlock FontFamily="Segoe UI" FontSize="11" Foreground="$(Get-TC 'TextSecondary' '#9BA4C0')" TextWrapping="Wrap" LineHeight="20">
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [RAM-01]"/><Run Text="  DiskItem_v211 sin INPC — wrapper DiskItemToggle_v230 ligero (−30 a −80 MB en escaneos grandes)&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [RAM-02]"/><Run Text="  Exportación CSV/HTML con StreamWriter directo y flush por lotes (sin StringBuilder)&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [RAM-04]"/><Run Text="  Load-SnapshotList: JsonTextReader línea a línea — Entries nunca en RAM al listar (−200 a −400 MB)&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentGreen' '#4AE896')" Text="• [RAM-05]"/><Run Text="  RunspacePool centralizado (1–3 runspaces) para operaciones async&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentAmber' '#FFB547')" Text="• [NEW]"/><Run Text="  Snapshots con checkboxes, botón 'Todo' y contador en tiempo real&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentAmber' '#FFB547')" Text="• [NEW]"/><Run Text="  Comparador en 3 modos: snapshot vs actual, snapshot A vs B, histórico&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentAmber' '#FFB547')" Text="• [NEW]"/><Run Text="  Eliminación en lote de snapshots con confirmación&#x0a;"/>
-                            <Run Foreground="$(Get-TC 'AccentAmber' '#FFB547')" Text="• [NEW]"/><Run Text="  Comparador O(1) con HashSet + Dictionary (antes O(n²))"/>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
-
-                <!-- Footer -->
-                <Rectangle Height="1" Fill="$(Get-TC 'BorderSubtle' '#252B40')" Margin="0,4,0,12"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="$(Get-TC 'BorderHover' '#4A5068')" Text="2026 © Danew Malavita | "/>
-                    <TextBlock FontFamily="Segoe UI" FontSize="10">
-                        <Hyperlink Name="lnkGithub" NavigateUri="https://github.com/Danewmalavita/"
-                                   Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" TextDecorations="None">
-                            github.com/Danewmalavita
-                        </Hyperlink>
-                    </TextBlock>
-                </StackPanel>
-
-                <!-- Botón cerrar -->
-                <Button Name="btnAboutClose" Content="Cerrar"
-                        Width="120" Height="34" Margin="0,16,0,0"
-                        HorizontalAlignment="Center"
-                        Background="$(Get-TC 'HdrBtnBg' '#1A2040')" BorderBrush="$(Get-TC 'BtnSecondaryFg' '#3D8EFF')" BorderThickness="1"
-                        Foreground="$(Get-TC 'AccentBlue' '#5BA3FF')" FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold"
-                        Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border x:Name="bd" CornerRadius="8" Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="$(Get-TC 'HdrBtnHover' '#253060')"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-            </StackPanel>
-        </ScrollViewer>
-    </Grid>
-</Window>
-"@
+    $aboutXaml = [XamlLoader]::Load($script:XamlFolder, "AboutWindow")
+    $aboutXaml = $ExecutionContext.InvokeCommand.ExpandString($aboutXaml)
     try {
         $aboutReader = [System.Xml.XmlNodeReader]::new([xml]$aboutXaml)
         $aboutWin    = [Windows.Markup.XamlReader]::Load($aboutReader)

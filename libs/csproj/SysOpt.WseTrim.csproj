@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>SysOpt.WseTrim</AssemblyName>
+    <RootNamespace>SysOpt</RootNamespace>
+    <Version>2.5.0</Version>
+    <Description>Working Set trim helper — extracted from SysOpt v2.5.0 inline Add-Type</Description>
+    <Nullable>disable</Nullable>
+    <Optimize>true</Optimize>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+</Project>

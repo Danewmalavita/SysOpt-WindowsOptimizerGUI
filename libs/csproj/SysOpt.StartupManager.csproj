@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <AssemblyName>SysOpt.StartupManager</AssemblyName>
+    <RootNamespace>SysOpt.StartupManager</RootNamespace>
+    <LangVersion>5</LangVersion>
+  </PropertyGroup>
+</Project>
