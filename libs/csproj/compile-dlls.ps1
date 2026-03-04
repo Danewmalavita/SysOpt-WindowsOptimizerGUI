@@ -120,6 +120,12 @@ $extraRefs = @{
         "System.dll",
         "System.Core.dll"
     )
+    "SysOpt.Toast.cs"       = @(
+        "PresentationFramework.dll",
+        "PresentationCore.dll",
+        "WindowsBase.dll",
+        "System.Xaml.dll"
+    )
 }
 
 # Mapa: nombre del .cs -> DLLs locales del proyecto que necesita como /r:
@@ -145,11 +151,12 @@ $outputNames = @{
     "SysOpt.Optimizer.cs"   = "SysOpt.Optimizer.dll"
     "SysOpt.StartupManager.cs" = "SysOpt.StartupManager.dll"
     "SysOpt.Diagnostics.cs"    = "SysOpt.Diagnostics.dll"
+    "SysOpt.Toast.cs"          = "SysOpt.Toast.dll"
 }
 
 # ── Auto-descubrir todos los .cs (excluir archivos _old / _bak / Copy) ────────
 $sources = Get-ChildItem -Path $here -Filter "*.cs" |
-    Where-Object { $_.Name -notmatch "_old|_bak|_copy|-Copy|\.Test\." } |
+    Where-Object { $_.Name -notmatch "_old|_bak|_copy|-Copy|\.Test\.|_AssemblyInfo" } |
     Sort-Object Name
 
 if ($sources.Count -eq 0) {

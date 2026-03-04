@@ -5,6 +5,23 @@ using System.Collections.Generic;
 
 namespace SysOpt.Diagnostics
 {
+    /// <summary>Minimal localization helper — PS1 calls SetDict() after loading language.</summary>
+    public static class Loc
+    {
+        private static System.Collections.Generic.Dictionary<string, string> _d =
+            new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+
+        public static void SetDict(System.Collections.Generic.Dictionary<string, string> d)
+        {
+            _d = d ?? new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static string T(string key, string fallback)
+        {
+            return (_d != null && _d.ContainsKey(key)) ? _d[key] : fallback;
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // DTOs
     // ═══════════════════════════════════════════════════════════════════════
@@ -74,33 +91,33 @@ namespace SysOpt.Diagnostics
             int warnCount  = 0;
 
             string dateStr = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
-            export.Add("INFORME DE DIAGNÓSTICO DEL SISTEMA — SysOpt v1.0");
-            export.Add(string.Format("Fecha: {0}", dateStr));
+            export.Add(Loc.T("DiagReportTitle", "INFORME DE DIAGNÓSTICO DEL SISTEMA — SysOpt v1.0"));
+            export.Add(string.Format(Loc.T("DiagExportDate", "Fecha: {0}"), dateStr));
             export.Add("");
 
             // ── ALMACENAMIENTO ──────────────────────────────────────────
-            AddSection(items, export, "ALMACENAMIENTO", "\U0001F5C4\uFE0F");
+            AddSection(items, export, Loc.T("DiagSectStorage", "ALMACENAMIENTO"), "\U0001F5C4\uFE0F");
 
             double tempTotal = report.TempFilesMB + report.UserTempMB;
             if (tempTotal > 1000)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "CRIT", "Archivos temporales acumulados",
-                    string.Format("{0} MB en carpetas Temp", Math.Round(tempTotal, 0)),
-                    "Limpiar Temp Windows + Usuario", 15);
+                    "CRIT", Loc.T("DiagTempCrit", "Archivos temporales acumulados"),
+                    string.Format(Loc.T("DiagTempCritDetail", "{0} MB en carpetas Temp"), Math.Round(tempTotal, 0)),
+                    Loc.T("DiagTempCritAction", "Limpiar Temp Windows + Usuario"), 15);
             }
             else if (tempTotal > 200)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "WARN", "Archivos temporales moderados",
-                    string.Format("{0} MB — recomendable limpiar", Math.Round(tempTotal, 0)),
-                    "Limpiar carpetas Temp", 7);
+                    "WARN", Loc.T("DiagTempWarn", "Archivos temporales moderados"),
+                    string.Format(Loc.T("DiagTempWarnDetail", "{0} MB — recomendable limpiar"), Math.Round(tempTotal, 0)),
+                    Loc.T("DiagTempWarnAction", "Limpiar carpetas Temp"), 7);
             }
             else
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "OK", "Carpetas temporales limpias",
-                    string.Format("{0} MB — nivel óptimo", Math.Round(tempTotal, 1)),
+                    "OK", Loc.T("DiagTempOk", "Carpetas temporales limpias"),
+                    string.Format(Loc.T("DiagOptimalLevel", "{0} MB — nivel óptimo"), Math.Round(tempTotal, 1)),
                     "", 0);
             }
 
@@ -108,69 +125,69 @@ namespace SysOpt.Diagnostics
             if (recycleSize > 500)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "WARN", "Papelera de reciclaje llena",
-                    string.Format("{0} MB ocupados", Math.Round(recycleSize, 0)),
-                    "Vaciar papelera", 5);
+                    "WARN", Loc.T("DiagRecycleBinFull", "Papelera de reciclaje llena"),
+                    string.Format(Loc.T("DiagRecycleBinDetail", "{0} MB ocupados"), Math.Round(recycleSize, 0)),
+                    Loc.T("DiagRecycleBinAction", "Vaciar papelera"), 5);
             }
             else if (recycleSize > 0)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "INFO", "Papelera con contenido",
+                    "INFO", Loc.T("DiagRecycleBinInfo", "Papelera con contenido"),
                     string.Format("{0} MB", Math.Round(recycleSize, 1)),
                     "", 0);
             }
             else
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "OK", "Papelera vacía",
-                    "Sin archivos pendientes de eliminar", "", 0);
+                    "OK", Loc.T("DiagRecycleBinEmpty", "Papelera vacía"),
+                    Loc.T("DiagRecycleBinEmptyDetail", "Sin archivos pendientes de eliminar"), "", 0);
             }
 
             double wuSize = report.WUCacheMB;
             if (wuSize > 2000)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "WARN", "Caché de Windows Update grande",
-                    string.Format("{0} MB en SoftwareDistribution", Math.Round(wuSize, 0)),
-                    "Limpiar WU Cache", 8);
+                    "WARN", Loc.T("DiagWUCacheLarge", "Caché de Windows Update grande"),
+                    string.Format(Loc.T("DiagWUCacheDetail", "{0} MB en SoftwareDistribution"), Math.Round(wuSize, 0)),
+                    Loc.T("DiagWUCacheAction", "Limpiar WU Cache"), 8);
             }
             else if (wuSize > 0)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "INFO", "Caché Windows Update presente",
+                    "INFO", Loc.T("DiagWUCachePresent", "Caché Windows Update presente"),
                     string.Format("{0} MB", Math.Round(wuSize, 1)),
                     "", 0);
             }
             else
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "OK", "Caché de Windows Update limpia",
-                    "Sin residuos de actualización", "", 0);
+                    "OK", Loc.T("DiagWUCacheClean", "Caché de Windows Update limpia"),
+                    Loc.T("DiagNoUpdateResidues", "Sin residuos de actualización"), "", 0);
             }
 
             // ── MEMORIA Y RENDIMIENTO ───────────────────────────────────
-            AddSection(items, export, "MEMORIA Y RENDIMIENTO", "\U0001F4BE");
+            AddSection(items, export, Loc.T("DiagSectMemory", "MEMORIA Y RENDIMIENTO"), "\U0001F4BE");
 
             double ramPct = report.RamUsedPct;
             if (ramPct > 85)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "CRIT", "Memoria RAM crítica",
-                    string.Format("{0}% en uso — riesgo de lentitud severa", ramPct),
-                    "Liberar RAM urgente", 20);
+                    "CRIT", Loc.T("DiagRamCritical", "Memoria RAM crítica"),
+                    string.Format(Loc.T("DiagRamCritDetail", "{0}% en uso — riesgo de lentitud severa"), ramPct),
+                    Loc.T("DiagRamCritAction", "Liberar RAM urgente"), 20);
             }
             else if (ramPct > 70)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "WARN", "Uso de RAM elevado",
-                    string.Format("{0}% en uso", ramPct),
-                    "Liberar RAM recomendado", 10);
+                    "WARN", Loc.T("DiagRamWarn", "Uso de RAM elevado"),
+                    string.Format(Loc.T("DiagRamPctInUse", "{0}% en uso"), ramPct),
+                    Loc.T("DiagRamWarnAction", "Liberar RAM recomendado"), 10);
             }
             else
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "OK", "Memoria RAM en niveles normales",
-                    string.Format("{0}% en uso", ramPct),
+                    "OK", Loc.T("DiagRamOk", "Memoria RAM en niveles normales"),
+                    string.Format(Loc.T("DiagRamPctInUse", "{0}% en uso"), ramPct),
                     "", 0);
             }
 
@@ -178,41 +195,41 @@ namespace SysOpt.Diagnostics
             if (diskPct > 90)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "CRIT", "Disco C: casi lleno",
-                    string.Format("{0}% ocupado — rendimiento muy degradado", diskPct),
-                    "Liberar espacio urgente", 20);
+                    "CRIT", Loc.T("DiagDiskCrit", "Disco C: casi lleno"),
+                    string.Format(Loc.T("DiagDiskCritDetail", "{0}% ocupado — rendimiento muy degradado"), diskPct),
+                    Loc.T("DiagDiskCritAction", "Liberar espacio urgente"), 20);
             }
             else if (diskPct > 75)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "WARN", "Disco C: con poco espacio libre",
-                    string.Format("{0}% ocupado", diskPct),
-                    "Limpiar archivos", 10);
+                    "WARN", Loc.T("DiagDiskWarn", "Disco C: con poco espacio libre"),
+                    string.Format(Loc.T("DiagDiskPctUsed", "{0}% ocupado"), diskPct),
+                    Loc.T("DiagDiskWarnAction", "Limpiar archivos"), 10);
             }
             else
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "OK", "Espacio en disco C: saludable",
-                    string.Format("{0}% ocupado", diskPct),
+                    "OK", Loc.T("DiagDiskOk", "Espacio en disco C: saludable"),
+                    string.Format(Loc.T("DiagDiskPctUsed", "{0}% ocupado"), diskPct),
                     "", 0);
             }
 
             // ── RED Y NAVEGADORES ───────────────────────────────────────
-            AddSection(items, export, "RED Y NAVEGADORES", "\U0001F310");
+            AddSection(items, export, Loc.T("DiagSectNetwork", "RED Y NAVEGADORES"), "\U0001F310");
 
             double dnsCount = report.DnsEntries;
             if (dnsCount > 500)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "WARN", "Caché DNS muy grande",
-                    string.Format("{0} entradas — puede ralentizar resolución", dnsCount),
-                    "Limpiar caché DNS", 5);
+                    "WARN", Loc.T("DiagDnsCacheLarge", "Caché DNS muy grande"),
+                    string.Format(Loc.T("DiagDnsSlowResolution", "{0} entradas — puede ralentizar resolución"), dnsCount),
+                    Loc.T("DiagCleanDns", "Limpiar caché DNS"), 5);
             }
             else
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "OK", "Caché DNS normal",
-                    string.Format("{0} entradas", dnsCount),
+                    "OK", Loc.T("DiagDnsCacheNormal", "Caché DNS normal"),
+                    string.Format(Loc.T("DiagDnsEntries", "{0} entradas"), dnsCount),
                     "", 0);
             }
 
@@ -220,65 +237,65 @@ namespace SysOpt.Diagnostics
             if (browserMB > 1000)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "WARN", "Caché de navegadores muy grande",
-                    string.Format("{0} MB — recomendable limpiar", Math.Round(browserMB, 0)),
-                    "Limpiar caché navegadores", 5);
+                    "WARN", Loc.T("DiagBrowserCacheLarge", "Caché de navegadores muy grande"),
+                    string.Format(Loc.T("DiagBrowserWarnDetail", "{0} MB — recomendable limpiar"), Math.Round(browserMB, 0)),
+                    Loc.T("DiagCleanBrowsers", "Limpiar caché navegadores"), 5);
             }
             else if (browserMB > 200)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "INFO", "Caché de navegadores presente",
+                    "INFO", Loc.T("DiagBrowserCachePresent", "Caché de navegadores presente"),
                     string.Format("{0} MB", Math.Round(browserMB, 1)),
                     "", 0);
             }
             else
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "OK", "Caché de navegadores limpia",
+                    "OK", Loc.T("DiagBrowserCacheClean", "Caché de navegadores limpia"),
                     string.Format("{0} MB", Math.Round(browserMB, 1)),
                     "", 0);
             }
 
             // ── REGISTRO DE WINDOWS ─────────────────────────────────────
-            AddSection(items, export, "REGISTRO DE WINDOWS", "\U0001F4CB");
+            AddSection(items, export, Loc.T("DiagSectRegistry", "REGISTRO DE WINDOWS"), "\U0001F4CB");
 
             double orphaned = report.OrphanedKeys;
             if (orphaned > 20)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "WARN", "Claves huérfanas en el registro",
-                    string.Format("{0} claves de programas desinstalados", orphaned),
-                    "Limpiar registro", 5);
+                    "WARN", Loc.T("DiagOrphanKeys", "Claves huérfanas en el registro"),
+                    string.Format(Loc.T("DiagOrphanDetail", "{0} claves de programas desinstalados"), orphaned),
+                    Loc.T("DiagOrphanAction", "Limpiar registro"), 5);
             }
             else if (orphaned > 0)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "INFO", "Algunas claves huérfanas",
-                    string.Format("{0} claves — impacto mínimo", orphaned),
+                    "INFO", Loc.T("DiagSomeOrphanKeys", "Algunas claves huérfanas"),
+                    string.Format(Loc.T("DiagMinimalImpact", "{0} claves — impacto mínimo"), orphaned),
                     "", 0);
             }
             else
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "OK", "Registro sin claves huérfanas",
-                    "No se detectaron entradas obsoletas", "", 0);
+                    "OK", Loc.T("DiagRegistryClean", "Registro sin claves huérfanas"),
+                    Loc.T("DiagRegistryCleanDetail", "No se detectaron entradas obsoletas"), "", 0);
             }
 
             // ── REGISTROS DE EVENTOS ────────────────────────────────────
-            AddSection(items, export, "REGISTROS DE EVENTOS", "\U0001F4F0");
+            AddSection(items, export, Loc.T("DiagSectEventLogs", "REGISTROS DE EVENTOS"), "\U0001F4F0");
 
             double eventMB = report.EventLogsMB;
             if (eventMB > 100)
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "WARN", "Logs de eventos grandes",
-                    string.Format("{0} MB en System+Application+Setup", Math.Round(eventMB, 1)),
-                    "Limpiar Event Logs", 3);
+                    "WARN", Loc.T("DiagEventLogWarn", "Logs de eventos grandes"),
+                    string.Format(Loc.T("DiagEventLogDetail", "{0} MB en System+Application+Setup"), Math.Round(eventMB, 1)),
+                    Loc.T("DiagEventLogAction", "Limpiar Event Logs"), 3);
             }
             else
             {
                 AddRow(items, ref deductions, ref critCount, ref warnCount, export,
-                    "OK", "Logs de eventos dentro de límites",
+                    "OK", Loc.T("DiagEventLogsOk", "Logs de eventos dentro de límites"),
                     string.Format("{0} MB", Math.Round(eventMB, 1)),
                     "", 0);
             }
@@ -290,24 +307,24 @@ namespace SysOpt.Diagnostics
             if (finalScore >= 80)
             {
                 scoreColor = "#4AE896";
-                scoreLabel = "Sistema en buen estado";
+                scoreLabel = Loc.T("DiagScoreGood", "Sistema en buen estado");
             }
             else if (finalScore >= 55)
             {
                 scoreColor = "#FFB547";
-                scoreLabel = "Mantenimiento recomendado";
+                scoreLabel = Loc.T("DiagScoreRecommended", "Mantenimiento recomendado");
             }
             else
             {
                 scoreColor = "#FF6B84";
-                scoreLabel = "Atención urgente";
+                scoreLabel = Loc.T("DiagUrgent", "Atención urgente");
             }
 
             export.Add("");
-            export.Add("=== RESUMEN ===");
-            export.Add(string.Format("Puntuación: {0} / 100", finalScore));
-            export.Add(string.Format("Críticos: {0}  |  Avisos: {1}", critCount, warnCount));
-            export.Add(string.Format("Estado: {0}", scoreLabel));
+            export.Add(Loc.T("DiagExportSummary", "=== RESUMEN ==="));
+            export.Add(string.Format(Loc.T("DiagScore", "Puntuación: {0} / 100"), finalScore));
+            export.Add(string.Format(Loc.T("DiagCritWarn", "Críticos: {0}  |  Avisos: {1}"), critCount, warnCount));
+            export.Add(string.Format(Loc.T("DiagExportState", "Estado: {0}"), scoreLabel));
 
             return new DiagResult
             {
@@ -358,10 +375,10 @@ namespace SysOpt.Diagnostics
 
             // Línea de exportación
             string prefix;
-            if (status == "CRIT") prefix = "[CRÍTICO]";
-            else if (status == "WARN") prefix = "[AVISO]";
-            else if (status == "INFO") prefix = "[INFO]";
-            else prefix = "[OK]";
+            if (status == "CRIT") prefix = Loc.T("DiagCritPrefix", "[CRÍTICO]");
+            else if (status == "WARN") prefix = Loc.T("DiagPrefixWarn", "[AVISO]");
+            else if (status == "INFO") prefix = Loc.T("DiagPrefixInfo", "[INFO]");
+            else prefix = Loc.T("DiagPrefixOk", "[OK]");
 
             string exportLine = string.Format("{0} {1}: {2}", prefix, label, detail);
             if (!string.IsNullOrEmpty(action))

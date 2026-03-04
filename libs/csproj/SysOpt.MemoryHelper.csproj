@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- Compilar como net462 para compatibilidad con PowerShell 5.1 (WPF/WinForms) -->
     <TargetFramework>net462</TargetFramework>

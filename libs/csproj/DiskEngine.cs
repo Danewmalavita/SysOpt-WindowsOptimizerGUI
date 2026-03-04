@@ -97,17 +97,36 @@ public class DiskItemToggle_v230 : INotifyPropertyChanged
 }
 
 // ── ScanCtl211: señales compartidas entre runspaces ──────────────────────────
+// [CTK] Bridge: Stop getter ahora revisa _stop || _token.IsCancellationRequested
+//       Así PScanner211 respeta CancellationToken sin cambiar su código interno.
+//       Uso: [ScanCtl211]::SetToken([ScanTokenManager]::Token)
 public static class ScanCtl211
 {
     private static volatile bool   _stop     = false;
     public  static int             _doneRef  = 0;
     public  static int             _totalRef = 0;
     private static volatile string _current  = "";
+    private static CancellationToken _token  = CancellationToken.None;
 
-    public static bool   Stop    { get { return _stop;     } set { _stop     = value; } }
+    /// <summary>
+    /// True si se pidió detener via flag directo O via CancellationToken.
+    /// PScanner211 lee esta propiedad — el bridge garantiza que Cancel() basta.
+    /// </summary>
+    public static bool Stop
+    {
+        get { return _stop || _token.IsCancellationRequested; }
+        set { _stop = value; }
+    }
+
     public static int    Done    { get { return System.Threading.Thread.VolatileRead(ref _doneRef);  } set { _doneRef   = value; } }
     public static int    Total   { get { return System.Threading.Thread.VolatileRead(ref _totalRef); } set { _totalRef  = value; } }
     public static string Current { get { return _current;  } set { _current   = value; } }
+
+    /// <summary>Enlaza el token de ScanTokenManager para que PScanner211 respete CTK.</summary>
+    public static void SetToken(CancellationToken token)
+    {
+        _token = token;
+    }
 
     public static void Reset()
     {
@@ -115,6 +134,7 @@ public static class ScanCtl211
         _doneRef  = 0;
         _totalRef = 0;
         _current  = "";
+        _token    = CancellationToken.None;
     }
 }
 

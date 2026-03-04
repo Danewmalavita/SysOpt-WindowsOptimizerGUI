@@ -28,6 +28,23 @@ using System.Threading;
 
 namespace SysOpt.Optimizer
 {
+    /// <summary>Minimal localization helper — PS1 calls SetDict() after loading language.</summary>
+    public static class Loc
+    {
+        private static System.Collections.Generic.Dictionary<string, string> _d =
+            new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+
+        public static void SetDict(System.Collections.Generic.Dictionary<string, string> d)
+        {
+            _d = d ?? new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static string T(string key, string fallback)
+        {
+            return (_d != null && _d.ContainsKey(key)) ? _d[key] : fallback;
+        }
+    }
+
     // =========================================================================
     // DTOs
     // =========================================================================
@@ -150,12 +167,12 @@ namespace SysOpt.Optimizer
                 {
                     beforeMB = GetDirectorySizeMB(wuPath);
                 }
-                result.Messages.Add("  Tamaño actual: " + beforeMB + " MB");
+                result.Messages.Add(Loc.T("OptCurrentSize", "  Tamaño actual: ") + beforeMB + " MB");
                 result.FreedMB = beforeMB;   // en dry-run = lo que se liberaría
 
                 if (dryRun)
                 {
-                    result.Messages.Add("  [DRY RUN] Se liberarían ~" + beforeMB + " MB");
+                    result.Messages.Add(Loc.T("OptDryRunFree", "  [DRY RUN] Se liberarían ~") + beforeMB + " MB");
                     return result;
                 }
 
@@ -294,7 +311,7 @@ namespace SysOpt.Optimizer
 
                 if (dryRun)
                 {
-                    result.Messages.Add("  [DRY RUN] Se vaciaría el Working Set de todos los procesos accesibles");
+                    result.Messages.Add(Loc.T("OptDryRunWorkingSet", "  [DRY RUN] Se vaciaría el Working Set de todos los procesos accesibles"));
                     return result;
                 }
 
@@ -323,7 +340,7 @@ namespace SysOpt.Optimizer
                 double freeGBAft = Math.Round(ramAfter.FreeBytes / 1073741824.0, 2);
                 double gained    = Math.Round(freeGBAft - freeGBBef, 2);
 
-                result.Messages.Add("  Libre después:   " + freeGBAft + " GB");
+                result.Messages.Add(Loc.T("OptFreeAfter", "  Libre después:   ") + freeGBAft + " GB");
                 result.Messages.Add("  \u2713 RAM recuperada: " + gained + " GB");
             }
             catch (Exception ex)
@@ -373,7 +390,7 @@ namespace SysOpt.Optimizer
                 {
                     if (dryRun)
                     {
-                        result.Messages.Add("  [DRY RUN] Cerraría: " + p.ProcessName +
+                        result.Messages.Add(Loc.T("OptDryRunClose", "  [DRY RUN] Cerraría: ") + p.ProcessName +
                                             " (PID: " + p.Id + ")");
                     }
                     else
@@ -453,7 +470,7 @@ namespace SysOpt.Optimizer
         {
             TaskLabels = new Dictionary<string, string>
             {
-                { "OptimizeDisks",  "Optimización de discos" },
+                { "OptimizeDisks",  Loc.T("OptLblOptimizeDisks", "Optimización de discos") },
                 { "RecycleBin",     "Vaciando papelera" },
                 { "TempFiles",      "Archivos temporales Windows" },
                 { "UserTemp",       "Archivos temporales Usuario" },
@@ -461,7 +478,7 @@ namespace SysOpt.Optimizer
                 { "Chkdsk",         "Check Disk (CHKDSK)" },
                 { "ClearMemory",    "Liberando memoria RAM" },
                 { "CloseProcesses", "Cerrando procesos" },
-                { "DNSCache",       "Limpiando caché DNS" },
+                { "DNSCache",       Loc.T("OptLblDnsCache", "Limpiando caché DNS") },
                 { "BrowserCache",   "Limpiando navegadores" },
                 { "BackupRegistry", "Backup del registro" },
                 { "CleanRegistry",  "Limpiando registro" },
@@ -472,20 +489,20 @@ namespace SysOpt.Optimizer
 
             TaskBanners = new Dictionary<string, string>
             {
-                { "OptimizeDisks",  "1. OPTIMIZACIÓN DE DISCOS DUROS" },
+                { "OptimizeDisks",  Loc.T("OptStep1", "1. OPTIMIZACIÓN DE DISCOS DUROS") },
                 { "RecycleBin",     "2. VACIANDO PAPELERA DE RECICLAJE" },
                 { "TempFiles",      "3. ARCHIVOS TEMPORALES DE WINDOWS" },
                 { "UserTemp",       "4. ARCHIVOS TEMPORALES DE USUARIO" },
                 { "WUCache",        "5. WINDOWS UPDATE CACHE (SoftwareDistribution)" },
                 { "Chkdsk",         "6. PROGRAMANDO CHECK DISK (CHKDSK)" },
                 { "ClearMemory",    "7. LIBERANDO MEMORIA RAM" },
-                { "CloseProcesses", "8. CERRANDO PROCESOS NO CRÍTICOS" },
-                { "DNSCache",       "9. LIMPIANDO CACHÉ DNS" },
-                { "BrowserCache",   "10. LIMPIANDO CACHÉ DE NAVEGADORES" },
+                { "CloseProcesses", Loc.T("OptStep8", "8. CERRANDO PROCESOS NO CRÍTICOS") },
+                { "DNSCache",       Loc.T("OptStep9", "9. LIMPIANDO CACHÉ DNS") },
+                { "BrowserCache",   Loc.T("OptStep10", "10. LIMPIANDO CACHÉ DE NAVEGADORES") },
                 { "BackupRegistry", "11. BACKUP DEL REGISTRO" },
-                { "CleanRegistry",  "12. LIMPIANDO CLAVES HUÉRFANAS DEL REGISTRO" },
+                { "CleanRegistry",  Loc.T("OptStep12", "12. LIMPIANDO CLAVES HUÉRFANAS DEL REGISTRO") },
                 { "SFC",            "13. SFC /SCANNOW" },
-                { "DISM",           "14. DISM \u2014 Reparación de imagen del sistema" },
+                { "DISM",           Loc.T("OptStep14", "14. DISM \u2014 Reparación de imagen del sistema") },
                 { "EventLogs",      "15. LIMPIANDO EVENT VIEWER LOGS" }
             };
         }
@@ -508,7 +525,7 @@ namespace SysOpt.Optimizer
         {
             var result = new OptimizeResult { IsDryRun = options.DryRun };
             bool dryRun = options.DryRun;
-            string dryRunLabel = dryRun ? " [MODO ANÁLISIS \u2014 sin cambios]" : "";
+            string dryRunLabel = dryRun ? Loc.T("OptDryRunMode", " [MODO ANÁLISIS \u2014 sin cambios]") : "";
 
             // Determinar tareas seleccionadas
             var selected = GetSelectedTasks(options);
@@ -528,15 +545,15 @@ namespace SysOpt.Optimizer
             // ── Header ──────────────────────────────────────────────────────
             int boxWidth = 62;
             string titleLine = dryRun
-                ? "INICIANDO OPTIMIZACIÓN  \u2014  MODO ANÁLISIS (DRY RUN)"
-                : "INICIANDO OPTIMIZACIÓN DEL SISTEMA WINDOWS";
+                ? Loc.T("OptStartDryRun", "INICIANDO OPTIMIZACIÓN  \u2014  MODO ANÁLISIS (DRY RUN)")
+                : Loc.T("OptStartReal", "INICIANDO OPTIMIZACIÓN DEL SISTEMA WINDOWS");
             EmitBox(onProgress, boxWidth, titleLine, 0);
             Msg(onProgress, "", 0,
                 "Fecha:    " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"));
             Msg(onProgress, "", 0,
                 "Modo:     " + (dryRun
-                    ? "\U0001f50d ANÁLISIS (Dry Run) \u2014 solo reportar"
-                    : "\u2699 EJECUCIÓN real"));
+                    ? Loc.T("OptAnalysisMode", "\U0001f50d ANÁLISIS (Dry Run) \u2014 solo reportar")
+                    : Loc.T("OptRealMode", "\u2699 EJECUCIÓN real")));
             Msg(onProgress, "", 0, "Tareas:   " + totalTasks);
             Msg(onProgress, "", 0,
                 "Tareas a ejecutar: " + string.Join(", ", selected));
@@ -549,7 +566,7 @@ namespace SysOpt.Optimizer
                 {
                     Msg(onProgress, "", Pct(completedTasks, totalTasks), "");
                     Msg(onProgress, "", Pct(completedTasks, totalTasks),
-                        "\u26a0 OPTIMIZACIÓN CANCELADA POR EL USUARIO");
+                        Loc.T("OptCancelledByUser", "\u26a0 OPTIMIZACIÓN CANCELADA POR EL USUARIO"));
                     Status(onProgress, "\u26a0 Cancelado por el usuario");
                     result.Cancelled = true;
                     break;
@@ -624,10 +641,10 @@ namespace SysOpt.Optimizer
                 result.Duration.Minutes, result.Duration.Seconds);
 
             string footerTitle = result.Cancelled
-                ? "OPTIMIZACIÓN CANCELADA"
+                ? Loc.T("OptCancelled", "OPTIMIZACIÓN CANCELADA")
                 : (dryRun
-                    ? "ANÁLISIS COMPLETADO EXITOSAMENTE"
-                    : "OPTIMIZACIÓN COMPLETADA EXITOSAMENTE");
+                    ? Loc.T("OptAnalysisDone", "ANÁLISIS COMPLETADO EXITOSAMENTE")
+                    : Loc.T("OptDone", "OPTIMIZACIÓN COMPLETADA EXITOSAMENTE"));
 
             Msg(onProgress, "", 100, "");
             EmitBox(onProgress, boxWidth, footerTitle, 100);
@@ -640,7 +657,7 @@ namespace SysOpt.Optimizer
 
             if (!result.Cancelled)
             {
-                Status(onProgress, "\u2713 " + (dryRun ? "Análisis" : "Optimización") +
+                Status(onProgress, "\u2713 " + (dryRun ? Loc.T("OptAnalysis", "Análisis") : Loc.T("OptOptimization", "Optimización")) +
                        " completada");
                 Progress(onProgress, "\u00a1Todas las tareas completadas!", 100);
             }
@@ -709,7 +726,7 @@ namespace SysOpt.Optimizer
                 }
 
                 tr.Messages.Add("");
-                tr.Messages.Add("\u2713 Optimización de discos " +
+                tr.Messages.Add(Loc.T("OptDiskOptResult", "\u2713 Optimización de discos ") +
                                 (dryRun ? "analizada" : "completada"));
             }
             catch (Exception ex)
@@ -833,7 +850,7 @@ namespace SysOpt.Optimizer
                 {
                     // Contar entradas DNS vía ipconfig /displaydns
                     int count = CountDnsCacheEntries();
-                    tr.Messages.Add("  [DRY RUN] Caché DNS actual: " + count + " entradas");
+                    tr.Messages.Add(Loc.T("OptDryRunDns", "  [DRY RUN] Caché DNS actual: ") + count + " entradas");
                     tr.ItemsCount = count;
                 }
                 else

@@ -26,6 +26,25 @@ using System.Threading;
 // ═══════════════════════════════════════════════════════════════════════════════
 // LangEngine — Parsing de archivos .lang (formato INI: [meta] + [ui])
 // ═══════════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Loc — Minimal localization helper. PS1 calls Loc.SetDict() after loading language.
+// ═══════════════════════════════════════════════════════════════════════════════
+public static class Loc
+{
+    private static Dictionary<string, string> _d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    public static void SetDict(Dictionary<string, string> d)
+    {
+        _d = d ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    public static string T(string key, string fallback)
+    {
+        return (_d != null && _d.ContainsKey(key)) ? _d[key] : fallback;
+    }
+}
+
 public static class LangEngine
 {
     public static Dictionary<string, string> ParseLangFile(string path)
@@ -50,6 +69,9 @@ public static class LangEngine
             if (eq <= 0) continue;
             string key = line.Substring(0, eq).Trim();
             string val = line.Substring(eq + 1).Trim().Replace("\\n", "\n");
+            // Strip surrounding quotes if present
+            if (val.Length >= 2 && val[0] == '"' && val[val.Length - 1] == '"')
+                val = val.Substring(1, val.Length - 2);
             strings[key] = val;
         }
         return strings;
@@ -407,6 +429,8 @@ public class SystemSnapshot
     public string       MachineName { get; set; }
     public string       OsCaption   { get; set; }
     public string       OsVersion   { get; set; }
+    public string       OsBuild     { get; set; }   // "22631" — extracted from Win32_OperatingSystem.BuildNumber
+    public DateTime     BootTime    { get; set; }   // LastBootUpTime — uptime info
     public DateTime     Timestamp   { get; set; }
 
     public CpuSnapshot     Cpu      { get; set; }
@@ -896,15 +920,24 @@ public static class SystemDataCollector
     {
         string osCaption = "";
         string osVersion = "";
+        string osBuild   = "";
+        DateTime bootTime = DateTime.MinValue;
         try
         {
             using (var os = new ManagementObjectSearcher(
-                "SELECT Caption, Version FROM Win32_OperatingSystem"))
+                "SELECT Caption, Version, BuildNumber, LastBootUpTime FROM Win32_OperatingSystem"))
             {
                 foreach (ManagementObject obj in os.Get())
                 {
                     osCaption = SafeStr(obj, "Caption");
                     osVersion = SafeStr(obj, "Version");
+                    osBuild   = SafeStr(obj, "BuildNumber");
+                    string bootStr = SafeStr(obj, "LastBootUpTime");
+                    if (!string.IsNullOrEmpty(bootStr))
+                    {
+                        try { bootTime = ManagementDateTimeConverter.ToDateTime(bootStr); }
+                        catch { }
+                    }
                     break;
                 }
             }
@@ -916,6 +949,8 @@ public static class SystemDataCollector
             MachineName = Environment.MachineName,
             OsCaption   = osCaption,
             OsVersion   = osVersion,
+            OsBuild     = osBuild,
+            BootTime    = bootTime,
             Timestamp   = DateTime.UtcNow,
             Cpu         = GetCpuSnapshot(),
             Ram         = GetRamSnapshot(),
@@ -1133,7 +1168,7 @@ public static class LogEngine
     {
         EnsureDay();
         string sep  = new string('═', 60);
-        string line = string.Format("  {0} v{1}  —  Sesión iniciada: {2}",
+        string line = string.Format(Loc.T("CoreSessionStarted", "  {0} v{1}  —  Sesión iniciada: {2}"),
             appName, version, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
         string host = string.Format("  Usuario: {0}  |  Host: {1}",
             Environment.UserName, Environment.MachineName);
