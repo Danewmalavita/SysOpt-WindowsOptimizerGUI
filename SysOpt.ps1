@@ -93,8 +93,10 @@ $splashWin.Show()
 
 function Set-SplashProgress([int]$Pct, [string]$Msg = "") {
     if ($Msg) { $splashMsg.Text = $Msg }
-    $splashBar.Width = [math]::Round(408 * [math]::Min(100,$Pct) / 100)
-    [System.Windows.Forms.Application]::DoEvents()   # pump messages sin runspace
+    # Anti-retroceso: solo avanzar, nunca retroceder
+    $targetW = [math]::Round(408 * [math]::Min(100,$Pct) / 100)
+    if ($targetW -gt $splashBar.Width) { $splashBar.Width = $targetW }
+    [System.Windows.Forms.Application]::DoEvents()
 }
 Set-SplashProgress 10 "Cargando ensamblados .NET..."
 
@@ -370,7 +372,7 @@ if (-not [SysOptFallbacks]::AcquireMutex()) {
     exit
 }
 
-Set-SplashProgress 40 "Analizando permisos..."
+Set-SplashProgress 74 "Analizando permisos..."
 
 # ─────────────────────────────────────────────────────────────────────────────
 # XAML — Interfaz Gráfica v1.0
@@ -380,10 +382,10 @@ $xaml = [XamlLoader]::Load($script:XamlFolder, "MainWindow")
 # ─────────────────────────────────────────────────────────────────────────────
 # Cargar XAML y obtener controles
 # ─────────────────────────────────────────────────────────────────────────────
-Set-SplashProgress 65 "Construyendo interfaz gráfica..."
+Set-SplashProgress 82 "Construyendo interfaz gráfica..."
 $reader = [System.Xml.XmlNodeReader]::new([xml]$xaml)
 $window = [Windows.Markup.XamlReader]::Load($reader)
-Set-SplashProgress 85 "Enlazando controles..."
+Set-SplashProgress 90 "Enlazando controles..."
 Initialize-RunspacePool
 
 # ─────────────────────────────────────────────────────────────────────────────

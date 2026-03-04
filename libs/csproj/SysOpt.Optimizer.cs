@@ -64,10 +64,12 @@ namespace SysOpt.Optimizer
     public class OptimizeProgress
     {
         public string TaskName { get; set; }   // Nombre de la tarea actual (para TaskText)
-        public int    Percent  { get; set; }   // 0-100 global (para ProgressBar + ProgressText)
+        public int    Percent  { get; set; }   // 0-100 global, -1 = sin cambio
         public string Message  { get; set; }   // Línea de consola (para ConsoleOutput.AppendText)
         public string Status   { get; set; }   // Texto de estado (para StatusText)
         public bool   IsError  { get; set; }
+
+        public OptimizeProgress() { Percent = -1; }
     }
 
     /// <summary>Resultado de una tarea individual.</summary>
