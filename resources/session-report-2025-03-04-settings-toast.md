@@ -1,4 +1,4 @@
-﻿# SysOpt — Session Report: Win11 Settings + Toast Notifications
+# SysOpt — Session Report: Win11 Settings + Toast Notifications
 
 **Date:** 2025-03-04  
 **Version:** 3.2.0-STABLE  
