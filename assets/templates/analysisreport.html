@@ -1,0 +1,716 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SysOpt — Informe de Análisis {{REPORT_DATE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:      #0D0F1A;
+    --card:    #131625;
+    --card2:   #1A1E2F;
+    --border:  #252B40;
+    --blue:    #5BA3FF;
+    --cyan:    #2EDFBF;
+    --amber:   #FFB547;
+    --red:     #FF6B84;
+    --green:   #4AE896;
+    --purple:  #9B7EFF;
+    --txt:     #E8ECF4;
+    --muted:   #7880A0;
+    --mono:    'JetBrains Mono', monospace;
+    --sans:    'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(91,163,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,163,255,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Blobs */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: .10;
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .blob-1 { width:520px; height:520px; background:#5BA3FF; top:-120px; left:-120px; }
+  .blob-2 { width:420px; height:420px; background:#2EDFBF; bottom:-60px; right:-80px; animation-delay:-9s; }
+  .blob-3 { width:320px; height:320px; background:#9B7EFF; top:45%; left:50%; transform:translate(-50%,-50%); animation-delay:-4s; }
+
+  @keyframes drift {
+    from { transform: translate(0,0)   scale(1);    }
+    to   { transform: translate(28px,18px) scale(1.07); }
+  }
+  .blob-3 { animation-name: drift3; }
+  @keyframes drift3 {
+    from { transform: translate(-50%,-50%) scale(1);    }
+    to   { transform: translate(calc(-50% + 28px), calc(-50% + 18px)) scale(1.07); }
+  }
+
+  /* ── Layout ── */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 52px 28px 96px;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding-bottom: 36px;
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+  .logo-fallback {
+    width: 60px; height: 60px;
+    border-radius: 14px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; flex-shrink: 0;
+  }
+  .header-brand h1 {
+    font-size: clamp(1.6rem, 3vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+  .header-brand h1 .a1 { color: var(--blue); }
+  .header-brand h1 .a2 { color: var(--cyan); }
+  .header-meta {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .header-meta .sep { color: var(--border); }
+  .badge-ver {
+    margin-left: auto;
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--purple);
+    background: rgba(155,126,255,.1);
+    border: 1px solid rgba(155,126,255,.25);
+    border-radius: 100px;
+    padding: 4px 14px;
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+
+  /* ── Section chrome ── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 22px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+  }
+  .card.card-warn::before { background: linear-gradient(90deg, var(--amber), var(--red)); }
+  .card.card-ok::before   { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+
+  /* ── Summary stats row ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .stat-box {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 14px;
+    text-align: center;
+  }
+  .stat-lbl {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 1.55rem;
+    font-weight: 700;
+  }
+  .stat-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .c-blue   { color: var(--blue);   }
+  .c-green  { color: var(--green);  }
+  .c-amber  { color: var(--amber);  }
+  .c-red    { color: var(--red);    }
+  .c-purple { color: var(--purple); }
+  .c-cyan   { color: var(--cyan);   }
+  .c-muted  { color: var(--muted);  }
+
+  /* ── Score gauge ── */
+  .gauge-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+    padding: 12px 0;
+  }
+  .gauge-svg { width: 200px; height: 200px; }
+  .gauge-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .gauge-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .gauge-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .gauge-item-val {
+    font-family: var(--mono);
+    font-weight: 600;
+    margin-left: auto;
+    padding-left: 18px;
+  }
+
+  /* ── Health bar ── */
+  .health-bar-wrap {
+    height: 10px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 14px 0 6px;
+  }
+  .health-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width .5s ease;
+  }
+  .health-bar-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* ── System info grid ── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .info-key {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .info-val {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--txt);
+    text-align: right;
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Check list table ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .data-table th {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 9px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table th.r { text-align: right; }
+  .data-table th.c { text-align: center; }
+  .data-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(37,43,64,.5);
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(26,30,47,.7); }
+  .td-icon { width: 32px; text-align: center; font-size: 16px; }
+  .td-name { font-weight: 600; }
+  .td-desc { color: var(--muted); font-size: 11px; }
+  .td-status { text-align: center; width: 80px; }
+  .td-impact { text-align: center; width: 80px; font-family: var(--mono); font-size: 11px; }
+
+  /* Status badges */
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 100px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+  .badge-ok   { color: var(--green); background: rgba(74,232,150,.1);  border: 1px solid rgba(74,232,150,.25);  }
+  .badge-warn { color: var(--amber); background: rgba(255,181,71,.1);  border: 1px solid rgba(255,181,71,.25);  }
+  .badge-fail { color: var(--red);   background: rgba(255,107,132,.1); border: 1px solid rgba(255,107,132,.25); }
+  .badge-info { color: var(--blue);  background: rgba(91,163,255,.1);  border: 1px solid rgba(91,163,255,.25);  }
+  .badge-skip { color: var(--muted); background: rgba(120,128,160,.08); border: 1px solid rgba(120,128,160,.2); }
+
+  /* ── Recommendation cards ── */
+  .rec-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .rec-item {
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .rec-icon {
+    font-size: 20px;
+    text-align: center;
+  }
+  .rec-text h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .rec-text p {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ── Pie chart (reused from diskreport) ── */
+  .chart-wrap {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 36px;
+    align-items: start;
+  }
+  .pie-svg-container { position: relative; }
+  .pie-svg-container svg { display: block; width: 100%; max-width: 260px; }
+  .slice {
+    cursor: pointer;
+    transform-origin: 160px 160px;
+    transition: opacity .15s, transform .15s;
+  }
+  .slice:hover { opacity: 1 !important; transform: scale(1.04); }
+  .legend { display: flex; flex-direction: column; gap: 5px; max-height: 360px; overflow-y: auto; }
+  .legend::-webkit-scrollbar { width: 4px; }
+  .legend::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .legend-item {
+    display: grid;
+    grid-template-columns: 12px 1fr 54px;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 7px;
+    cursor: default;
+    transition: background .15s;
+    font-size: 12px;
+  }
+  .legend-item:hover { background: var(--card2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--txt); }
+  .legend-val  { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: right; }
+
+  /* ── Tooltip ── */
+  .tooltip-box {
+    position: fixed;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--txt);
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    max-width: 320px;
+  }
+  .tooltip-box .tt-name { color: var(--blue); font-weight: 700; margin-bottom: 3px; }
+  .tooltip-box .tt-val  { color: var(--amber); }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding-top: 36px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+  .chips {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 3px 12px;
+    font-size: 10px;
+  }
+  .chip-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  @media (max-width: 780px) {
+    .chart-wrap { grid-template-columns: 1fr; }
+    .stats-row  { grid-template-columns: repeat(2, 1fr); }
+    .gauge-wrap { flex-direction: column; gap: 24px; }
+    .info-grid  { grid-template-columns: 1fr; }
+    header { flex-wrap: wrap; }
+    .badge-ver { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="tooltip-box" id="tt">
+  <div class="tt-name" id="tt-name"></div>
+  <span class="tt-val" id="tt-val"></span>
+</div>
+
+<div class="container">
+
+  <!-- ═══ HEADER ═══════════════════════════════════════════════════════════ -->
+  <header>
+    {{LOGO_TAG}}
+    <div class="header-brand">
+      <h1><span class="a1">SYS</span>OPT <span class="a2">·</span> Informe de Análisis</h1>
+      <div class="header-meta">
+        <span>💻 {{COMPUTER_NAME}}</span>
+        <span class="sep">|</span>
+        <span>📅 {{REPORT_DATE_LONG}}</span>
+        <span class="sep">|</span>
+        <span>⏱ {{ANALYSIS_TIME}}</span>
+      </div>
+    </div>
+    <div class="badge-ver">{{APP_VERSION}}</div>
+  </header>
+
+  <!-- ═══ PUNTUACIÓN GLOBAL ════════════════════════════════════════════════ -->
+  <section class="card">
+    <div class="section-label">Puntuación del sistema</div>
+    <div class="section-title">Estado general del equipo</div>
+    <div class="gauge-wrap">
+      <svg class="gauge-svg" viewBox="0 0 200 200">
+        <!-- Track -->
+        <circle cx="100" cy="100" r="80" fill="none"
+                stroke="var(--card2)" stroke-width="14"
+                stroke-dasharray="377 503"
+                stroke-dashoffset="-63"
+                stroke-linecap="round"/>
+        <!-- Score arc -->
+        <circle cx="100" cy="100" r="80" fill="none"
+                stroke="{{SCORE_COLOR}}" stroke-width="14"
+                stroke-dasharray="{{SCORE_ARC}} 503"
+                stroke-dashoffset="-63"
+                stroke-linecap="round"
+                style="filter: drop-shadow(0 0 8px {{SCORE_COLOR}})"/>
+        <!-- Score number -->
+        <text x="100" y="92" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace"
+              font-size="38" font-weight="700" fill="{{SCORE_COLOR}}">{{SCORE}}</text>
+        <text x="100" y="112" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace"
+              font-size="10" fill="var(--muted)" letter-spacing="2">/ 100</text>
+        <text x="100" y="132" text-anchor="middle"
+              font-family="'Syne',sans-serif"
+              font-size="11" font-weight="600" fill="{{SCORE_COLOR}}">{{SCORE_LABEL}}</text>
+      </svg>
+      <div class="gauge-details">
+        <div class="gauge-item">
+          <span class="gauge-dot" style="background:var(--green)"></span>
+          <span>Comprobaciones correctas</span>
+          <span class="gauge-item-val c-green">{{CHECKS_OK}}</span>
+        </div>
+        <div class="gauge-item">
+          <span class="gauge-dot" style="background:var(--amber)"></span>
+          <span>Advertencias</span>
+          <span class="gauge-item-val c-amber">{{CHECKS_WARN}}</span>
+        </div>
+        <div class="gauge-item">
+          <span class="gauge-dot" style="background:var(--red)"></span>
+          <span>Problemas detectados</span>
+          <span class="gauge-item-val c-red">{{CHECKS_FAIL}}</span>
+        </div>
+        <div class="gauge-item">
+          <span class="gauge-dot" style="background:var(--muted)"></span>
+          <span>Omitidas</span>
+          <span class="gauge-item-val c-muted">{{CHECKS_SKIP}}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ INFORMACIÓN DEL SISTEMA ══════════════════════════════════════════ -->
+  <section class="card">
+    <div class="section-label">Información del sistema</div>
+    <div class="section-title">Hardware y software detectado</div>
+    <div class="info-grid">
+      {{SYSTEM_INFO_ITEMS}}
+    </div>
+  </section>
+
+  <!-- ═══ RESUMEN RÁPIDO ═══════════════════════════════════════════════════ -->
+  <section class="card">
+    <div class="section-label">Resumen rápido</div>
+    <div class="section-title">Métricas principales</div>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-lbl">RAM libre</div>
+        <div class="stat-val {{RAM_COLOR}}">{{RAM_FREE}}</div>
+        <div class="stat-sub">de {{RAM_TOTAL}}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Disco libre</div>
+        <div class="stat-val {{DISK_COLOR}}">{{DISK_FREE}}</div>
+        <div class="stat-sub">de {{DISK_TOTAL}}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Temp recuperable</div>
+        <div class="stat-val c-amber">{{TEMP_SIZE}}</div>
+        <div class="stat-sub">{{TEMP_FILES}} archivos</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Inicio de Windows</div>
+        <div class="stat-val c-purple">{{STARTUP_COUNT}}</div>
+        <div class="stat-sub">programas</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Servicios innecesarios</div>
+        <div class="stat-val {{SERVICES_COLOR}}">{{SERVICES_BLOAT}}</div>
+        <div class="stat-sub">de {{SERVICES_TOTAL}} activos</div>
+      </div>
+      {{EXTRA_STATS}}
+    </div>
+  </section>
+
+  <!-- ═══ DISTRIBUCIÓN POR CATEGORÍA ═══════════════════════════════════════ -->
+  <section class="card">
+    <div class="section-label">Distribución de resultados</div>
+    <div class="section-title">Comprobaciones por categoría</div>
+    <div class="chart-wrap">
+      <div class="pie-svg-container">
+        <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg">
+          {{PIE_SLICES}}
+          <circle cx="160" cy="160" r="62" fill="#0D0F1A"/>
+          <text x="160" y="153" text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="15" font-weight="700" fill="var(--txt)">{{TOTAL_CHECKS}}</text>
+          <text x="160" y="170" text-anchor="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="9" fill="var(--muted)" letter-spacing="1.5">CHECKS</text>
+        </svg>
+      </div>
+      <div class="legend" id="legend">
+        {{PIE_LEGEND}}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ DETALLE DE COMPROBACIONES ════════════════════════════════════════ -->
+  <section class="card">
+    <div class="section-label">Comprobaciones detalladas</div>
+    <div class="section-title">Todas las comprobaciones realizadas</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="td-icon"></th>
+          <th>Comprobación</th>
+          <th>Descripción</th>
+          <th class="c">Estado</th>
+          <th class="c">Impacto</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{CHECK_ROWS}}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══ RECOMENDACIONES ══════════════════════════════════════════════════ -->
+  <section class="card {{REC_CARD_CLASS}}">
+    <div class="section-label">Recomendaciones</div>
+    <div class="section-title">Acciones sugeridas para mejorar el rendimiento</div>
+    <div class="rec-list">
+      {{RECOMMENDATION_ITEMS}}
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ════════════════════════════════════════════════════════════ -->
+  <footer>
+    <p>SysOpt Windows Optimizer GUI {{APP_VERSION}} — Informe generado el {{REPORT_DATE_LONG}}</p>
+    <div class="chips">
+      <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>{{COMPUTER_NAME}}</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>{{CHECKS_OK}} correctas</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--amber)"></span>{{CHECKS_WARN}} advertencias</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--red)"></span>{{CHECKS_FAIL}} problemas</span>
+      <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>PowerShell + WPF</span>
+    </div>
+  </footer>
+
+</div><!-- /container -->
+
+<script>
+// ── Tooltip en slices del pie ─────────────────────────────────────────────
+const tt     = document.getElementById('tt');
+const ttName = document.getElementById('tt-name');
+const ttVal  = document.getElementById('tt-val');
+
+document.querySelectorAll('.slice').forEach(s => {
+  s.addEventListener('mousemove', e => {
+    tt.style.display = 'block';
+    tt.style.left    = (e.clientX + 16) + 'px';
+    tt.style.top     = (e.clientY - 14) + 'px';
+    ttName.textContent = s.dataset.name;
+    ttVal.textContent  = s.dataset.val;
+  });
+  s.addEventListener('mouseleave', () => { tt.style.display = 'none'; });
+});
+
+// ── Highlight cruzado pie ↔ leyenda ──────────────────────────────────────
+document.querySelectorAll('.slice').forEach((s, i) => {
+  s.addEventListener('mouseenter', () => {
+    document.querySelectorAll('.slice').forEach((ss, ii) => {
+      ss.style.opacity = ii === i ? '1' : '0.35';
+    });
+    const li = document.querySelectorAll('.legend-item')[i];
+    if (li) li.style.background = 'var(--card2)';
+  });
+  s.addEventListener('mouseleave', () => {
+    document.querySelectorAll('.slice').forEach(ss => ss.style.opacity = '');
+    document.querySelectorAll('.legend-item').forEach(li => li.style.background = '');
+  });
+});
+</script>
+</body>
+</html>
